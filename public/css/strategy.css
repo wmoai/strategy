@@ -1,0 +1,53 @@
+.cell {
+  display: inline-block;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border: silver 1px solid;
+  border-bottom: none;
+  border-right: none;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+.cell.plains {
+  background-color: darkseagreen;
+}
+.cell.forest {
+  background-color: darkgreen;
+}
+.cell.mountain {
+  background-color: peru;
+}
+
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+}
+.overlay.movable {
+  background-color: palegreen;
+}
+.overLay.actionable {
+  background-color: gold;
+}
+
+.unit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+}
+
+.unit.wait {
+  color: gray;
+}
