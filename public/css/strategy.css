@@ -1,11 +1,16 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .cell {
   display: inline-block;
   position: relative;
   width: 30px;
   height: 30px;
   border: silver 1px solid;
-  border-bottom: none;
-  border-right: none;
+  border-top: none;
+  border-left: none;
   overflow: hidden;
   cursor: pointer;
   text-align: center;
@@ -14,13 +19,16 @@
   -webkit-user-select: none;
 }
 .cell.plains {
-  background-color: darkseagreen;
+  background-color: palegoldenrod;
 }
 .cell.forest {
-  background-color: darkgreen;
+  background-color: olivedrab;
 }
 .cell.mountain {
-  background-color: peru;
+  background-color: tan;
+}
+.cell.water {
+  background-color: cornflowerblue;
 }
 
 
@@ -30,7 +38,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 .overlay.movable {
   background-color: palegreen;
@@ -47,7 +55,26 @@
   height: 100%;
   z-index: 100;
 }
-
-.unit.wait {
-  color: gray;
+.unit.army {
+  color: blue;
 }
+.unit.enemy {
+  color: red;
+}
+.unit.standby {
+  color: darkgray;
+}
+
+.unit .hpbar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background-color: darkslategray;
+}
+.unit .hpbar .remain {
+  position: absolute;
+  height: 100%;
+  background-color: aquamarine;
+}
+
