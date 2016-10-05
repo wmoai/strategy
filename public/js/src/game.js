@@ -60,6 +60,10 @@ export default class Gmae {
     return this;
   }
 
+  hoverCell(y, x) {
+    return this;
+  }
+
   controlSelect(y, x) {
     const unit = this.field[y][x].unit;
     if (unit && unit.isReady()) {
@@ -125,11 +129,11 @@ export default class Gmae {
   }
   processAction(actor, target) {
     if (actor.healer) {
-      target.hp = Math.min(target.hp + actor.mgc, target.maxHp);
+      target.hp = Math.min(target.hp + actor.pow, target.maxHp);
     } else if (!actor.magical) {
-      target.hp -= Math.max(actor.atk - target.dff, 0);
+      target.hp -= Math.max(actor.pow - target.dff, 0);
     } else {
-      target.hp -= Math.max(actor.mgc - target.spl, 0);
+      target.hp -= Math.max(actor.pow - target.spl, 0);
     }
   }
   checkAlive(unit) {

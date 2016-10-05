@@ -11,7 +11,7 @@ class Container extends MicroContainer {
     const land = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,2,2,1,1,1,1,9,1,1,1,1,1,1,1],
+      [1,1,2,2,3,3,1,1,9,1,1,1,1,1,1,1],
       [1,1,1,1,3,3,1,9,9,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1],
       [1,1,1,1,3,3,1,9,1,1,1,1,1,1,1,1],
@@ -27,6 +27,7 @@ class Container extends MicroContainer {
     ];
     const units = [
       new Unit.Lord(3, 3, 1),
+      new Unit.Knight(1, 3, 1),
       new Unit.Priest(2, 3, 1),
       new Unit.Archer(4, 3, 1),
       new Unit.Armor(3, 4, 1),
@@ -43,7 +44,8 @@ class Container extends MicroContainer {
   }
   componentDidMount() {
     this.subscribe({
-      selectCell: this.handleSelectCell
+      selectCell: this.handleSelectCell,
+      hoverCell: this.handleHoverCell
     });
   }
   handleSelectCell(y, x) {
@@ -51,46 +53,60 @@ class Container extends MicroContainer {
       game: this.state.game.selectCell(y, x)
     });
   }
+  handleHoverCell(y, x) {
+    this.setState({
+      game: this.state.game.hoverCell(y, x)
+    });
+  }
 
   render() {
+    let game = this.state.game;
     return (
       <div>
-        {this.state.game.field.map((row, y) => {
-          return (
-            <div key={y}>
-              {row.map((cell, x) => {
-                let maskClasses = ['overlay'];
-                if (this.state.game.forcus) {
-                  if (cell.mask.movable) {
-                    maskClasses.push('movable');
-                  } else if (cell.mask.actionable) {
-                    maskClasses.push('actionable');
+        <div>
+          {game.field.map((row, y) => {
+            return (
+              <div key={y}>
+                {row.map((cell, x) => {
+                  let maskClasses = ['overlay'];
+                  if (game.forcus) {
+                    if (cell.mask.movable) {
+                      maskClasses.push('movable');
+                    } else if (cell.mask.actionable) {
+                      if (game.forcus.healer) {
+                        maskClasses.push('healable');
+                      } else {
+                        maskClasses.push('attackable');
+                      }
+                    } 
                   }
-                }
-                var cellClasses = ['cell'];
-                if (cell.land == 1) {
-                  cellClasses.push('plains');
-                } else if (cell.land == 2) {
-                  cellClasses.push('forest');
-                } else if (cell.land == 3) {
-                  cellClasses.push('mountain');
-                } else if (cell.land == 9) {
-                  cellClasses.push('water');
-                }
-                return (
-                  <div
-                    className={cellClasses.join(' ')}
-                    key={x}
-                    onClick={() => {this.dispatch('selectCell', y, x)}}
-                  >
-                    <div className={maskClasses.join(' ')}></div>
-                    <UnitSymbol unit={cell.unit} />
-                  </div>
-                  );
-              })}
-            </div>
-            )
-        })}
+                  var cellClasses = ['cell'];
+                  if (cell.land == 1) {
+                    cellClasses.push('plains');
+                  } else if (cell.land == 2) {
+                    cellClasses.push('forest');
+                  } else if (cell.land == 3) {
+                    cellClasses.push('mountain');
+                  } else if (cell.land == 9) {
+                    cellClasses.push('water');
+                  }
+                  return (
+                    <div
+                      className={cellClasses.join(' ')}
+                      key={x}
+                      onClick={() => {this.dispatch('selectCell', y, x)}}
+                      onMouseOver={() => {this.dispatch('hoverCell', y, x)}}
+                    >
+                      <div className={maskClasses.join(' ')}></div>
+                      <UnitSymbol unit={cell.unit} />
+                    </div>
+                    );
+                })}
+              </div>
+              )
+          })}
+        </div>
+        <div id="statusBar">Player {game.phase}</div>
       </div>
     );
   }
