@@ -8,17 +8,17 @@ export default class UnitSymbol extends React.Component {
       return null;
     }
     let unitClass = ['unit'];
-    if (unit.isActed()) {
+    if (unit[13]) {
       unitClass.push('standby');
-    } else if (unit.player == 1) {
+    } else if (unit[2] == 1) {
       unitClass.push('army');
     } else {
       unitClass.push('enemy');
     }
-    let hpPer = unit.hp / unit.maxHp * 100;
+    let hpPer = unit[6] / unit[7] * 100;
     return (
       <div className={unitClass.join(' ')}>
-        {unit.symbol}
+        {unit[3]}
         <div className='hpbar'>
           <div className='remain' style={{width:`${hpPer}%`}}></div>
         </div>

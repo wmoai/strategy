@@ -3,14 +3,19 @@ body {
   padding: 0;
 }
 
-.cell {
-  display: inline-block;
+#field {
+  border-collapse: collapse;
+  table-layout:fixed;
+}
+
+#field td {
   position: relative;
   width: 30px;
+  min-width: 30px;
   height: 30px;
+  min-height: 30px;
+  box-sizing: border-box;
   border: silver 1px solid;
-  border-top: none;
-  border-left: none;
   overflow: hidden;
   cursor: pointer;
   text-align: center;
@@ -18,16 +23,16 @@ body {
   -moz-user-select: none;
   -webkit-user-select: none;
 }
-.cell.plains {
+#field td.plains {
   background-color: palegoldenrod;
 }
-.cell.forest {
+#field td.forest {
   background-color: olivedrab;
 }
-.cell.mountain {
+#field td.mountain {
   background-color: tan;
 }
-.cell.water {
+#field td.water {
   background-color: cornflowerblue;
 }
 
@@ -84,3 +89,27 @@ body {
 #statusBar {
   padding: 5px;
 }
+
+.refunit {
+  position: fixed;
+  left: 5px;
+  bottom: 5px;
+  border-collapse: collapse;
+  background-color: white;
+  border: 1px silver solid;
+  opacity: 0.8;
+  z-index: 1000;
+  pointer-events: none;
+}
+.refunit th {
+  border: 1px silver solid;
+  background-color: whitesmoke;
+  text-align: center;
+  padding: 5px;
+}
+.refunit td {
+  border: 1px silver solid;
+  text-align: right;
+  padding: 5px;
+}
+

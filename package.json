@@ -15,12 +15,21 @@
     "babel-preset-react": "^6.11.1",
     "babelify": "^7.3.0",
     "browserify": "^13.1.0",
+    "eslint": "^3.9.1",
+    "eslint-plugin-react": "^6.4.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2"
   },
   "dependencies": {
+    "boom": "^4.1.0",
+    "hapi": "^15.1.1",
+    "inert": "^4.0.2",
+    "jade": "^1.11.0",
+    "path": "^0.12.7",
     "react": "^15.3.1",
     "react-dom": "^15.3.1",
-    "react-micro-container": "^1.1.0"
+    "react-micro-container": "^1.1.0",
+    "socket.io": "^1.4.8",
+    "vision": "^4.1.0"
   }
 }

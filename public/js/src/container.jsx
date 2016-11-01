@@ -1,112 +1,136 @@
 import React from 'react';
 import {render} from 'react-dom';
 import MicroContainer from 'react-micro-container';
-import Game from './game.js';
 import UnitSymbol from './unitSymbol.jsx';
-import * as Unit from './unit.js';
+
+import Refunit from './refunit.jsx';
+
+import socketIOClient from 'socket.io-client';
+const socket = socketIOClient();
+
 
 class Container extends MicroContainer {
   constructor(props) {
     super(props);
-    const land = [
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,2,2,3,3,1,1,9,1,1,1,1,1,1,1],
-      [1,1,1,1,3,3,1,9,9,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1],
-      [1,1,1,1,3,3,1,9,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    ];
-    const units = [
-      new Unit.Lord(3, 3, 1),
-      new Unit.Knight(1, 3, 1),
-      new Unit.Priest(2, 3, 1),
-      new Unit.Archer(4, 3, 1),
-      new Unit.Armor(3, 4, 1),
-      new Unit.Magician(4, 4, 1),
-      new Unit.Knight(8, 12, 2),
-      new Unit.Knight(8, 11, 2),
-      new Unit.Knight(8, 10, 2),
-      new Unit.Knight(8, 9, 2),
-      new Unit.Knight(8, 8, 2)
-    ];
+
     this.state = {
-      game: new Game(land, units)
+      field: null,
+      mask: {},
+      info: {}
     };
+
+    socket.on('init', data => {
+      this.setState({
+        mw: data.mw,
+        field: data.field,
+        units: data.units,
+        pnum: data.playerNum,
+        phase: data.phase
+      });
+    });
+    socket.on('pnum', data => {
+      this.setState({
+        pnum: data.playerNum,
+      });
+    });
+
+    socket.on('update', data => {
+      this.setState({
+        units: data.units,
+        mask: data.mask,
+        phase: data.phase
+      });
+    });
   }
   componentDidMount() {
     this.subscribe({
       selectCell: this.handleSelectCell,
-      hoverCell: this.handleHoverCell
+      hoverCell: this.handleHoverCell,
+      engage: () => {
+        socket.emit('engage');
+      },
+      leave: () => {
+        socket.emit('leave');
+      }
     });
   }
   handleSelectCell(y, x) {
-    this.setState({
-      game: this.state.game.selectCell(y, x)
-    });
+    socket.emit('control', [y,x]);
   }
   handleHoverCell(y, x) {
-    this.setState({
-      game: this.state.game.hoverCell(y, x)
-    });
+    const unit = this.state.units[x+y*this.state.mw];
+    let info = this.state.info;
+    info.unit = unit;
+    this.setState({info: info});
   }
 
   render() {
-    let game = this.state.game;
+    const field = this.state.field;
+    if (!field) {
+      return null;
+    }
+    const units = this.state.units;
+    const mask = this.state.mask;
+    const info = this.state.info;
+    var person = 'ゲスト';
+    if (this.state.pnum > 0) {
+      person = `Player${this.state.pnum}`;
+    }
     return (
       <div>
-        <div>
-          {game.field.map((row, y) => {
-            return (
-              <div key={y}>
-                {row.map((cell, x) => {
-                  let maskClasses = ['overlay'];
-                  if (game.forcus) {
-                    if (cell.mask.movable) {
-                      maskClasses.push('movable');
-                    } else if (cell.mask.actionable) {
-                      if (game.forcus.healer) {
-                        maskClasses.push('healable');
-                      } else {
+        <table id="field">
+          <tbody>
+            {field.map((row, y) => {
+              return (
+                <tr key={y}>
+                  {row.map((cell, x) => {
+                    let maskClasses = ['overlay'];
+                    switch (mask[x+y*this.state.mw]) {
+                      case 1:
+                        maskClasses.push('movable');
+                        break;
+                      case 2:
                         maskClasses.push('attackable');
-                      }
-                    } 
-                  }
-                  var cellClasses = ['cell'];
-                  if (cell.land == 1) {
-                    cellClasses.push('plains');
-                  } else if (cell.land == 2) {
-                    cellClasses.push('forest');
-                  } else if (cell.land == 3) {
-                    cellClasses.push('mountain');
-                  } else if (cell.land == 9) {
-                    cellClasses.push('water');
-                  }
-                  return (
-                    <div
-                      className={cellClasses.join(' ')}
-                      key={x}
-                      onClick={() => {this.dispatch('selectCell', y, x)}}
-                      onMouseOver={() => {this.dispatch('hoverCell', y, x)}}
-                    >
-                      <div className={maskClasses.join(' ')}></div>
-                      <UnitSymbol unit={cell.unit} />
-                    </div>
+                        break;
+                      case 3:
+                        maskClasses.push('healable');
+                        break;
+                    }
+                    var cellClasses = [];
+                    if (cell == 1) {
+                      cellClasses.push('plains');
+                    } else if (cell == 2) {
+                      cellClasses.push('forest');
+                    } else if (cell == 3) {
+                      cellClasses.push('mountain');
+                    } else if (cell == 9) {
+                      cellClasses.push('water');
+                    }
+                    return (
+                      <td
+                        className={cellClasses.join(' ')}
+                        key={x}
+                        onClick={() => {this.dispatch('selectCell', y, x);}}
+                        onMouseOver={() => {this.dispatch('hoverCell', y, x);}}
+                        >
+                        <div className={maskClasses.join(' ')}></div>
+                        <UnitSymbol unit={units[x+y*this.state.mw]} />
+                      </td>
                     );
-                })}
-              </div>
-              )
-          })}
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <div id="statusBar">
+          あなたは{person}です
+          <button onClick={() => {this.dispatch('engage');}}>engage</button>
+          <button onClick={() => {this.dispatch('leave');}}>leave</button>
         </div>
-        <div id="statusBar">Player {game.phase}</div>
+        <div id="statusBar">Player{this.state.phase}のターン</div>
+        <Refunit unit={info.unit} />
       </div>
     );
   }
@@ -116,9 +140,6 @@ class Container extends MicroContainer {
 window.onload = () => {
   render(
     <Container />,
-    document.querySelector("#contents")
+    document.querySelector('#contents')
   );
-}
-
-
-
+};

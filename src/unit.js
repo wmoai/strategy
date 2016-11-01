@@ -21,6 +21,25 @@ class Unit {
     this.state = State.ready;
   }
 
+  getData() {
+    return [
+      this.y,  // 0
+      this.x,
+      this.player,
+      this.symbol,
+      this.foot,
+      this.range,  // 5
+      this.hp,
+      this.maxHp,
+      this.pow,
+      this.dff,
+      this.spl,  // 10
+      this.healer,
+      this.magical,
+      this.isActed()
+    ];
+  }
+
   isPhase(player) {
     return this.player == player;
   }
@@ -56,38 +75,38 @@ class Unit {
   }
 }
 
-export class Lord extends Unit {
+exports.Lord = class Lord extends Unit {
   constructor(y, x, player) {
     super(y, x, player, '主', [4, [1], 40, 12, 3, 3]);
   }
-}
-export class Archer extends Unit {
+};
+exports.Archer = class Archer extends Unit {
   constructor(y, x, player) {
     super(y, x, player, '弓', [4, [2], 36, 13, 2, 2]);
   }
-}
-export class Armor extends Unit {
+};
+exports.Armor = class Armor extends Unit {
   constructor(y, x, player) {
-    super(y, x, player, '重', [3, [1], 44, 15, 8, 0]);
+    super(y, x, player, '重', [3, [1], 44, 15, 6, 0]);
   }
-}
-export class Knight extends Unit {
+};
+exports.Knight = class Knight extends Unit {
   constructor(y, x, player) {
     super(y, x, player, '騎', [6, [1], 44, 14, 4, 2]);
   }
   getLandCost(land) {
     return Math.floor(super.getLandCost(land) * 1.5);
   }
-}
-export class Magician extends Unit {
+};
+exports.Magician = class Magician extends Unit {
   constructor(y, x, player) {
     super(y, x, player, '魔', [4, [1,2], 30, 17, 1, 8]);
     this.magical = true;
   }
-}
-export class Priest extends Unit {
+};
+exports.Priest = class Priest extends Unit {
   constructor(y, x, player) {
     super(y, x, player, '僧', [3, [1], 26, 10, 0, 10]);
     this.healer = true;
   }
-}
+};

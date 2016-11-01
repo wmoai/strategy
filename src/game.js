@@ -5,57 +5,56 @@ const State = {
   act: Symbol()
 };
 
-export default class Gmae {
+module.exports = class Gmae {
   constructor(land, units) {
     this.controlState = State.select;
-    this.field = land.map(row => {
+    this.mapWidth = land[0].length;
+    this.land = land;
+    this.map = land.map(row => {
       return row.map(cell => {
         return {
-          land: cell,
-          over: {}
+          land: cell
         };
       });
     });
     this.units = [];
     units.forEach(unit => {
-      this.field[unit.y][unit.x].unit = unit;
+      this.map[unit.y][unit.x].unit = unit;
       this.units.push(unit);
     });
     this.changePhase();
   }
 
-  getFieldData() {
-    let data = [];
-    this.field.forEach(row => {
-      row.forEach(cell => {
-        data.push(cell);
-      });
-    });
-    return {
-      height: this.field.length,
-      width: this.field[0].length,
-      data: data
-    };
-  }
-
   getUnitData() {
     let data = {};
-    let w = this.field[0].length;
     this.units.forEach(unit => {
       if (unit.dead) {
         return;
       }
-      data[unit.y * w + unit.x] = unit;
+      data[unit.y * this.mapWidth + unit.x] = unit.getData();
     });
     return data;
   }
 
-  getData() {
-    return {
-      field: this.field,
-      forcus: this.forcus,
-      phase: this.phase
-    };
+  getMaskData() {
+    let data = {};
+    if (this.forcus) {
+      this.map.forEach((row, y) => {
+        row.forEach((cell, x) => {
+          let index = y * this.mapWidth + x;
+          if (cell.mask.movable) {
+            data[index] = 1; // movable
+          } else if (cell.mask.actionable) {
+            if (this.forcus.healer) {
+              data[index] = 3; // healable
+            } else {
+              data[index] = 2; // attakable
+            }
+          }
+        });
+      });
+    }
+    return data;
   }
 
   checkPhase() {
@@ -94,12 +93,8 @@ export default class Gmae {
     return this;
   }
 
-  hoverCell(y, x) {
-    return this;
-  }
-
   controlSelect(y, x) {
-    const unit = this.field[y][x].unit;
+    const unit = this.map[y][x].unit;
     if (unit && unit.isReady()) {
       this.setForcusedMovable(unit);
       this.controlState = State.move;
@@ -109,40 +104,40 @@ export default class Gmae {
     const unit = this.forcus;
     if (!unit) {
       return;
-    } else if (unit.isPhase(this.phase) && this.field[y][x].mask.movable) {
-      if (this.field[y][x].unit && this.field[y][x].unit != unit) {
+    } else if (unit.isPhase(this.phase) && this.map[y][x].mask.movable) {
+      if (this.map[y][x].unit && this.map[y][x].unit != unit) {
         return;
       }
-      this.field[unit.y][unit.x].unit = null;
+      this.map[unit.y][unit.x].unit = null;
       unit.move(y, x);
-      this.field[y][x].unit = unit;
+      this.map[y][x].unit = unit;
       this.controlState = State.act;
 
-      this.clearFieldMask();
+      this.clearMapMask();
       this.setForcusedActionable();
     } else {
-      this.clearFieldMask();
+      this.clearMapMask();
       this.controlState = State.select;
     }
   }
   controlAct(y, x) {
     const unit = this.forcus;
-    if (this.field[y][x].mask.actionable) {
-      const target = this.field[y][x].unit;
+    if (this.map[y][x].mask.actionable) {
+      const target = this.map[y][x].unit;
       if (!target) {
         return;
       }
       this.act(unit, target);
       unit.standby();
-    } else if (this.field[y][x].mask.movable) {
+    } else if (this.map[y][x].mask.movable) {
       unit.standby();
     } else {
-      this.field[unit.y][unit.x].unit = null;
+      this.map[unit.y][unit.x].unit = null;
       unit.cancelMove();
-      this.field[unit.y][unit.x].unit = unit;
+      this.map[unit.y][unit.x].unit = unit;
     }
     this.forcus = null;
-    this.clearFieldMask();
+    this.clearMapMask();
     this.controlState = State.select;
   }
   act(unit, target) {
@@ -175,16 +170,16 @@ export default class Gmae {
       return true;
     }
     unit.dead = true;
-    this.field[unit.y][unit.x].unit = null;
+    this.map[unit.y][unit.x].unit = null;
     return false;
   }
 
   existsCell(y, x) {
     return (
       y >= 0
-      && y < this.field.length
+      && y < this.map.length
       && x >= 0
-      && x < this.field[y].length
+      && x < this.map[y].length
     );
   }
 
@@ -192,7 +187,7 @@ export default class Gmae {
     this.forcus = unit;
     const y = unit.y;
     const x = unit.x;
-    this.field.forEach(row => {
+    this.map.forEach(row => {
       row.forEach(cell => {
         cell.mask = {
           foot: -cell.land,
@@ -206,7 +201,7 @@ export default class Gmae {
       if (!this.existsCell(y, x)) {
         return;
       }
-      const cell = this.field[y][x];
+      const cell = this.map[y][x];
       if (cell.unit && cell.unit.player != unit.player) {
         return;
       }
@@ -225,7 +220,7 @@ export default class Gmae {
             const ay = y + (r * Math.sin(i * (Math.PI / 180)) | 0);
             const ax = x + (r * Math.cos(i * (Math.PI / 180)) | 0);
             if (this.existsCell(ay, ax)) {
-              this.field[ay][ax].mask.actionable = true;
+              this.map[ay][ax].mask.actionable = true;
             }
           }
         });
@@ -243,26 +238,25 @@ export default class Gmae {
     const unit = this.forcus;
     const y = unit.y;
     const x = unit.x;
-    this.field[y][x].mask.movable = true;
+    this.map[y][x].mask.movable = true;
     unit.range.forEach(r => {
       const bd = 90 / r;
       for(let i=0; i<360; i+=bd) {
         const ay = y + (r * Math.sin(i * (Math.PI / 180)) | 0);
         const ax = x + (r * Math.cos(i * (Math.PI / 180)) | 0);
         if (this.existsCell(ay, ax)) {
-          this.field[ay][ax].mask.actionable = true;
+          this.map[ay][ax].mask.actionable = true;
         }
       }
     });
   }
 
-  clearFieldMask() {
-    this.field.forEach(row => {
+  clearMapMask() {
+    this.map.forEach(row => {
       row.forEach(cell => {
         cell.mask = {};
       });
     });
   }
 
-
-}
+};
