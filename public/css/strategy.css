@@ -3,6 +3,13 @@ body {
   padding: 0;
 }
 
+#preparation {
+  position: absolute;
+  padding: 5px 15px;
+  background-color: whitesmoke;
+  z-index: 10;
+}
+
 #field {
   border-collapse: collapse;
   table-layout:fixed;
@@ -112,4 +119,3 @@ body {
   text-align: right;
   padding: 5px;
 }
-

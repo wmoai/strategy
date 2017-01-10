@@ -1,23 +1,42 @@
 const gulp = require('gulp')
-  , babel = require('gulp-babel')
   , browserify = require('browserify')
-  , fs = require('fs')
-;
+  , mocha = require('gulp-mocha')
+  , fs = require('fs');
 
-gulp.task('browserify', () => {
-  browserify('./public/js/src/container.jsx')
+function buildPublic(base, out) {
+  browserify(base)
     .transform('babelify')
     .bundle()
-    .on('error', function(err){
+    .on('error', err => {
       console.log('\u001b[31m'+err.message+'\u001b[0m');
     })
-    .pipe(fs.createWriteStream('./public/js/dist/container.js'));
+    .pipe(fs.createWriteStream(out));
+}
+
+gulp.task('game', () => {
+  buildPublic('./src/public/game/container.jsx', './public/js/dist/game.js');
+});
+gulp.task('matching', () => {
+  buildPublic('./src/public/matching/index.js', './public/js/dist/matching.js');
 });
 
-gulp.task('build', ['browserify']);
+gulp.task('build', ['game', 'matching']);
+
+gulp.task('mocha', () => {
+  return gulp.src(['test/**/*.js'], { read: false })
+    .pipe(mocha({ reporter: 'spec'}))
+    .on('error', err => {
+      console.log('\u001b[31m'+err.message+'\u001b[0m');
+    });
+});
 
 gulp.task('watch', () => {
-  gulp.watch('./public/js/src/**/*.{js,jsx}', ['browserify']);
+  gulp.watch('./src/public/game/**/*.{js,jsx}', ['game']);
+  gulp.watch('./src/public/matching/**/*.{js,jsx}', ['matching']);
+  gulp.watch('test/**', ['mocha']);
 });
 
 gulp.task('default', ['build', 'watch']);
+
+
+
