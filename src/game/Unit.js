@@ -1,13 +1,24 @@
 const Klass = require('./Klass.js');
 
+const masterJson = require('./data/json/unit.json');
+
 module.exports = class Unit {
   constructor(opt) {
     if (opt !== undefined) {
       this.pnum = opt.pnum;
       this.klass = opt.klass;
-      this.hp = opt.hp || opt.klass.maxhp;
+      this.hp = opt.hp || opt.klass.hp;
       this.acted = opt.acted || false;
+      this.unitId = opt.unitId;
     }
+  }
+
+  static get(id) {
+
+  }
+
+  status() {
+    return masterJson[this.unitId];
   }
 
   static parse(data) {
@@ -18,6 +29,7 @@ module.exports = class Unit {
       acted: data[3]
     });
   }
+
 
   data() {
     return [
@@ -34,26 +46,47 @@ module.exports = class Unit {
     }
     if (this.klass.healer) {
       target.hp += this.klass.pow;
-      target.hp = Math.min(target.hp, target.klass.maxhp);
+      target.hp = Math.min(target.hp, target.klass.hp);
     } else {
-      const hitr = 80 + this.klass.skl * 3;
-      const avoidr = target.klass.skl + target.klass.luc * 2;
-      if (Math.random() < (hitr - avoidr) / 100) {
-        const crtr = this.klass.skl * 2 + this.klass.luc;
-        const prtr = target.klass.luc * 3;
-        let pr = 1;
-        if (Math.random() < (crtr - prtr) / 100) {
-          pr = 3;
-        }
-        if (this.klass.magical) {
-          const damage = Math.max(this.klass.pow * pr - target.klass.fth, 0);
-          target.hp = Math.max(target.hp - damage, 0);
-        } else {
-          const damage = Math.max(this.klass.pow * pr - target.klass.dff, 0);
-          target.hp = Math.max(target.hp - damage, 0);
-        }
+      if (Math.random() < this.hitRate(target) / 100) {
+        const isCrit = Math.random() < this.critRate(target) / 100;
+        target.hp = Math.max(target.hp - this.damage(target, isCrit), 0);
       }
     }
+  }
+
+  hitRate(target) {
+    if (!target) {
+      return 0;
+    }
+    const hitr = this.klass.hit;
+    const avoidr = target.klass.luc;
+    return Math.min(Math.max(Math.floor(hitr - avoidr), 0), 100);
+  }
+
+  critRate(target) {
+    if (!target) {
+      return 0;
+    }
+    const crtr = this.klass.skl;
+    const prtr = target.klass.luc;
+    return Math.min(Math.max(Math.floor(crtr - prtr), 0), 100);
+  }
+
+  damage(target, crit = false) {
+    if (!target) {
+      return 0;
+    }
+    let damage = 0;
+    if (this.klass.magical) {
+      damage = Math.max(this.klass.pow - target.klass.fth, 1);
+    } else {
+      damage = Math.max(this.klass.pow - target.klass.dff, 1);
+    }
+    if (crit) {
+      damage *= 3;
+    }
+    return damage;
   }
 
 };

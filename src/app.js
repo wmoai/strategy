@@ -107,6 +107,7 @@ gameNS.use(handshake);
 gameNS.on('connection', socket => {
   socket.on('join', gid => {
     const gserver = new GameServer(rediscl);
+    console.log('create');
     gserver.get(gid, (err, game, player) => {
       if (err || !game) {
         return;

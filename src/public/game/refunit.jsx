@@ -9,27 +9,36 @@ module.exports = class Container extends React.Component {
     const klass = unit.klass;
     return (
       <table className="refunit">
-        <thead>
-          <tr>
-            <th></th>
-            <th>HP</th>
-            <th>力</th>
-            <th>守</th>
-            <th>信</th>
-            <th>技</th>
-            <th>運</th>
-            <th>移</th>
-          </tr>
-        </thead>
         <tbody>
           <tr>
-            <th>{klass.name}</th>
-            <td>{unit.hp}/{klass.maxhp}</td>
+            <th colSpan="2">{klass.name}</th>
+          </tr>
+          <tr>
+            <th>HP</th>
+            <td>{unit.hp}</td>
+          </tr>
+          <tr>
+            <th>力</th>
             <td>{klass.pow}</td>
+          </tr>
+          <tr>
+            <th>守</th>
             <td>{klass.dff}</td>
+          </tr>
+          <tr>
+            <th>信</th>
             <td>{klass.fth}</td>
+          </tr>
+          <tr>
+            <th>技</th>
             <td>{klass.skl}</td>
+          </tr>
+          <tr>
+            <th>運</th>
             <td>{klass.luc}</td>
+          </tr>
+          <tr>
+            <th>移</th>
             <td>{klass.move}</td>
           </tr>
         </tbody>

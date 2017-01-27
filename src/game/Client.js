@@ -71,7 +71,6 @@ module.exports = class Client {
   }
 
   controlMOVE(cellId) {
-    // const unit = this.game.map.unit(this.forcusedCell);
     const unit = this.forcusedUnit;
     const tunit = this.game.map.unit(cellId);
     if (this.game.phase != this.pnum || (this.forcusedCell != cellId && tunit)) {
@@ -93,7 +92,6 @@ module.exports = class Client {
     if (this.mask.movable[cellId] != undefined) {
       this.actUnit();
     } else if (this.mask.actionable[cellId] != undefined) {
-      // const unit = this.game.map.unit(this.movedCell);
       if (this.game.map.isActionable(this.forcusedUnit, this.movedCell, cellId)) {
         this.actUnit(cellId);
       }
@@ -113,6 +111,39 @@ module.exports = class Client {
     this.forcusedCell = cellId;
     this.forcusedUnit = this.game.map.unit(cellId);
     this.state.set('MOVE');
+  }
+
+  actionForecast(cellId) {
+    const unit = this.forcusedUnit;
+    const target = this.game.map.unit(cellId);
+    if (!this.state.is('ACT') || !unit || !target || !this.game.map.isActionable(unit, this.movedCell, cellId)) {
+      return;
+    }
+    const result = {
+      me: {
+        name: unit.klass.name,
+        hp: unit.hp
+      },
+      tg: {
+        name: target.klass.name,
+        hp: target.hp
+      }
+    };
+    if (unit.klass.healer) {
+      result.me.val = unit.klass.pow;
+    } else {
+      result.me.val = unit.damage(target);
+      result.me.hit = unit.hitRate(target);
+      result.me.crit = unit.critRate(target);
+    }
+    if (!unit.klass.healer && !target.klass.healer) {
+      if (this.game.map.isActionable(target, cellId, this.movedCell)) {
+        result.tg.val = target.damage(unit);
+        result.tg.hit = target.hitRate(unit);
+        result.tg.crit = target.critRate(unit);
+      }
+    }
+    return result;
   }
 
   actUnit(cellId = null) {

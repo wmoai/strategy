@@ -1,10 +1,13 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: sans-serif;
 }
 
 #preparation {
-  position: absolute;
+  position: fixed;
+  top: 10px;
+  left: 10px;
   padding: 5px 15px;
   background-color: whitesmoke;
   z-index: 10;
@@ -30,16 +33,19 @@ body {
   -moz-user-select: none;
   -webkit-user-select: none;
 }
-#field td.plains {
-  background-color: palegoldenrod;
+#field td.geo_1 {
+  background-color: rgb(182,215,168);
 }
-#field td.forest {
+#field td.geo_2 {
+  background-color: rgb(217,234,211);
+}
+#field td.geo_3 {
   background-color: olivedrab;
 }
-#field td.mountain {
+#field td.geo_4 {
   background-color: tan;
 }
-#field td.water {
+#field td.geo_6 {
   background-color: cornflowerblue;
 }
 
@@ -97,25 +103,59 @@ body {
   padding: 5px;
 }
 
-.refunit {
+#navigator {
   position: fixed;
-  left: 5px;
-  bottom: 5px;
-  border-collapse: collapse;
-  background-color: white;
-  border: 1px silver solid;
-  opacity: 0.8;
+  right: 10px;
+  top: 10px;
+  background-color: whitesmoke;
   z-index: 1000;
   pointer-events: none;
 }
-.refunit th {
+
+#refbattle {
+  border-collapse: collapse;
+  background-color: white;
   border: 1px silver solid;
-  background-color: whitesmoke;
+}
+#refbattle th {
+  font-size: 0.8em;
+  font-weight: normal;
+  text-align: center;
+  padding: 2px 5px;
+  background-color: ivory;
+}
+#refbattle td {
+  text-align: right;
+  padding: 2px 5px;
+}
+#refbattle td:first-child {
+  background-color: lightcyan;
+}
+#refbattle td:last-child {
+  background-color: mistyrose;
+}
+#refbattle tr:first-child td {
+  background-color: lightcyan;
   text-align: center;
   padding: 5px;
 }
-.refunit td {
-  border: 1px silver solid;
-  text-align: right;
+#refbattle tr:last-child td {
+  background-color: mistyrose;
+  text-align: center;
   padding: 5px;
+}
+
+.refunit {
+  border-collapse: collapse;
+  background-color: white;
+  border: 1px silver solid;
+}
+.refunit th {
+  background-color: whitesmoke;
+  text-align: center;
+  padding: 2px 5px;
+}
+.refunit td {
+  text-align: right;
+  padding: 2px 5px;
 }

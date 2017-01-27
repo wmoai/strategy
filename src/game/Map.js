@@ -68,7 +68,7 @@ module.exports = class Map {
       if (stamina >= 0) {
         if (!movable[ccid] || stamina > movable[ccid]) {
           movable[ccid] = stamina;
-          unit.klass.range.forEach(range => {
+          for (let range=unit.klass.min_range; range<=unit.klass.max_range; range++) {
             const bd = 90 / range;
             for(let i=0; i<360; i+=bd) {
               const ay = y + (range * Math.sin(i * (Math.PI / 180)) | 0);
@@ -78,7 +78,7 @@ module.exports = class Map {
                 actionable[acid] = true;
               }
             }
-          });
+          }
           search4(y-1, x, stamina);
           search4(y+1, x, stamina);
           search4(y, x-1, stamina);
@@ -164,11 +164,7 @@ module.exports = class Map {
 
     let actionable = false;
     const dist = this.field.distance(fromCid, toCid);
-    unit.klass.range.forEach(range=> {
-      if (range == dist) {
-        actionable = true;
-      }
-    });
+    actionable = (unit.klass.min_range <= dist && dist <= unit.klass.max_range);
     return actionable;
   }
 

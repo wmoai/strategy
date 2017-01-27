@@ -14,7 +14,7 @@ module.exports = class UnitSymbol extends React.Component {
     } else {
       unitClass.push('enemy');
     }
-    let hpPer = unit.hp / unit.klass.maxhp * 100;
+    let hpPer = unit.hp / unit.klass.hp * 100;
     return (
       <div className={unitClass.join(' ')}>
         {unit.klass.name.charAt(0)}

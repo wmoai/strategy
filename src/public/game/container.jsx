@@ -7,8 +7,8 @@ const socket = socketIOClient('/game');
 
 const Preparation = require('./preparation.jsx');
 const UnitSymbol = require ('./unitSymbol.jsx');
-const Refunit = require('./refunit.jsx');
 const Result = require('./Result.jsx');
+import Navigator from './Navigator.jsx';
 
 const Client = require('./core/Client.js');
 const Klass = require('./core/Klass.js');
@@ -30,9 +30,9 @@ class Container extends MicroContainer {
     };
 
     socket.on('mirror', data => {
-      console.log(data);
       this.setState({
-        client: this.state.client.mirror(data)
+        client: this.state.client.mirror(data),
+        info: {}
       });
     });
     socket.on('pnum', pnum => {
@@ -54,11 +54,11 @@ class Container extends MicroContainer {
     });
     socket.on('completeAction', data => {
       this.setState({
-        client: this.state.client.mirror(data, true)
+        client: this.state.client.mirror(data, true),
+        info: {}
       });
     });
     socket.on('winner', pnum => {
-      console.log(pnum, this.state.client.pnum);
       this.setState({
         winner: pnum
       });
@@ -111,7 +111,8 @@ class Container extends MicroContainer {
   handleHoverCell(cellId) {
     this.setState({
       info: {
-        unit: this.state.client.unit(cellId)
+        unit: this.state.client.unit(cellId),
+        battle: this.state.client.actionForecast(cellId)
       }
     });
   }
@@ -155,7 +156,7 @@ class Container extends MicroContainer {
             {field.rows().map((row, y) => {
               return (
                 <tr key={y}>
-                  {row.map((cell, x) => {
+                  {row.map((geo, x) => {
                     const cellId = field.cellId(y, x);
                     let maskClasses = ['overlay'];
                     if (movable[cellId] != undefined) {
@@ -167,19 +168,9 @@ class Container extends MicroContainer {
                         maskClasses.push('attackable');
                       }
                     }
-                    let cellClasses = [];
-                    if (cell == 1) {
-                      cellClasses.push('plains');
-                    } else if (cell == 2) {
-                      cellClasses.push('forest');
-                    } else if (cell == 3) {
-                      cellClasses.push('mountain');
-                    } else if (cell == 9) {
-                      cellClasses.push('water');
-                    }
                     return (
                       <td
-                        className={cellClasses.join(' ')}
+                        className={`geo_${geo}`}
                         key={x}
                         onClick={() => {this.dispatch('selectCell', cellId);}}
                         onMouseOver={() => {this.dispatch('hoverCell', cellId);}}
@@ -196,7 +187,12 @@ class Container extends MicroContainer {
             })}
           </tbody>
         </table>
-        <Refunit unit={info.unit} />
+        <Navigator
+          dispatch={this.dispatch}
+          refunit={info.unit}
+          refbattle={info.battle}
+          pnum={this.state.client.pnum}
+        />
       </div>
     );
   }

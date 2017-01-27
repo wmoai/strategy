@@ -3,7 +3,8 @@ const Player = require('./Player.js');
 const Klass = require('./Klass.js');
 const Unit = require('./Unit.js');
 
-const smplField = require('./sampleField.js');
+const map1 = require('./data/json/field/seki.json');
+
 const smplklass = require('./klass.json');
 
 module.exports = class GameServer {
@@ -12,7 +13,7 @@ module.exports = class GameServer {
   }
   init(gid, userId1, userId2) {
     const game = new Game(gid);
-    game.map.setField(smplField);
+    game.map.setField(map1);
     game.size = 7;
     const player = new Player([userId1, userId2]);
     this.save(game, player);
@@ -50,7 +51,7 @@ module.exports = class GameServer {
       }
       const data = JSON.parse(json);
       const game = new Game(gid);
-      game.map.setField(smplField);
+      game.map.setField(map1);
       game.restore(data.data);
       const player = new Player(data.player);
       callback(null, game, player);

@@ -1,3 +1,6 @@
+
+const geo = require('./data/json/geo.json');
+
 module.exports = class Field {
   constructor(opt) {
     if (opt !== undefined) {
@@ -34,7 +37,7 @@ module.exports = class Field {
     if (cellId >= this.array.length) {
       throw new Error('cell not exists');
     }
-    return this.array[cellId];
+    return geo[this.array[cellId]].foot;
   }
 
   rows() {

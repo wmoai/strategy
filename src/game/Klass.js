@@ -1,9 +1,13 @@
+const masterJson = require('./data/json/unit.json');
+
+
 const props = [
-  'name', 'maxhp', 'pow',  'dff',   'fth',
-  'skl',    'luc',   'move', 'range', 'magical',
-  'healer', 'horse'
+  'name', 'hp', 'pow',  'dff',   'fth',
+  'skl',  'luc', 'hit',  'move', 'min_range', 'max_range',
+  'magical', 'healer', 'horse'
 ];
 module.exports = class Klass {
+
   constructor(arr) {
     for (let i=0; i<props.length; i++) {
       this[props[i]] = arr[i];
