@@ -1,4 +1,4 @@
-id,name,avoid,foot,horse,hover,sky
+id,name,avoid,foot,horse,hover,fly
 1,平地,0,1,1,1,1
 2,道,0,1,1,1,1
 3,森,20,2,3,2,1

@@ -58,6 +58,9 @@ module.exports = class Map {
       }
       const ccid = this.field.cellId(y, x);
       const cost = this.field.cost(ccid);
+      if (cost == 0) {
+        return;
+      }
       const eunit = this.units[ccid];
       if (eunit && unit.pnum != eunit.pnum) {
         return;
@@ -114,6 +117,9 @@ module.exports = class Map {
       }
       const ccid = this.field.cellId(y, x);
       const cost = this.field.cost(ccid);
+      if (cost == 0) {
+        return;
+      }
       const eunit = this.units[ccid];
       if (eunit && unit.pnum != eunit.pnum) {
         return;
