@@ -1,7 +1,16 @@
 const chai = require('chai');
 const expect = chai.expect;
 
-const Field = require('../../src/game/Field.js');
+const Field = require('../../src/game/Field.js').setup({
+  1: { avoid: 1, foot: 2, horse: 20 },
+  2: { avoid: 3, foot: 4, horse: 21 },
+  3: { avoid: 5, foot: 6, horse: 22 },
+  4: { avoid: 7, foot: 8, horse: 23 },
+  5: { avoid: 9, foot:10, horse: 24 },
+  6: { avoid:11, foot:12, horse: 25 },
+  7: { avoid:13, foot:14, horse: 26 },
+  8: { avoid:15, foot:16, horse: 27 }
+});
 
 const testParams = {
   width: 4,
@@ -39,12 +48,18 @@ describe('Field', () => {
   });
 
   describe('cost', () => {
-    it('should return cell data', () => {
+    it('任意のセルのfootのコストをデフォルトで返すこと', () => {
       const field = new Field(testParams);
-      expect(field.cost(0)).to.equal(8);
-      expect(field.cost(5)).to.equal(3);
-      expect(field.cost(7)).to.equal(1);
+      expect(field.cost(0)).to.equal(16);
+      expect(field.cost(5)).to.equal(6);
+      expect(field.cost(7)).to.equal(2);
       expect(() => {field.cost(8);}).to.throw('cell not exists');
+    });
+
+    it('任意のセルの指定した移動タイプのコストを返すこと', () => {
+      const field = new Field(testParams);
+      expect(field.cost(0, 'horse')).to.equal(27);
+      expect(field.cost(5, 'horse')).to.equal(22);
     });
   });
 

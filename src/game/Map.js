@@ -1,54 +1,54 @@
+const Immutable = require('immutable');
+
 const Unit = require('./Unit.js');
-const Field = require('./Field.js');
+const Field = require('./Field.js').setup(require('./data/json/geo.json'));
+const map1 = require('./data/json/field/seki.json');
 
-module.exports = class Map {
-  constructor() {
-    this.field = null;
-    this.units = {};
-  }
+module.exports = class Map extends Immutable.Record({
+  field: new Field(map1),
+  units: Immutable.Map({})
+}) {
 
-  setField(obj) {
-    this.field = new Field(obj);
-  }
-
-  data(hasField=false) {
+  data() {
     const unitsData = {};
-    Object.keys(this.units).forEach(key => {
-      unitsData[key] = this.units[key].data();
+    this.units.keySeq().forEach(key => {
+      unitsData[key] = this.units.get(key).data();
     });
     const data = {
       units: unitsData
     };
-    if (hasField) {
-      data.field = this.field.data();
-    }
     return data;
   }
-  restore(data) {
-    if (!data) {
-      return;
-    }
-    this.units = {};
-    if (data.units) {
-      Object.keys(data.units).forEach(key => {
-        this.units[key] = Unit.parse(data.units[key]);
-      });
-    }
-    if (data.field) {
-      this.field = new Field(data.field);
-    }
+
+  static restore(data) {
+    const map = new Map();
+
+    // if (data.field) {
+      // map.field = new Field(data.field);
+    // }
+    return map.set('units', map.units.withMutations(mnt => {
+      if (data && data.units) {
+        Object.keys(data.units).forEach(key => {
+          mnt.set(Number(key), Unit.parse(data.units[key]));
+        });
+      }
+    }));
   }
 
+  // setField(obj) {
+    // this.field = new Field(obj);
+  // }
+
   putUnit(cellId, unit) {
-    this.units[cellId] = unit;
+    return this.set('units', this.units.set(cellId, unit));
   }
 
   unit(cellId) {
-    return this.units[cellId];
+    return this.units.get(cellId);
   }
 
   movingMap(cellId, noMove=false) {
-    const unit = this.units[cellId];
+    const unit = this.units.get(cellId);
     const movable = {};
     const actionable = {};
 
@@ -57,21 +57,21 @@ module.exports = class Map {
         return;
       }
       const ccid = this.field.cellId(y, x);
-      const cost = this.field.cost(ccid);
+      const cost = this.field.cost(ccid, unit.klass().move);
       if (cost == 0) {
         return;
       }
-      const eunit = this.units[ccid];
+      const eunit = this.units.get(ccid);
       if (eunit && unit.pnum != eunit.pnum) {
         return;
       }
       if (!init) {
-        stamina -= unit.klass.takenFoot(cost);
+        stamina -= cost;
       }
       if (stamina >= 0) {
         if (!movable[ccid] || stamina > movable[ccid]) {
           movable[ccid] = stamina;
-          for (let range=unit.klass.min_range; range<=unit.klass.max_range; range++) {
+          for (let range=unit.status().min_range; range<=unit.status().max_range; range++) {
             const bd = 90 / range;
             for(let i=0; i<360; i+=bd) {
               const ay = y + (range * Math.sin(i * (Math.PI / 180)) | 0);
@@ -90,7 +90,7 @@ module.exports = class Map {
       }
     };
     const [y, x] = this.field.coordinates(cellId);
-    let move = unit.klass.move;
+    let move = unit.status().move;
     if (noMove) {
       move = 0;
     }
@@ -105,8 +105,8 @@ module.exports = class Map {
     if (fromCid == toCid) {
       return true;
     }
-    const unit = this.units[fromCid];
-    if (!unit || this.units[toCid]) {
+    const unit = this.units.get(fromCid);
+    if (!unit || this.units.get(toCid)) {
       return false;
     }
     let movable = false;
@@ -116,16 +116,16 @@ module.exports = class Map {
         return;
       }
       const ccid = this.field.cellId(y, x);
-      const cost = this.field.cost(ccid);
+      const cost = this.field.cost(ccid, unit.klass().move);
       if (cost == 0) {
         return;
       }
-      const eunit = this.units[ccid];
+      const eunit = this.units.get(ccid);
       if (eunit && unit.pnum != eunit.pnum) {
         return;
       }
       if (!init) {
-        stamina -= unit.klass.takenFoot(cost);
+        stamina -= cost;
       }
       if (stamina >= 0) {
         if (!movable[ccid] || stamina > movable[ccid]) {
@@ -138,27 +138,25 @@ module.exports = class Map {
       }
     };
     const [y, x] = this.field.coordinates(fromCid);
-    search4(y, x, unit.klass.move, true);
+    search4(y, x, unit.status().move, true);
     return movable;
   }
 
   moveUnit(fromCid, toCid) {
-    if (!this.isMovable(fromCid, toCid)) {
-      return false;
-    }
-    this.units[toCid] = this.units[fromCid];
-    if (toCid != fromCid) {
-      delete this.units[fromCid];
-    }
-    return true;
+    return this.set('units', this.units.withMutations(mnt => {
+      mnt.set(toCid, mnt.get(fromCid));
+      if (toCid != fromCid) {
+        mnt.delete(fromCid);
+      }
+    }));
   }
 
   isActionable(unit, fromCid, toCid) {
-    const target = this.units[toCid];
+    const target = this.units.get(toCid);
     if (!unit || unit.acted || unit.hp <= 0 || !target || target.hp <= 0) {
       return false;
     }
-    if (unit.klass.healer) {
+    if (unit.klass().healer) {
       if (unit.pnum != target.pnum) {
         return false;
       }
@@ -170,36 +168,39 @@ module.exports = class Map {
 
     let actionable = false;
     const dist = this.field.distance(fromCid, toCid);
-    actionable = (unit.klass.min_range <= dist && dist <= unit.klass.max_range);
+    actionable = (unit.status().min_range <= dist && dist <= unit.status().max_range);
     return actionable;
   }
 
   actUnit(fromCid, toCid) {
-    const unit = this.units[fromCid];
+    const unit = this.units.get(fromCid);
     if (unit) {
       unit.acted = 1;
     }
     if (!toCid) {
-      return;
+      return this;
     }
-    const target = this.units[toCid];
+    const target = this.units.get(toCid);
 
-    unit.act(target);
-    if (!unit.klass.healer && !target.klass.healer && this.isActionable(target, toCid, fromCid)) {
-      target.act(unit);
+    unit.act(target, this.field.avoid(toCid));
+    if (!unit.klass().healer && !target.klass().healer && this.isActionable(target, toCid, fromCid)) {
+      target.act(unit, this.field.avoid(fromCid));
     }
-    if (unit.hp <= 0) {
-      delete this.units[fromCid];
-    }
-    if (target.hp <= 0) {
-      delete this.units[toCid];
-    }
+
+    return this.set('units', this.units.withMutations(mnt => {
+      if (unit.hp <= 0) {
+        mnt.delete(fromCid);
+      }
+      if (target.hp <= 0) {
+        mnt.delete(toCid);
+      }
+    }));
   }
 
   isEndPhase(pnum) {
     let ended = true;
-    Object.keys(this.units).forEach(key => {
-      const unit = this.units[key];
+    this.units.keySeq().forEach(key => {
+      const unit = this.units.get(key);
       if (pnum == unit.pnum) {
         ended = unit.acted && ended;
       }
@@ -208,16 +209,15 @@ module.exports = class Map {
   }
 
   resetUnitsActed() {
-    Object.keys(this.units).forEach(key => {
-      const unit = this.units[key];
-      unit.acted = false;
+    this.units.keySeq().forEach(key => {
+      this.units.get(key).acted = false;
     });
   }
 
   survivedCount() {
     let result = {};
-    Object.keys(this.units).forEach(key => {
-      const unit = this.units[key];
+    this.units.keySeq().forEach(key => {
+      const unit = this.units.get(key);
       if (result[unit.pnum] == undefined) {
         result[unit.pnum] = 0;
       }

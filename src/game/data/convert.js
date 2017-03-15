@@ -16,14 +16,8 @@ fs.readdirSync(`${__dirname}/csv/field`).forEach(filepath => {
 
 csv2json(`${__dirname}/csv/klass.csv`, klass => {
   fs.writeFile(`${__dirname}/json/klass.json`, JSON.stringify(klass));
-  const klassTable = {};
-  Object.keys(klass).forEach(key => {
-    klassTable[klass[key].name] = key;
-  });
-  csv2json(`${__dirname}/csv/unit.csv`, unit => {
-    Object.keys(unit).forEach(key => {
-      unit[key].klass = klassTable[unit[key].klass];
-    });
-    fs.writeFile(`${__dirname}/json/unit.json`, JSON.stringify(unit));
-  });
 });
+csv2json(`${__dirname}/csv/unit.csv`, unit => {
+  fs.writeFile(`${__dirname}/json/unit.json`, JSON.stringify(unit));
+});
+

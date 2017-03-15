@@ -5,12 +5,12 @@ import MicroContainer from 'react-micro-container';
 import socketIOClient from 'socket.io-client';
 const socket = socketIOClient('/game');
 
-import Preparation from './preparation.jsx';
+import Preparation from './Preparation.jsx';
 import UnitSymbol from './unitSymbol.jsx';
 import Result from './Result.jsx';
 import Navigator from './Navigator.jsx';
 
-const Client = require('./core/Client.js');
+const Client = require('../../Client.js');
 let lockScreen = true;
 
 class Container extends MicroContainer {

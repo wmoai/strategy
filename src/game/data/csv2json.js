@@ -15,12 +15,16 @@ module.exports = function(filepath, callback) {
     csv.parse(csvFile, {auto_parse:true}, (err, csvData) => {
       const keys = csvData[0];
       const jsonData = {};
+      const idIndex = keys.indexOf('id');
       for(let i=1; i<csvData.length; i++) {
+        const id = (idIndex >= 0) ? csvData[i][idIndex] : i; 
         const klassData = {};
         keys.forEach((key, j) => {
-          klassData[key] = csvData[i][j];
+          if (!key.match('#')) {
+            klassData[key] = csvData[i][j];
+          }
         });
-        jsonData[klassData.id] = klassData;
+        jsonData[id] = klassData;
       }
       if (callback) callback(jsonData);
     });

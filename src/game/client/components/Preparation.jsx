@@ -1,17 +1,17 @@
 import React from 'react';
 
-export default function Preparation(props) {
-  if (!props.show) {
+export default function Preparation({ dispatch, data, meta }) {
+  if (!data.show) {
     return null;
   }
-  const cost = props.cost;
+  const cost = data.cost;
   let costStyle = (cost > 20) ? {
     color: 'red',
     fontWeight: 'bold'
   } : null;
   const submittable = (cost > 0 && cost <= 20);
-  let deck = props.deck;
-  const selected = props.selected;
+  let deck = meta.deck;
+  const selected = data.selected;
   return (
     <div id="preparation">
       <div>出撃ユニット選択</div>
@@ -26,8 +26,8 @@ export default function Preparation(props) {
               className={c.join(' ')}
               key={i}
               onClick={() => {
-                if (props.selected.indexOf(i) >= 0 || props.cost <= 20) {
-                  props.dispatch('selectSortie', i, props.deck.army[i].cost);
+                if (data.selected.indexOf(i) >= 0 || data.cost <= 20) {
+                  dispatch('selectSortie', i, meta.deck.army[i].cost);
                 }
               }}>
               {unit.name}
@@ -37,12 +37,12 @@ export default function Preparation(props) {
       </div>
       <div>
         <div>
-          統率コスト：<span style={costStyle}>{props.cost}</span>/20
+          統率コスト：<span style={costStyle}>{data.cost}</span>/20
         </div>
       </div>
       <button disabled={!submittable} onClick={()=> {
-        if (props.cost > 0 && props.cost <= 20) {
-          props.dispatch('makeSortie');
+        if (data.cost > 0 && data.cost <= 20) {
+          dispatch('makeSortie');
         }
       }}>出撃</button>
     <div>敵軍</div>

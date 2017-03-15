@@ -1,4 +1,3 @@
-
 module.exports = class Player {
   constructor() {
     this.userIds = [];
@@ -30,6 +29,21 @@ module.exports = class Player {
 
   isPlayer(userId) {
     return this.userIds.indexOf(userId) >= 0;
+  }
+
+  isReady(userId=null) {
+    if (!userId) {
+      let result = true;
+      this.userIds.forEach(userId => {
+        result &= this.isReady(userId);
+      });
+      return result;
+    }
+    return this.sortie[userId] != undefined;
+  }
+
+  setSortie(userId, selectedIndexes) {
+    this.sortie[userId] = selectedIndexes;
   }
 
   pnum(userId) {

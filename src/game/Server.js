@@ -1,31 +1,23 @@
-const Game = require('./Game.js');
-const Player = require('./Player.js');
-const Klass = require('./Klass.js');
 const Unit = require('./Unit.js');
+const Match = require('./Match.js');
 
-const map1 = require('./data/json/field/seki.json');
+const unitMaster = require('./data/json/unit.json');
 
-const smplklass = require('./klass.json');
 
 module.exports = class GameServer {
   constructor(client) {
     this.client = client;
   }
-  init(gid, userId1, userId2) {
-    const game = new Game(gid);
-    game.map.setField(map1);
-    game.size = 7;
-    const player = new Player([userId1, userId2]);
-    this.save(game, player);
+  createMatch(gid, uid1, deck1, uid2, deck2) {
+    const match = Match.create(gid);
+    match.addPlayer(uid1, deck1);
+    match.addPlayer(uid2, deck2);
+    this.saveMatch(match);
   }
-  save(game, player, callback) {
-    const data = {
-      data: game.data(),
-      player: player.data()
-    };
-    const key = `game:${game.gid}`;
+  saveMatch(match, callback) {
+    const key = `game:${match.game.gid}`;
     this.client.multi()
-      .set([key, JSON.stringify(data)])
+      .set([key, JSON.stringify(match.data())])
       .expire([key, 36000])
       .exec(err => {
         if (err) {
@@ -36,6 +28,7 @@ module.exports = class GameServer {
         }
       });
   }
+
   existsGame(gid, callback) {
     this.client.exists(`game:${gid}`, (err, reply) => {
       if (err) {
@@ -44,46 +37,39 @@ module.exports = class GameServer {
       callback(reply === 1);
     });
   }
-  get(gid, callback) {
+
+  getMatch(gid, callback) {
     this.client.get(`game:${gid}`, (err, json) => {
       if (err || !json) {
         return callback(new Error('game not found'));
       }
       const data = JSON.parse(json);
-      const game = new Game(gid);
-      game.map.setField(map1);
-      game.restore(data.data);
-      const player = new Player(data.player);
-      callback(null, game, player);
+      const match = Match.restore(data);
+      callback(null, match);
     });
   }
 
   isPrepared(gid, userId, callback) {
-    this.client.exists(`game:${gid}:sortie`, (err, exists) => {
-      if (err) {
-        throw err;
-      }
-      //TODO check id
-      callback(exists === 1);
+    this.client.hget([`game:${gid}:sortie`, userId], (err, data) => {
+      callback(data != null);
     });
   }
 
-  klassList() {
-    //TODO my and rival's
-    return smplklass;
+  joiningUnitIds() {
+    return Object.keys(unitMaster);
   }
 
-  saveSortie(gid, userId, klassIds, callback) {
-    this.get(gid, (err, game, player) => {
+  saveSortie(gid, userId, selectedIndexes, callback) {
+    this.getMatch(gid, (err, match) => {
       if (err) {
         return;
       }
-      if (!player.isPlayer(userId)) {
+      if (!match.player.isPlayer(userId)) {
         return;
       }
       const key = `game:${gid}:sortie`;
       this.client.multi()
-        .hset([key, userId, JSON.stringify(klassIds)])
+        .hset([key, userId, JSON.stringify(selectedIndexes)])
         .expire([key, 300])
         .exec(err => {
           if (err) {
@@ -95,7 +81,7 @@ module.exports = class GameServer {
   }
 
   engage(gid, callback) {
-    this.get(gid, (err, game, player) => {
+    this.getMatch(gid, (err, match) => {
       if (err) {
         return callback(err);
       }
@@ -104,59 +90,59 @@ module.exports = class GameServer {
           throw err;
         }
         let prepared = true;
-        player.userIds.forEach(userId => {
+        match.player.userIds.forEach(userId => {
           prepared = prepared && sorties[userId] != undefined;
         });
         if (!prepared) {
           return callback(null);
         }
-        player.userIds.forEach(userId => {
-          const pnum = player.pnum(userId);
-          const klassIds = JSON.parse(sorties[userId]);
-          klassIds.forEach((klassId, seq) => {
+        match.player.userIds.forEach(userId => {
+          const pnum = match.player.pnum(userId);
+          const selectedIndexes = JSON.parse(sorties[userId]);
+          selectedIndexes.forEach((selectedIndex, seq) => {
             const unit = new Unit({
               pnum: pnum,
-              klass: new Klass(smplklass[klassId])
+              unitId: this.joiningUnitIds()[selectedIndex]
             });
-            const cid = game.map.field.initPos[pnum][seq];
-            game.map.putUnit(cid, unit);
+            const cid = match.game.map.field.initPos[pnum][seq];
+            match.game.map.putUnit(cid, unit);
           });
         });
-        game.turn = 1;
-        game.phase = player.firstPnum();
-        this.save(game, player, () => {
-          callback(game);
+        match.game.turn = 1;
+        match.game.phase = match.player.firstPnum();
+        this.saveMatch(match, () => {
+          callback(match);
         });
       });
     });
   }
 
   action(gid, userId, fromCid, toCid, targetCid, callback) {
-    this.get(gid, (err, game, player) => {
+    this.getMatch(gid, (err, match) => {
       if (err) {
         throw err;
       }
-      const pnum = player.pnum(userId);
-      const unit = game.map.unit(fromCid);
-      if (!game.isRun() || game.phase != pnum || !unit || unit.pnum != pnum) {
+      const pnum = match.player.pnum(userId);
+      const unit = match.game.map.unit(fromCid);
+      if (!match.game.isRun() || match.game.phase != pnum || !unit || unit.pnum != pnum) {
         return;
       }
-      if (!game.map.isMovable(fromCid, toCid)) {
+      if (!match.game.map.isMovable(fromCid, toCid)) {
         return;
       }
-      if (targetCid && !game.map.isActionable(unit, toCid, targetCid)) {
+      if (targetCid && !match.game.map.isActionable(unit, toCid, targetCid)) {
         return;
       }
-      game.map.moveUnit(fromCid, toCid);
-      game.map.actUnit(toCid, targetCid);
+      match.game.map.moveUnit(fromCid, toCid);
+      match.game.map.actUnit(toCid, targetCid);
 
-      if (game.map.isEndPhase(pnum)) {
-        game.map.resetUnitsActed();
-        game.changePhase(player.anotherPnum(game.phase));
+      if (match.game.map.isEndPhase(pnum)) {
+        match.game.map.resetUnitsActed();
+        match.game.changePhase(match.player.anotherPnum(match.game.phase));
       }
 
-      this.save(game, player, () => {
-        callback(game);
+      this.saveMatch(match, () => {
+        callback(match);
       });
     });
   }

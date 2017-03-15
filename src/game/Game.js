@@ -1,31 +1,34 @@
+const Immutable = require('immutable');
 const Map = require('./Map.js');
 
-module.exports = class Game {
-  constructor(gid) {
-    this.gid = gid;
-    this.turn = 0;
-    this.phase = 0;
-    this.size = 0;
-    this.map = new Map();
-  }
+module.exports = class Game extends Immutable.Record({
+  turn: 0,
+  phase: 0,
+  map: new Map()
+}) {
 
   data(isInit=false) {
     const data = {
       map: this.map.data(isInit),
       turn: this.turn,
-      phase: this.phase,
-      size: this.size
+      phase: this.phase
     };
     return data;
   }
-  restore(data) {
+
+  static restore(data) {
     if (!data) {
-      return;
+      return new Game();
     }
-    this.map.restore(data.map);
-    this.turn = data.turn || this.turn;
-    this.phase = data.phase || this.phase;
-    this.size = data.size || this.size;
+    data.map = Map.restore(data.map);
+    return new Game(data);
+  }
+
+  start(pnum) {
+    return this.withMutations(mnt => {
+      mnt.set('turn', 1)
+      .set('phase', pnum);
+    });
   }
 
   isRun() {
@@ -33,10 +36,24 @@ module.exports = class Game {
   }
 
   changePhase(pnum) {
-    this.phase = pnum;
-    if (this.phase == 1) {
-      this.turn += 1;
-    }
+    return this.withMutations(mnt => {
+      mnt.set('phase', pnum);
+      if (pnum == 1) {
+        mnt.set('turn', mnt.turn + 1);
+      }
+    });
+  }
+
+  putUnit(cellId, unit) {
+    return this.set('map', this.map.putUnit(cellId, unit));
+  }
+
+  moveUnit(fromCid, toCid) {
+    return this.set('map', this.map.moveUnit(fromCid, toCid));
+  }
+
+  actUnit(fromCid, toCid) {
+    return this.set('map', this.map.actUnit(fromCid, toCid));
   }
 
 };

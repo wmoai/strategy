@@ -8,8 +8,7 @@ const redisStore = new RedisStore({});
 const app = express();
 const SECRET = 'your secret';
 const uid = require('uid-safe').sync;
-const redis = require('redis');
-const rediscl = redis.createClient();
+const redis = require('./redis.js');
 
 app.set('view engine', 'pug');
 app.set('views', Path.join(__dirname, '../views'));
@@ -26,27 +25,28 @@ app.use(session({
   }
 }));
 
-const GameServer = require('./game/Server.js');
+const MatchServer = require('./game/server/MatchServer.js');
+const matchServer = new MatchServer();
 
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index', {
+    units: require('./game/data/json/unit.json')
+  });
 });
 app.post('/matching', (req, res) => {
   req.session.reload(() => {
     req.session.userId = uid(24);
+    req.session.deck = req.body.deck;
     res.render('matching');
   });
 });
 
 app.get('/game/:id', (req, res, next) => {
-  const gid = req.params.id;
-  const gserver = new GameServer(rediscl);
-  gserver.existsGame(gid, isExists => {
-    if (!isExists) {
-      return next(new Error('game not found'));
-    }
-    res.render('game', {gid: gid});
-  });
+  const mid = req.params.id;
+  if (!matchServer.existsMatch(mid)) {
+    return next(new Error('game not found'));
+  }
+  res.render('game', {mid: mid});
 });
 app.get('/game/:id/stat', (req, res) => {
   res.send('data');
@@ -57,7 +57,7 @@ app.use((req, res, next) => {
 });
 app.use((err, req, res, next) => {
   res.status(500).send(err.message);
-  console.log(next, err.message);
+  // console.log(next, err.message);
 });
 
 
@@ -72,6 +72,7 @@ const handshake = function(socket, next) {
     redisStore.get(sid, (err, sess) => {
       if (!err && sess && sess.userId) {
         socket.userId = sess.userId;
+        socket.deck = sess.deck;
         return next();
       } else {
         next('fail', false);
@@ -82,74 +83,72 @@ const handshake = function(socket, next) {
   }
 };
 
+const matchmaker = require('./matchmaker.js');
+
 const matchingNS = io.of('/matching');
 matchingNS.use(handshake);
 matchingNS.on('connection', socket => {
-  rediscl.rpop('matching', (err, socketId) => {
-    if (socketId) {
-      const wait = matchingNS.connected[socketId];
-      if (wait) {
-        const gameId = uid(24);
-        const gserver = new GameServer(rediscl);
-        gserver.init(gameId, wait.userId, socket.userId);
-        [socket, wait].forEach(socket => {
-          socket.emit('done', gameId);
-        });
-      }
-    }
-    rediscl.lpush('matching', socket.id);
+  matchmaker.wait(socket.id);
+  socket.on('disconnect', () => {
+    matchmaker.remove(socket.id);
   });
 });
+
+const bredis = redis.duplicate();
+function makeMatch() {
+  bredis.brpop('matching', 0, (err, replies) => {
+    const ids = JSON.parse(replies[1]);
+    //TODO heart beat & retry
+    const match = matchServer.createMatch();
+    ids.forEach(socketId => {
+      const socket = matchingNS.connected[socketId];
+      match.player.add(socket.userId, socket.deck);
+      socket.emit('done', match.id);
+    });
+
+    makeMatch();
+  });
+}
+makeMatch();
 
 
 const gameNS = io.of('/game');
 gameNS.use(handshake);
 gameNS.on('connection', socket => {
-  socket.on('join', gid => {
-    const gserver = new GameServer(rediscl);
-    console.log('create');
-    gserver.get(gid, (err, game, player) => {
-      if (err || !game) {
-        return;
-      }
-      const userId = socket.userId;
-      socket.emit('mirror', game.data(true));
-      socket.join(gid);
+  socket.on('join', matchId => {
+    const match = matchServer.getMatch(matchId);
+    if (!match) {
+      return;
+    }
+    socket.join(matchId);
+    const userId = socket.userId;
+    socket.emit('metaData', match.metaData(userId));
+    socket.emit('mirror', match.game.data());
 
-      if (!player.isPlayer(userId)) {
-        return;
-      }
-      socket.emit('pnum', player.pnum(userId));
+    if (!match.player.isPlayer(userId)) {
+      return;
+    }
 
-      if (!game.isRun()) {
-        gserver.isPrepared(gid, userId, (isPrepared) => {
-          if (!isPrepared) {
-            socket.emit('preparation', {
-              klassList: gserver.klassList()
-            });
-            socket.on('prepared', klassIds => {
-              gserver.saveSortie(gid, userId, klassIds, () => {
-                gserver.engage(gid, (game) => {
-                  if (game) {
-                    gameNS.to(gid).emit('mirror', game.data());
-                  }
-                });
-              });
-            });
-          }
-        });
-      }
-      socket.on('action', (fromCid, toCid, targetCid) => {
-        gserver.action(gid, userId, fromCid, toCid, targetCid, (game) => {
-          gameNS.to(gid).emit('completeAction', game.data());
-          const winnedPnum = gserver.winnedPnum(game);
-          if (winnedPnum !== undefined) {
-            gameNS.to(gid).emit('winner', winnedPnum);
-          }
-        });
+    if (!match.player.isReady(userId)) {
+      socket.emit('preparation');
+      socket.on('prepared', selectedIndexes => {
+        match.player.setSortie(userId, selectedIndexes);
+        if (match.engage()) {
+          gameNS.to(matchId).emit('mirror', match.game.data());
+        }
       });
+    }
 
+    socket.on('action', (fromCid, toCid, targetCid) => {
+      if (match.action(userId, fromCid, toCid, targetCid)) {
+        gameNS.to(matchId).emit('completeAction', match.game.data());
+        const winnedPnum = match.winnedPnum(match.game);
+        if (winnedPnum !== undefined) {
+          gameNS.to(matchId).emit('winner', winnedPnum);
+        }
+      }
     });
 
   });
 });
+

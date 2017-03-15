@@ -4,4 +4,41 @@ html
   body
     #contents
       form(action="matching", method="POST")
+        table
+          thead
+            tr
+              th
+              th 名
+              th HP
+              th 力
+              th 守
+              th 信
+              th 技
+              th 運
+              th 命中
+              th 移動
+              th 射程
+              th コスト
+          tbody
+            for unit in units
+              tr
+                td
+                  input(
+                  type="checkbox",
+                  name="deck",
+                  value=unit.id,
+                  id=`unit_${unit.id}`
+                  checked= unit.id < 6)
+                td
+                  label(for=`unit_${unit.id}`)= unit.name
+                td= unit.hp
+                td= unit.pow
+                td= unit.dff
+                td= unit.fth
+                td= unit.skl
+                td= unit.luc
+                td= unit.hit
+                td= unit.move
+                td #{unit.min_range}~#{unit.max_range}
+                td= unit.cost
         input(type="submit", value="マッチング")

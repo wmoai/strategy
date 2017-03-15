@@ -1,92 +1,96 @@
-const Klass = require('./Klass.js');
-
-const masterJson = require('./data/json/unit.json');
+const unitMaster = require('./data/json/unit.json');
+const klassMaster = require('./data/json/klass.json');
 
 module.exports = class Unit {
   constructor(opt) {
     if (opt !== undefined) {
       this.pnum = opt.pnum;
-      this.klass = opt.klass;
-      this.hp = opt.hp || opt.klass.hp;
-      this.acted = opt.acted || false;
       this.unitId = opt.unitId;
+      this.hp = opt.hp || this.status().hp;
+      this.acted = opt.acted || false;
     }
   }
 
-  static get(id) {
-
+  status() {
+    return unitMaster[this.unitId];
   }
 
-  status() {
-    return masterJson[this.unitId];
+  klass() {
+    return klassMaster[this.status().klass];
   }
 
   static parse(data) {
     return new Unit({
       pnum: data[0],
-      klass: new Klass(data[1]),
+      unitId: data[1],
       hp: data[2],
       acted: data[3]
     });
   }
 
-
   data() {
     return [
       this.pnum,
-      this.klass.data(),
+      this.unitId,
       this.hp,
       this.acted
     ];
   }
 
-  act(target) {
+  act(target, geoAvoid=0) {
     if (!target) {
       return;
     }
-    if (this.klass.healer) {
-      target.hp += this.klass.pow;
-      target.hp = Math.min(target.hp, target.klass.hp);
+    if (this.klass().healer) {
+      target.hp += this.status().pow;
+      target.hp = Math.min(target.hp, target.status().hp);
     } else {
-      if (Math.random() < this.hitRate(target) / 100) {
+      if (Math.random() < this.hitRate(target, geoAvoid) / 100) {
         const isCrit = Math.random() < this.critRate(target) / 100;
-        target.hp = Math.max(target.hp - this.damage(target, isCrit), 0);
+        target.hp = Math.max(target.hp - this.effect(target, isCrit), 0);
       }
     }
   }
 
-  hitRate(target) {
+  hitRate(target, geoAvoid=0) {
     if (!target) {
       return 0;
     }
-    const hitr = this.klass.hit;
-    const avoidr = target.klass.luc;
-    return Math.min(Math.max(Math.floor(hitr - avoidr), 0), 100);
+    if (this.klass().healer) {
+      return 100;
+    }
+    const hitr = this.status().hit;
+    const avoidr = target.status().luc;
+    return Math.min(Math.max(Math.floor(hitr - avoidr - geoAvoid), 0), 100);
   }
 
   critRate(target) {
-    if (!target) {
+    if (this.klass().healer || !target) {
       return 0;
     }
-    const crtr = this.klass.skl;
-    const prtr = target.klass.luc;
+    const crtr = this.status().skl;
+    const prtr = target.status().luc;
     return Math.min(Math.max(Math.floor(crtr - prtr), 0), 100);
   }
 
-  damage(target, crit = false) {
+  effect(target, crit=false) {
     if (!target) {
       return 0;
     }
-    let damage = 0;
-    if (this.klass.magical) {
-      damage = Math.max(this.klass.pow - target.klass.fth, 1);
+    if (this.klass().healer) {
+      return this.status().pow;
+    }
+    let effect = 0;
+    if (this.klass().magical) {
+      effect = Math.max(this.status().pow - target.status().fth, 1);
     } else {
-      damage = Math.max(this.klass.pow - target.klass.dff, 1);
+      effect = Math.max(this.status().pow - target.status().dff, 1);
     }
     if (crit) {
-      damage *= 3;
+      effect *= 3;
     }
-    return damage;
+    return effect;
   }
 
 };
+

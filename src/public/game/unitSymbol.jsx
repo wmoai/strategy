@@ -1,27 +1,30 @@
-const React = require('react');
+import React from 'react';
 
-module.exports = class UnitSymbol extends React.Component {
+export default class UnitSymbol extends React.Component {
   render() {
-    const unit = this.props.unit;
-    if (!unit) {
+    const u = this.props.unit;
+    if (!u) {
       return null;
     }
-    let unitClass = ['unit'];
-    if (unit.acted) {
-      unitClass.push('standby');
-    } else if (unit.pnum == this.props.pnum || (!this.props.pnum && unit.pnum == 1)) {
-      unitClass.push('army');
+    let c = ['unit'];
+    if (u.acted) {
+      c.push('standby');
+    } else if (u.pnum == this.props.pnum || (!this.props.pnum && u.pnum == 1)) {
+      c.push('army');
     } else {
-      unitClass.push('enemy');
+      c.push('enemy');
     }
-    let hpPer = unit.hp / unit.klass.hp * 100;
+    let hpPer = u.hp / u.status().hp * 100;
+    const tip = {backgroundImage: `url("/image/k_${u.klass().id}.png")`};
     return (
-      <div className={unitClass.join(' ')}>
-        {unit.klass.name.charAt(0)}
+      <div
+        className={c.join(' ')}
+        >
+        {u.status().name.charAt(0)}
         <div className='hpbar'>
           <div className='remain' style={{width:`${hpPer}%`}}></div>
         </div>
       </div>
     );
   }
-};
+}

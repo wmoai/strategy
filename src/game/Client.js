@@ -1,10 +1,13 @@
 const Game = require('./Game.js');
+const unitMaster = require('./data/json/unit.json');
 
 module.exports = class Client {
   constructor(gid, socket) {
-    this.game = new Game(gid);
+    this.game = new Game();
     this.socket = socket;
     socket.emit('join', gid);
+    this.pnum = null;
+    this.deck = {};
 
     this.forcusedCell = null;
     this.forcusedUnit = null;
@@ -34,7 +37,7 @@ module.exports = class Client {
   }
 
   mirror(data, completedAction=false) {
-    this.game.restore(data);
+    this.game = Game.restore(data);
     if (completedAction) {
       this.clearForcus();
       this.state.set('FREE');
@@ -42,8 +45,20 @@ module.exports = class Client {
     return this;
   }
 
-  setPnum(pnum) {
-    this.pnum = pnum;
+  setMetaData(data) {
+    this.pnum = data.pnum;
+    const deck = {
+      army: [],
+      enemy: []
+    };
+    Object.keys(data.deck).forEach(pnum => {
+      if (pnum == data.pnum) {
+        deck.army = this.getPrepUnits(data.deck[pnum]);
+      } else {
+        deck.enemy = this.getPrepUnits(data.deck[pnum]);
+      }
+    });
+    this.deck = deck;
     return this;
   }
 
@@ -132,14 +147,14 @@ module.exports = class Client {
     if (unit.klass.healer) {
       result.me.val = unit.klass.pow;
     } else {
-      result.me.val = unit.damage(target);
-      result.me.hit = unit.hitRate(target);
+      result.me.val = unit.effect(target);
+      result.me.hit = unit.hitRate(target, this.game.map.field.avoid(cellId));
       result.me.crit = unit.critRate(target);
     }
     if (!unit.klass.healer && !target.klass.healer) {
       if (this.game.map.isActionable(target, cellId, this.movedCell)) {
-        result.tg.val = target.damage(unit);
-        result.tg.hit = target.hitRate(unit);
+        result.tg.val = target.effect(unit);
+        result.tg.hit = target.hitRate(unit, this.game.map.field.avoid(this.movedCell));
         result.tg.crit = target.critRate(unit);
       }
     }
@@ -160,6 +175,12 @@ module.exports = class Client {
     this.forcusedUnit = null;
     this.movedCell = null;
     this.state.set('FREE');
+  }
+
+  getPrepUnits(ids) {
+    return ids.map(id => {
+      return unitMaster[id];
+    });
   }
 
 };

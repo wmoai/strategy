@@ -1,0 +1,87 @@
+#field {
+  border-collapse: collapse;
+  table-layout:fixed;
+}
+
+#field td {
+  position: relative;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  box-sizing: border-box;
+  border: silver 1px solid;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+#field td.geo_1 {
+  background-color: rgb(182,215,168);
+}
+#field td.geo_2 {
+  background-color: rgb(217,234,211);
+}
+#field td.geo_3 {
+  background-color: olivedrab;
+}
+#field td.geo_4 {
+  background-color: tan;
+}
+#field td.geo_6 {
+  background-color: cornflowerblue;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+.overlay.movable {
+  background-color: palegreen;
+}
+.overLay.attackable {
+  background-color: gold;
+}
+.overLay.healable {
+  background-color: skyblue;
+}
+
+#field .unit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background: no-repeat center center;
+  background-size: contain;
+}
+
+#field .unit.army {
+  color: blue;
+}
+#field .unit.enemy {
+  color: red;
+}
+#field .unit.standby {
+  color: darkgray;
+}
+
+#field .unit .hpbar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background-color: darkslategray;
+}
+#field .unit .hpbar .remain {
+  position: absolute;
+  height: 100%;
+  background-color: aquamarine;
+}

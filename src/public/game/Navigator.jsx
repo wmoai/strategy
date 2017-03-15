@@ -3,6 +3,12 @@ import Refunit from './refunit.jsx';
 
 export default class Navigator extends React.Component {
   render() {
+    let style = {};
+    if (this.props.left) {
+      style.left = '10px';
+    } else {
+      style.right = '10px';
+    }
     let contents;
     if (this.props.refbattle) {
       const btl = this.props.refbattle;
@@ -42,7 +48,7 @@ export default class Navigator extends React.Component {
       contents = <Refunit unit={this.props.refunit} />;
     }
     return (
-      <div id="navigator">
+      <div id="navigator" style={style}>
         {contents}
       </div>
     );
