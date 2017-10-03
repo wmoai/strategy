@@ -26,7 +26,7 @@ export default class StatusBar extends React.Component {
   }
 
   lineupList() {
-    const { dispatch, game } = this.props;
+    const { onLineup } = this.props;
     return (
       <ul>
         {this.state.lineupSubmitted ? (
@@ -38,7 +38,7 @@ export default class StatusBar extends React.Component {
             <button onClick={
               () => {
                 this.setState({ lineupSubmitted: true }, () => {
-                  dispatch('lineupArmy', game.linedupData());
+                  onLineup();
                 });
               }}>
               出撃準備完了
@@ -50,7 +50,7 @@ export default class StatusBar extends React.Component {
   }
 
   battleList() {
-    const { dispatch, isOffense, game, ui } = this.props;
+    const { onEndTurn, isOffense, game, ui } = this.props;
     const { turn, field } = game;
     const remainingTurn = game.remainingTurn();
     const terrain = field.cellTerrain(ui.hoveredCell);
@@ -60,7 +60,7 @@ export default class StatusBar extends React.Component {
       turnControl = (
         <button onClick={
           () => {
-            dispatch('endTurn');
+            onEndTurn();
           }}>
           ターン終了
         </button>

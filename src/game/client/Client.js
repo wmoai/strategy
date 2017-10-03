@@ -3,7 +3,7 @@ import Controller from './Controller.js';
 
 const STATE = Map({
   LOBBY: 1,
-  PREPARATION: 10,
+  SELECT: 10,
   GAME: 20,
 });
 
@@ -42,7 +42,7 @@ export default class Client extends Record({
 
   startToElectArmy({ you, opponent }) {
     return this.withMutations(mnt => {
-      mnt.set('state', STATE.get('PREPARATION'))
+      mnt.set('state', STATE.get('SELECT'))
         .set('player', you)
         .set('opponent', opponent);
     });

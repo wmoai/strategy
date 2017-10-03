@@ -5,7 +5,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: {
-    app: './src/game/client/Container.jsx',
+    app: './src/game/client/',
   },
   output: {
     path: path.resolve('public'),

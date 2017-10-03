@@ -44,8 +44,9 @@
     "pug": "^2.0.0-rc.2",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
-    "react-micro-container": "^1.1.0",
+    "react-redux": "^5.0.6",
     "redis": "^2.7.1",
+    "redux": "^3.7.2",
     "socket.io": "^1.7.4",
     "uid-safe": "^2.1.4"
   }

@@ -1,0 +1,125 @@
+#sel-base {
+  height: 100%;
+  background-color: #222;
+  padding: 20px 0;
+}
+
+#sel-base h2 {
+  color: silver;
+  text-align: center;
+}
+
+#sel-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+  width: 640px;
+  margin: auto;
+  z-index: 10;
+  list-style: none;
+
+  color: white;
+  background-color: #222;
+}
+
+#sel-container section {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+.sel-side {
+  width: 120px;
+  margin: auto;
+  padding: 4px 0;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  background-color: #333;
+  color: #ccc;
+  border: 2px solid #999;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.sel-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 8px 0 22px;
+  box-sizing: border-box;
+  list-style: none;
+  border-radius: 10px;
+}
+
+.sel-roll {
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.box-offense {
+  background-color: indianred;
+}
+.box-defense {
+  background-color: cornflowerblue;
+}
+
+.sel-submitter {
+  margin-top: 10px;
+  text-align: center;
+}
+
+
+.sel-units-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  list-style: none;
+  margin: 0;
+  padding: 0 20px;
+  user-select: none;
+}
+.sel-units-list li {
+  position: relative;
+  width: 80px;
+  margin: 3px;
+  padding: 4px;
+  cursor: pointer;
+  text-align: center;
+  box-sizing: border-box;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.2);
+}
+.sel-unit-name {
+  color: #333;
+  font-size: 0.6em;
+}
+.sel-unit-cost {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  top: 0;
+  right: 0;
+  font-size: 0.8em;
+  line-height: 22px;
+  background: #222;
+  color: silver;
+  border: 1px solid silver;
+}
+
+.sel-units-list li.selected {
+}
+li.selected .sel-unit-cost {
+  color: white;
+  background: seagreen;
+  border-color: white;
+}
+li.selected .sel-unit-name {
+  color: white;
+}
+
+
