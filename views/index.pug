@@ -3,7 +3,7 @@ html
     link(rel="stylesheet", href="/css/strategy.css")
   body
     #contents
-      form(action="matching", method="POST")
+      form(action="app", method="POST", target="_blank")
         table
           thead
             tr
@@ -28,7 +28,7 @@ html
                   name="deck",
                   value=unit.id,
                   id=`unit_${unit.id}`
-                  checked= unit.id < 6)
+                  checked=false)
                 td
                   label(for=`unit_${unit.id}`)= unit.name
                 td= unit.hp

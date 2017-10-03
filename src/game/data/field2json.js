@@ -14,13 +14,20 @@ module.exports = function(filepath, callback) {
   readableStream.on('end', function() {
     csv.parse(csvFile, {auto_parse:true}, (err, csvData) => {
       const jsonData = {};
-      jsonData.width = csvData[0][0];
-      jsonData.height = csvData[0][1];
-      jsonData.array = Array.prototype.concat.apply([], csvData.slice(1, jsonData.height+1));
-      jsonData.initPos = {
-        1: csvData[jsonData.height+1].slice(0,10),
-        2: csvData[jsonData.height+2].slice(0,10)
-      };
+      jsonData.id = csvData[0][0];
+      jsonData.name = csvData[1][0];
+      jsonData.width = csvData[2][0];
+      jsonData.height = csvData[2][1];
+      jsonData.terrain = Array.prototype.concat.apply([], csvData.slice(3, jsonData.height+3));
+
+      const info = {};
+      for (let i = jsonData.height+3; i<csvData.length; i++) {
+        const key = csvData[i][0];
+        if (key && !key.match(/^\#/)) {
+          info[key] = csvData[i].slice(1).filter(data => data != '');
+        }
+      }
+      jsonData.info = info;
       if (callback) callback(jsonData);
     });
   });

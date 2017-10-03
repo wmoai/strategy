@@ -1,0 +1,60 @@
+#refunit {
+  height: 100%;
+  background-color: gainsboro;
+  padding: 5px 8px;
+  border: solid 3px white;
+  border-radius: 10px;
+  color: white;
+}
+#refunit.offense {
+  background-color: brown;
+}
+#refunit.defense {
+  background-color: steelblue;
+}
+
+#refunit-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+#hp {
+  font-size: 1.1em;
+  padding: 0 2px;
+  font-weight: bold;
+}
+#hp-max {
+  font-size: 0.7em;
+  color: white;
+}
+
+#refunit-table th {
+  font-size: 0.8em;
+  text-align: left;
+  color: white;
+}
+
+#refunit-table th:nth-child(3) {
+  padding-left: 30px;
+}
+
+#refunit-table td {
+  text-align: right;
+  padding: 0;
+  padding-left: 3px;
+  font-weight: bold;
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 saddlebrown;
+}
+
+#refunit-table td:first-child {
+  font-weight: bold;
+  text-align: left;
+  font-size: 1.1em;
+  color: white;
+  text-shadow: none;
+}
+#refunit-table tr:nth-child(2) td {
+  text-align: left;
+  height: 30px;
+}

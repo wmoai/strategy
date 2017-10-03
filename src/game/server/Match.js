@@ -1,103 +1,263 @@
-const Game = require('../Game.js');
-const Player = require('./Player.js');
-const Unit = require('../Unit.js');
-const unitMaster = require('../data/json/unit.json');
+const Immutable = require('immutable');
 
-module.exports = class Match {
+const Player = require('../models/Player.js');
+const Game = require('../models/Game.js');
 
-  static create(id) {
-    const match = new Match();
-    match.id = id;
-    match.game = new Game();
-    match.player = new Player();
+const Unit = require('../models/Unit.js');
+const Field = require('../models/Field.js');
+
+const STATE = Immutable.Map({
+  ROOM: 1,
+  ELECTION: 10,
+  LINEUP: 20,
+  BATTLE: 30,
+  END: 40,
+});
+
+module.exports = class Match extends Immutable.Record({
+  id: null,
+  io: null,
+  state: STATE.get('ROOM'),
+  players: Immutable.Map([]),
+  game: new Game({
+    field: Field.init()
+  }),
+}) {
+
+  forwardState() {
+    let next = this.state;
+    switch (this.state) {
+      case STATE.get('ROOM'):
+        next = STATE.get('ELECTION');
+        break;
+      case STATE.get('ELECTION'):
+        next = STATE.get('LINEUP');
+        break;
+      case STATE.get('LINEUP'):
+        next = STATE.get('BATTLE');
+        break;
+      case STATE.get('BATTLE'):
+        next = STATE.get('END');
+        break;
+    }
+    return this.set('state', next);
+  }
+
+  player(socket) {
+    return this.players.get(socket.userId);
+  }
+
+  opponent(id) {
+    let opponent;
+    this.players.keySeq().forEach(key => {
+      if (key !== id) {
+        opponent = this.players.get(key);
+      }
+    });
+    return opponent;
+  }
+
+  getSockets() {
+    return new Promise(resolve => {
+      this.io.to(this.id).clients((err, sids) => {
+        resolve(sids.map(sid => this.io.sockets[sid]));
+      });
+    });
+  }
+
+  join(userId, deck) {
+    const player = new Player({
+      id: userId,
+      deck: deck
+    });
+
+    return this.withMutations(mnt => {
+      mnt.set('players', mnt.players.set(userId, player))
+        .mightPrepareBattle();
+    });
+  }
+
+  leave(userId) {
+    return this.set('players', this.players.delete(userId));
+  }
+
+  playerCount() {
+    return this.players.count();
+  }
+
+  mightPrepareBattle() {
+    if (this.players.count() < 2 || this.state !== STATE.get('ROOM')) {
+      return this;
+    }
+    let tgl = Math.random() >= 0.5;
+
+    const match = this.withMutations(mnt => {
+      mnt.set('players', this.players.map(player => {
+        // decide offense side
+        tgl = !tgl;
+        return player.set('offense', tgl);
+      })).forwardState();
+    });
+    match.getSockets().then(sockets => {
+      sockets.forEach(socket => {
+        socket.emit('startToElectArmy', {
+          you: match.player(socket),
+          opponent: match.opponent(socket.userId)
+        });
+      });
+    });
     return match;
   }
 
-  // serializeData() {
-    // return {
-      // game: this.game.data(),
-      // player: this.player.data()
-    // };
-  // }
-
-  // unserializeData(data) {
-  // }
-
-  // addPlayer(userId, deck) {
-    // this.player.add(userId, deck);
-  // }
-
-  metaData(userId) {
-    const data = {};
-    if (this.player.isPlayer(userId)) {
-      const deck = {};
-      this.player.userIds.forEach(id => {
-        const pnum = this.player.pnum(id);
-        deck[pnum] = this.player.deck[id];
-      });
-      data.deck = deck;
-      data.pnum = this.player.pnum(userId);
+  electArmy(socket, election) {
+    if (this.state !== STATE.get('ELECTION')) {
+      return this;
     }
-    return data;
+    const id = socket.userId;
+    const deck = socket.deck;
+    const player = this.players.get(id);
+    const units = election.map(index => Unit.create({
+      offense: player.offense,
+      unitId: deck[index],
+    }));
+    //FIXME check cost and reject
+
+    const match = this.set('players', this.players.set(id, player.set('election', units)));
+    return match.mightStartLineup();
   }
 
-  engage() {
-    if (!this.player.isReady()) {
-      return;
+  mightStartLineup() {
+    let enable = true;
+    this.players.forEach(player => {
+      enable &= player.election && player.election.length > 0;
+    });
+    if (!enable) {
+      return this;
     }
-    this.player.userIds.forEach(userId => {
-      const pnum = this.player.pnum(userId);
-      const selectedIndexes = this.player.sortie[userId];
-      selectedIndexes.forEach((selectedIndex, seq) => {
-        const unit = new Unit({
-          pnum: pnum,
-          unitId: this.joiningUnitIds()[selectedIndex]
+
+    const match = this.withMutations(mnt => {
+      mnt.initUnits().forwardState();
+    });
+    match.getSockets().then(sockets => {
+      sockets.forEach(socket => {
+        const player = match.player(socket);
+        socket.emit('startToLineupArmy', {
+          game: match.game.set('units', match.game.myUnits(player.offense))
         });
-        const cid = this.game.map.field.initPos[pnum][seq];
-        this.game = this.game.putUnit(cid, unit);
       });
     });
-    this.game = this.game.start(this.player.firstPnum());
-    return true;
-  }
-  joiningUnitIds() {
-    return Object.keys(unitMaster);
+    return match;
   }
 
+  initUnits() {
+    const { field } = this.game;
 
-  action(userId, fromCid, toCid, targetCid) {
-    let acted = false;
-    const pnum = this.player.pnum(userId);
-    const unit = this.game.map.unit(fromCid);
-    if (!this.game.isRun() || this.game.phase != pnum || !unit || unit.pnum != pnum) {
-      return acted;
+    let units = [];
+    this.players.forEach(player => {
+      units = units.concat(
+        player.election.map((unit, seq) => {
+          return unit.set('cellId', field.initialPos(player.offense)[seq]);
+        })
+      );
+    });
+    return this.set('game', this.game.initUnits(units));
+  }
+
+  lineupArmy(socket, list) {
+    // list is Array of all my units' cellId
+    if (this.state !== STATE.get('LINEUP')) {
+      return this;
     }
-    if (!this.game.map.isMovable(fromCid, toCid)) {
-      return acted;
+    const player = this.player(socket);
+    if (player.lineupArmy) {
+      return this;
     }
-    if (targetCid && !this.game.map.isActionable(unit, toCid, targetCid)) {
-      return acted;
+
+    const match = this.set('players', this.players.set(socket.userId,
+      player.set('lineupList', list))
+    );
+
+    return match.mightEngage();
+  }
+
+  mightEngage() {
+    let canEngage = true;
+    this.players.forEach(player => {
+      canEngage &= player.lineupList != null;
+    });
+    if (!canEngage) {
+      return this;
     }
-    this.game = this.game.withMutations(mnt => {
-      mnt.moveUnit(fromCid, toCid)
-        .actUnit(toCid, targetCid);
+    let units = Immutable.List();
+    this.players.forEach(player => {
+      const punits = this.game.myUnits(player.offense).map((unit, i) => {
+        return unit.set('cellId', player.lineupList[i]);
+      });
+      units = units.concat(punits);
     });
 
-    if (this.game.map.isEndPhase(pnum)) {
-      this.game.map.resetUnitsActed();
-      this.game = this.game.changePhase(this.player.anotherPnum(this.game.phase));
-    }
-    return true;
+    const match = this.set('game', this.game.set('units', units).engage())
+      .forwardState();
+    match.io.to(match.id).emit('engage', {
+      game: match.game.toData() 
+    });
+    return match;
   }
 
-  winnedPnum() {
-    let result = undefined;
-    const survivedCount = this.game.map.survivedCount();
-    const remainArmyPnums = Object.keys(survivedCount);
-    if (remainArmyPnums.length == 1) {
-      result = remainArmyPnums[0];
+  isTurnPlayer(socket) {
+    const player = this.player(socket);
+    return this.game && player && player.offense == this.game.turn;
+  }
+
+  actInGame(socket, from, to, target) {
+    if (this.state !== STATE.get('BATTLE')) {
+      return this;
     }
-    return result;
+    if (!this.isTurnPlayer(socket)) {
+      console.error('action rejected');
+      socket.emit('rejectAction');
+      return this;
+    }
+
+    const match = this.withMutations(mnt => {
+      mnt.set('game',
+        mnt.game
+        .moveUnit(from, to)
+        .actUnit(to, target)
+        .mightChangeTurn()
+        .mightEndGame()
+      );
+      if (mnt.game.won != undefined) {
+        mnt.forwardState();
+      }
+    });
+    match.broadcast('act', {
+      move: { from: from, to: to },
+      act: { to: target },
+      game: match.game.toData() ,
+    });
+    return match;
+  }
+
+  endTurn(socket) {
+    if (this.state !== STATE.get('BATTLE') || !this.isTurnPlayer(socket)) {
+      return this;
+    }
+    const match = this.withMutations(mnt => {
+      mnt.set('game', this.game.changeTurn().mightEndGame());
+      if (mnt.game.won != undefined) {
+        mnt.forwardState();
+      }
+    });
+    match.broadcast('changeTurn', {
+      game: match.game.toData() 
+    });
+
+    return match;
+  }
+
+  broadcast(name, args={}) {
+    this.io.to(this.id).emit(name, args);
   }
 
 };

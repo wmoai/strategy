@@ -1,0 +1,40 @@
+
+#statusbar {
+  user-select: none;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 10px;
+  background-color: darkslategray;
+  color: white;
+}
+
+#statusbar.offense {
+  background-color: #4C191B;
+}
+#statusbar.defense {
+  background-color: #101D42;
+}
+
+#statusbar ul {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  font-size: 0.9em;
+}
+
+#statusbar ul li {
+  margin-right: 30px;
+}
+
+#statusbar ul li.center {
+  margin: auto;
+}
+
+#statusbar ul li.right {
+  margin-right: 0;
+  margin-left: auto;
+}
