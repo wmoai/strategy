@@ -11,11 +11,11 @@ export default class Game extends React.Component {
   render() {
     const cellSize = 50;
     const {
+      controller,
       onSelectCell,
       onHoverCell,
       onLineup,
       onEndTurn,
-      controller,
     } = this.props;
     const { game, ui } = controller;
     if (!game) {

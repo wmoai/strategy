@@ -31,7 +31,7 @@ export default class Controller extends Record({
     }
   }
 
-  selectCell(cellId, actionCallback) {
+  selectCell(cellId, onAct) {
     const { game, ui } = this;
     if (game.won != undefined) {
       return this;
@@ -43,7 +43,7 @@ export default class Controller extends Record({
     } else if (ui.stateIs('MOVE')) {
       return this.tryMove(cellId);
     } else if (ui.stateIs('ACT')) {
-      return this.tryAct(cellId, actionCallback);
+      return this.tryAct(cellId, onAct);
     }
     return this;
   }
@@ -102,13 +102,13 @@ export default class Controller extends Record({
     return this.clearUI();
   }
 
-  tryAct(cellId, actionCallback) {
+  tryAct(cellId, onAct) {
     const { ui } = this;
     if (this.canAct(cellId)) {
       const actCell = (cellId != ui.movedCell) ? cellId : undefined;
-      setTimeout(() => {
-        actionCallback(ui.forcusedCell, ui.movedCell, actCell);
-      }, 0);
+      setImmediate(() => {
+        onAct(ui.forcusedCell, ui.movedCell, actCell);
+      });
       return this.set('ui', ui.act());
     }
     return this.clearUI(true);

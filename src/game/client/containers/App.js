@@ -3,7 +3,7 @@ import Component from '../components/App.jsx';
 
 const mapStateToProps = state => {
   return {
-    client: state.client
+    step: state.step
   };
 };
 

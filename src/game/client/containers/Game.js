@@ -1,23 +1,31 @@
 import { connect } from 'react-redux';
 import Component from '../components/Game/Game.jsx';
+import {
+  selectCell,
+  hoverCell,
+  lineup,
+  endTurn,
+} from '../actions';
 
 const mapStateToProps = state => {
-  return state.client.props();
+  return {
+    controller: state.controller,
+  };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
     onSelectCell: cellId => {
-      dispatch({ type: 'selectCell', payload: cellId });
+      dispatch(selectCell(cellId));
     },
     onHoverCell: cellId => {
-      dispatch({ type: 'hoverCell', payload: cellId });
+      dispatch(hoverCell(cellId));
     },
     onLineup: () => {
-      dispatch({ type: 'lineupArmy' });
+      dispatch(lineup());
     },
     onEndTurn: () => {
-      dispatch({ type: 'endTurn' });
+      dispatch(endTurn());
     },
   };
 };

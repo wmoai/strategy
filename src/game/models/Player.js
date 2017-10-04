@@ -5,8 +5,8 @@ module.exports = class Player extends Immutable.Record({
   offense: undefined,
   cost: 10,
   deck: null, // [ unitId ]
-  election: null,
-  lineupList: null,
+  selection: null,
+  lineup: null,
 }) {
 
   toData() {

@@ -1,17 +1,18 @@
 import { connect } from 'react-redux';
 import Component from '../components/Selector/Selector.jsx';
+import { selectUnits } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    player: state.client.player,
-    opponent: state.client.opponent,
+    player: state.player,
+    opponent: state.opponent,
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
     onSubmit: selectedList => {
-      dispatch({ type: 'electArmy', payload: selectedList });
+      dispatch(selectUnits(selectedList));
     },
   };
 };

@@ -1,17 +1,15 @@
 import React from 'react';
-import MicroContainer from 'react-micro-container';
 import { render } from 'react-dom';
 
 
 const Player = require('../../../src/game/models/Player.js');
 
-import Component from '../../../src/game/client/screens/Preparation/Preparation.jsx';
+import Component from '../../../src/game/client/components/Selector/Selector.jsx';
 
-class Container extends MicroContainer {
+class Container extends React.Component {
   render() {
     return (
       <Component
-        dispatch={this.dispatch}
         costLimit={10}
         player={new Player({
           offense: true,

@@ -1,22 +1,23 @@
 import { connect } from 'react-redux';
 import Component from '../components/Lobby/Lobby.jsx';
+import { createRoom, joinRoom, leaveRoom } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    roomId: state.client.roomId
+    roomId: state.roomId
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
     onCreateRoom: () => {
-      dispatch({ type: 'createRoom' });
+      dispatch(createRoom());
     },
     onJoinRoom: roomId => {
-      dispatch({ type: 'joinRoom', payload: roomId });
+      dispatch(joinRoom(roomId));
     },
     onLeaveRoom: () => {
-      dispatch({ type: 'leaveRoom' });
+      dispatch(leaveRoom());
     },
   };
 };

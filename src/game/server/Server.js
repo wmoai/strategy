@@ -61,13 +61,13 @@ module.exports = class GameServer {
     });
     this.matches.set(matchId, match.join(socket.userId, socket.deck));
 
-    socket.on('electArmy', ({ election }) => {
+    socket.on('selectUnits', ({ list }) => {
       const match = this.matches.get(matchId);
-      this.matches.set(matchId, match.electArmy(socket, election));
+      this.matches.set(matchId, match.selectUnits(socket, list));
     });
-    socket.on('lineupArmy', ({ list }) => {
+    socket.on('lineup', ({ list }) => {
       const match = this.matches.get(matchId);
-      this.matches.set(matchId, match.lineupArmy(socket, list));
+      this.matches.set(matchId, match.lineup(socket, list));
     });
     socket.on('act', ({ from, to, target }) => {
       const match = this.matches.get(matchId);

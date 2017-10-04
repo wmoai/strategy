@@ -8,7 +8,7 @@ const Field = require('../models/Field.js');
 
 const STATE = Immutable.Map({
   ROOM: 1,
-  ELECTION: 10,
+  SELECT: 10,
   LINEUP: 20,
   BATTLE: 30,
   END: 40,
@@ -28,9 +28,9 @@ module.exports = class Match extends Immutable.Record({
     let next = this.state;
     switch (this.state) {
       case STATE.get('ROOM'):
-        next = STATE.get('ELECTION');
+        next = STATE.get('SELECT');
         break;
-      case STATE.get('ELECTION'):
+      case STATE.get('SELECT'):
         next = STATE.get('LINEUP');
         break;
       case STATE.get('LINEUP'):
@@ -100,7 +100,7 @@ module.exports = class Match extends Immutable.Record({
     });
     match.getSockets().then(sockets => {
       sockets.forEach(socket => {
-        socket.emit('startToElectArmy', {
+        socket.emit('startToSelectUnits', {
           you: match.player(socket),
           opponent: match.opponent(socket.userId)
         });
@@ -109,27 +109,27 @@ module.exports = class Match extends Immutable.Record({
     return match;
   }
 
-  electArmy(socket, election) {
-    if (this.state !== STATE.get('ELECTION')) {
+  selectUnits(socket, list) {
+    if (this.state !== STATE.get('SELECT')) {
       return this;
     }
     const id = socket.userId;
     const deck = socket.deck;
     const player = this.players.get(id);
-    const units = election.map(index => Unit.create({
+    const units = list.map(index => Unit.create({
       offense: player.offense,
       unitId: deck[index],
     }));
     //FIXME check cost and reject
 
-    const match = this.set('players', this.players.set(id, player.set('election', units)));
+    const match = this.set('players', this.players.set(id, player.set('selection', units)));
     return match.mightStartLineup();
   }
 
   mightStartLineup() {
     let enable = true;
     this.players.forEach(player => {
-      enable &= player.election && player.election.length > 0;
+      enable &= player.selection && player.selection.length > 0;
     });
     if (!enable) {
       return this;
@@ -141,7 +141,7 @@ module.exports = class Match extends Immutable.Record({
     match.getSockets().then(sockets => {
       sockets.forEach(socket => {
         const player = match.player(socket);
-        socket.emit('startToLineupArmy', {
+        socket.emit('startToLineup', {
           game: match.game.set('units', match.game.myUnits(player.offense))
         });
       });
@@ -155,7 +155,7 @@ module.exports = class Match extends Immutable.Record({
     let units = [];
     this.players.forEach(player => {
       units = units.concat(
-        player.election.map((unit, seq) => {
+        player.selection.map((unit, seq) => {
           return unit.set('cellId', field.initialPos(player.offense)[seq]);
         })
       );
@@ -163,18 +163,18 @@ module.exports = class Match extends Immutable.Record({
     return this.set('game', this.game.initUnits(units));
   }
 
-  lineupArmy(socket, list) {
+  lineup(socket, list) {
     // list is Array of all my units' cellId
     if (this.state !== STATE.get('LINEUP')) {
       return this;
     }
     const player = this.player(socket);
-    if (player.lineupArmy) {
+    if (player.lineup) {
       return this;
     }
 
     const match = this.set('players', this.players.set(socket.userId,
-      player.set('lineupList', list))
+      player.set('lineup', list))
     );
 
     return match.mightEngage();
@@ -183,7 +183,7 @@ module.exports = class Match extends Immutable.Record({
   mightEngage() {
     let canEngage = true;
     this.players.forEach(player => {
-      canEngage &= player.lineupList != null;
+      canEngage &= player.lineup != null;
     });
     if (!canEngage) {
       return this;
@@ -191,7 +191,7 @@ module.exports = class Match extends Immutable.Record({
     let units = Immutable.List();
     this.players.forEach(player => {
       const punits = this.game.myUnits(player.offense).map((unit, i) => {
-        return unit.set('cellId', player.lineupList[i]);
+        return unit.set('cellId', player.lineup[i]);
       });
       units = units.concat(punits);
     });
