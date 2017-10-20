@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const uid = require('uid-safe').sync;
 const jwt = require('jsonwebtoken');
-const config = require('../config/secret.json');
+// const config = require('../config/secret.json');
 // const JWT_SECRET = config.jwtSecret;
 const JWT_SECRET = 'Jq;dsi(jjkqwl;dba';
 
