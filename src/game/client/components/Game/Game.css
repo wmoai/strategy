@@ -9,9 +9,11 @@
 }
 
 #game-header {
+  position: relative;
   height: 50px;
   max-width: 800px;
   margin: auto;
+  z-index: 1;
 }
 
 #game-main {

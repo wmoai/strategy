@@ -5,7 +5,8 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const uid = require('uid-safe').sync;
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'qjkrfelqjfkaJ';
+const config = require('../config/secret.json');
+const JWT_SECRET = config.jwtSecret;
 
 app.set('view engine', 'pug');
 app.set('views', Path.join(__dirname, '../views'));
@@ -16,16 +17,50 @@ app.use(cookieParser());
 
 const GameServer = require('./game/server/Server.js');
 const gameServer = new GameServer();
+const Data = require('./game/data');
 
 app.get('/', (req, res) => {
   res.render('index', {
-    units: require('./game/data/json/unit.json')
+    units: req.cookies.sealed ? (
+      req.cookies.sealed.map(unitId => {
+        return Data.unitStatus(unitId);
+      })
+    ) : []
   });
 });
+
+function sealPack(units, count) {
+  const indexes = [];
+  while(indexes.length < count) {
+    const sel = Math.floor(Math.random() * units.length);
+    if (!indexes.includes(sel)) {
+      indexes.push(sel);
+    }
+  }
+  return indexes.map(index => {
+    return units[index].id;
+  });
+}
+
+app.post('/sealed', (req, res) => {
+  const common = Data.units().filter(unit => unit.cost == 2);
+  const elite = Data.units().filter(unit => unit.cost == 3);
+  const epic = Data.units().filter(unit => unit.cost == 5);
+  const deck = [].concat(
+    sealPack(common, 6),
+    sealPack(elite, 4),
+    sealPack(epic, 2)
+  );
+
+  res.cookie('sealed', deck);
+  res.redirect('/');
+});
+
 app.post('/app', (req, res) => {
   res.cookie('jwt', jwt.sign({
     userId: uid(24),
-    deck: Array.prototype.concat([], req.body.deck)
+    // deck: Array.prototype.concat([], req.body.deck)
+    deck: req.cookies.sealed
   }, JWT_SECRET));
   res.render('app');
 });
@@ -44,7 +79,7 @@ app.get('/game/:id/stat', (req, res) => {
   res.send('data');
 });
 app.get('/favicon.ico', function(req, res) {
-  res.send(204);
+  res.sendState(204);
 });
 
 app.use((req, res, next) => {
@@ -57,7 +92,9 @@ app.use((err, req, res, next) => {
 
 
 const server = require('http').createServer(app);
-server.listen(3005);
+Data.init().then(() => {
+  server.listen(3005);
+});
 
 const io = require('socket.io').listen(server);
 const gameNS = io.of('/game');

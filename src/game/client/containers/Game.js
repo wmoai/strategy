@@ -5,6 +5,7 @@ import {
   hoverCell,
   lineup,
   endTurn,
+  returnRoom,
 } from '../actions';
 
 const mapStateToProps = state => {
@@ -26,6 +27,9 @@ const mapDispatchToProps = dispatch => {
     },
     onEndTurn: () => {
       dispatch(endTurn());
+    },
+    onReturnRoom: () => {
+      dispatch(returnRoom());
     },
   };
 };

@@ -60,7 +60,7 @@ export default class Selector extends React.Component {
       <div id="sel-base">
         <h2>出撃ユニット選択</h2>
         <div id="sel-container">
-          <section>
+          <div className="sel-row">
             <div className="sel-side">自軍</div>
             <div className={'sel-box ' + (player.offense ? 'box-offense' : 'box-defense')}>
               <div className="sel-roll">{player.offense ? '攻撃' : '防衛'}</div>
@@ -87,27 +87,26 @@ export default class Selector extends React.Component {
               </ul>
             </div>
 
-            <div className="sel-submitter">
-              <span>
-                統率コスト：<span style={costStyle}>{cost}</span>/{costLimit}
-              </span>
-              {!this.state.isEmitted &&
-                  <button
-                    disabled={!submittable}
-                    onClick={()=> {
-                      if (cost > 0 && cost <= costLimit) {
-                        onSubmit(selected);
-                        this.setState({
-                          isEmitted: true
-                        });
-                      }
-                    }}>
-                    出撃
-                  </button>
-              }
+            <div className="sel-footer">
+              <div id="sel-totalcost">
+                コスト：<span style={costStyle}>{cost}</span>/{costLimit}
+              </div>
+              <button
+                id="sel-submitter"
+                disabled={!submittable || this.state.isEmitted}
+                onClick={()=> {
+                  if (cost > 0 && cost <= costLimit) {
+                    onSubmit(selected);
+                    this.setState({
+                      isEmitted: true
+                    });
+                  }
+                }}>
+                出撃
+              </button>
             </div>
-          </section>
-          <section>
+          </div>
+          <div className="sel-row">
             <div className="sel-side">敵軍</div>
             <div className={'sel-box ' + (opponent.offense ? 'box-offense' : 'box-defense')}>
               <div className="sel-roll">{opponent.offense ? '攻撃' : '防衛'}</div>
@@ -124,7 +123,7 @@ export default class Selector extends React.Component {
               </ul>
             </div>
 
-          </section>
+          </div>
         </div>
       </div>
     );

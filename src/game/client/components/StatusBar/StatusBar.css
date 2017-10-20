@@ -1,18 +1,23 @@
 
 #statusbar {
+  position: absolute;
   user-select: none;
   height: 100%;
+  width: 100%;
   box-sizing: border-box;
-  padding: 0 10px;
+  padding: 0;
   background-color: darkslategray;
   color: white;
+  border-bottom: 1px solid #555;
 }
 
 #statusbar.offense {
-  background-color: #4C191B;
+  background: -prefix-linear-gradient(top, darkred, #4C191B);
+  background: linear-gradient(to bottom, darkred, #4C191B);
 }
 #statusbar.defense {
-  background-color: #101D42;
+  background: -prefix-linear-gradient(top, navy, #101D42);
+  background: linear-gradient(to bottom, navy, #101D42);
 }
 
 #statusbar ul {
@@ -26,15 +31,69 @@
   font-size: 0.9em;
 }
 
-#statusbar ul li {
-  margin-right: 30px;
+#turn-end-button {
+  display: block;
+  height: 70px;
+  width: 70px;
+  outline: none;
+  margin-left: 15px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: -prefix-linear-gradient(left top, mediumaquamarine, darkgreen);
+  background: linear-gradient(to bottom right, mediumaquamarine, darkgreen);
+
+  border: solid 3px #555;
+  box-shadow:
+  inset 1px 2px 0 rgba(255,255,255,0.6),
+  inset -0.5px -0.5px rgba(255,255,255,0.3),
+  1px 1px 1px rgba(255, 255, 255, 0.1);
+
+  color: #eee;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  font-size: 1em;
+  line-height: 1.2em;
+  cursor: pointer;
+}
+#turn-end-button[disabled] {
+  background: -prefix-linear-gradient(left top, #888, #555);
+  background: linear-gradient(to bottom right, #888, #555);
+  font-size: 0.9em;
+  color: #222;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+  cursor: default;
 }
 
-#statusbar ul li.center {
-  margin: auto;
+#sb-remained-turn {
+  margin-left: 20px;
 }
 
-#statusbar ul li.right {
+#sb-terrain {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-width: 80px;
   margin-right: 0;
   margin-left: auto;
+  box-sizing: border-box;
+  padding: 0 15px;
+  background: -prefix-linear-gradient(top, #333, #111);
+  background: linear-gradient(to bottom, #333, #111);
+  border-left: solid 1px #111;
+  color: #eee;
 }
+#sb-terrain .name {
+  font-size: 1.1em;
+  line-height: 140%;
+  font-weight: bold;
+}
+#sb-terrain .influence {
+  line-height: 130%;
+  font-size: 0.75em;
+}
+#sb-terrain .influence .avoid {
+  color: #999;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+  margin-right: 5px;
+}
+

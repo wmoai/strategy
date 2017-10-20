@@ -2,50 +2,55 @@ const PIXI = require('pixi.js');
 
 export default class Engine {
 
-  static preload() {
-    return new Promise(resolve => {
-      for(let klass=1; klass<8; klass++) {
-        for(let color=0; color<3; color++) {
-          PIXI.loader.add(`unit${klass}_${color}`, `/image/units/${klass}_${color}.png`);
-        }
-      }
-      PIXI.loader
-        .add('terrain', '/image/terrain.png')
-        .load(() => {
-          resolve();
-        });
-    });
-  }
-
   constructor(canvas, width, height, cellSize) {
     this.resources = {};
     this.width = width;
     this.height = height;
     this.cellSize = cellSize;
-    this.renderer = new PIXI.autoDetectRenderer({
+    this.app = new PIXI.Application({
       width: width * cellSize,
       height: height * cellSize,
       view: canvas,
     });
-    this.stage = new PIXI.Container();
+    const stage = new PIXI.Container();
     this.layer = {
       terrain: new PIXI.Container(),
       range: new PIXI.Container(),
       units: new PIXI.Container(),
       ui: new PIXI.Container()
     };
-    this.stage.addChild(this.layer.terrain);
-    this.stage.addChild(this.layer.range);
-    this.stage.addChild(this.layer.units);
-    this.stage.addChild(this.layer.ui);
+    stage.addChild(this.layer.terrain);
+    stage.addChild(this.layer.range);
+    stage.addChild(this.layer.units);
+    stage.addChild(this.layer.ui);
+    let dgree = 180;
+    this.app.ticker.add(() => {
+      dgree = (dgree + 2) % 360;
+      const rad = dgree * Math.PI / 180;
+      this.layer.range.alpha = 1 - (Math.cos(rad) + 1) / 10;
+    });
+    this.app.stage = stage;
+  }
 
-    this.loadTerrainTexture(40);
-    // this.loadUnitsTexture(48);
+  setup() {
+    return new Promise(resolve => {
+      for(let klass=1; klass<8; klass++) {
+        for(let color=0; color<3; color++) {
+          this.app.loader.add(`unit${klass}_${color}`, `/image/units/${klass}_${color}.png`);
+        }
+      }
+      this.app.loader
+        .add('terrain', '/image/terrain.png')
+        .load(() => {
+          this.loadTerrainTexture(40);
+          resolve();
+        });
+    });
   }
 
   loadTerrainTexture(tileSize) {
     const terrain = new Map();
-    const originalTexture = PIXI.loader.resources['terrain'].texture;
+    const originalTexture = this.app.loader.resources['terrain'].texture;
     for (let i=0; i<originalTexture.width/tileSize; i++) {
       const set = [];
       for (let j=0; j<5; j++) {
@@ -68,26 +73,6 @@ export default class Engine {
     }
     this.resources.terrain = terrain;
   }
-
-  // loadUnitsTexture(tileSize) {
-    // const units = new Map();
-    // const originalTexture = PIXI.loader.resources['units'].texture;
-    // for (let i=0; i<originalTexture.width/tileSize; i++) {
-      // const set = [];
-      // for (let j=0; j<originalTexture.height/tileSize; j++) {
-        // const texture = new PIXI.Texture(originalTexture);
-        // texture.frame = new PIXI.Rectangle(
-          // tileSize*i,
-          // tileSize*j,
-          // tileSize,
-          // tileSize
-        // );
-        // set.push(texture);
-      // }
-      // units.set(i+1, set);
-    // }
-    // this.resources.units = units;
-  // }
 
   cursorRenderer() {
     const layer = this.layer.ui;
@@ -113,48 +98,40 @@ export default class Engine {
     cursor.visible = false;
     layer.addChild(cursor);
 
-    // let d = 0;
-    // setInterval(() => {
-      // d = (d + 10) % 360;
-      // cursor.alpha =  1 - (Math.sin(d * Math.PI / 180) + 1) / 8;
-      // this.render();
-    // }, 100);
-
     return {
       render: (x, y) => {
         cursor.visible = true;
         cursor.x = x * cellSize;
         cursor.y = y * cellSize;
-        this.render();
       }
     };
-  }
-
-  render() {
-    this.renderer.render(this.stage);
   }
 
   renderTerrain(field) {
     const layer = this.layer.terrain;
     layer.removeChildren();
     const { cellSize } = this;
+
+    const terrains = new PIXI.Graphics();
     field.rows().forEach((row, y) => {
       row.forEach((terrain, x) => {
         const same = field.neighborSame(y, x);
-        layer.addChild(this.createTerrainSprite(x, y, terrain, same, true, true));
-        layer.addChild(this.createTerrainSprite(x, y, terrain, same, true, false));
-        layer.addChild(this.createTerrainSprite(x, y, terrain, same, false, true));
-        layer.addChild(this.createTerrainSprite(x, y, terrain, same, false, false));
-
-        // shadow
-        if (field.isEdgeCell(y, x)) {
-          const shadow = new PIXI.Graphics();
-          shadow.beginFill(0, 0.2);
-          shadow.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-          layer.addChild(shadow);
-        }
+        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, true));
+        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, false));
+        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, false, true));
+        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, false, false));
       });
     });
+    terrains.cacheAsBitmap = true;
+    layer.addChild(terrains);
+
+    // outer area shadow
+    const shadow = new PIXI.Graphics();
+    shadow.lineStyle(cellSize*1.5, 0, 0.3);
+    shadow.drawRect(0, 0, field.width*cellSize, field.height*cellSize);
+    shadow.filters = [new PIXI.filters.BlurFilter()];
+    shadow.cacheAsBitmap = true;
+    layer.addChild(shadow);
 
     // bases mark
     field.info.base.map(bp => {
@@ -167,8 +144,6 @@ export default class Engine {
       base.drawRect(x*cellSize+width/2+1, y*cellSize+width/2+1, cellSize-width-2, cellSize-width-2);
       layer.addChild(base);
     });
-
-    this.render();
   }
 
   createTerrainSprite(x, y, terrain, same, top, left) {
@@ -208,12 +183,10 @@ export default class Engine {
 
       const rect = new PIXI.Graphics();
       const width = 4;
-      rect.beginFill(0x0000ff, 0.2);
+      rect.beginFill(0x0000ff, 0.5);
       rect.drawRect(x*cellSize+width/2, y*cellSize+width/2, cellSize-width, cellSize-width);
       layer.addChild(rect);
     });
-
-    this.render();
   }
 
   lineupUIRenderer() {
@@ -249,22 +222,18 @@ export default class Engine {
             rangeLayer.addChild(rect);
           });
         });
-        this.render();
       },
       renderPickMarker: (x, y) => {
         marker.visible = true;
         marker.x = x * cellSize;
         marker.y = y * cellSize - marker.height + 5;
-        this.render();
       },
       removePickMarker: () => {
         marker.visible = false;
-        this.render();
       },
       end: () => {
         rangeLayer.removeChildren();
         uiLayer.removeChild(marker);
-        this.render();
       }
     };
   }
@@ -302,52 +271,15 @@ export default class Engine {
           container.addChild(greenLine);
 
           const colorI = unit.acted ? 0 : (unit.offense ? 1 : 2);
-          // chara.texture = this.resources.units.get(unit.klass().id)[colorI];
-          chara.texture = PIXI.loader.resources[`unit${unit.klass().id}_${colorI}`].texture;
+          chara.texture = this.app.loader.resources[`unit${unit.klass().id}_${colorI}`].texture;
           container.x =  x * cellSize;
           container.y = y * cellSize;
           greenLine.width = (cellSize-4) * unit.hp / unit.status().hp;
 
           layer.addChild(container);
         });
-        this.render();
       }
     };
-  }
-
-
-  renderRange(field, ui) {
-    const layer = this.layer.range;
-    layer.removeChildren();
-
-    const { cellSize } = this;
-    const { movables, actionables } = ui;
-    if (actionables) {
-      const isHealer = ui.forcusedUnit ? ui.forcusedUnit.klass().healer : false;
-      actionables.filter(cid => !movables || !movables.includes(cid)).map(cid => {
-        const x = cid % field.width;
-        const y = Math.floor(cid / field.width);
-        const color = isHealer ? 0x87ceeb : 0xffd700;
-        const highlight = new PIXI.Graphics();
-        highlight.beginFill(color, 0.5);
-        highlight.lineStyle(1, color);
-        highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-        layer.addChild(highlight);
-      });
-    }
-    if (movables) {
-      movables.map(cid => {
-        const x = cid % field.width;
-        const y = Math.floor(cid / field.width);
-        const color = 0x98fb98;
-        const highlight = new PIXI.Graphics();
-        highlight.beginFill(color, 0.5);
-        highlight.lineStyle(1, color);
-        highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-        layer.addChild(highlight);
-      });
-    }
-    this.render();
   }
 
   rangeRenderer(field) {
@@ -380,39 +312,11 @@ export default class Engine {
             layer.addChild(highlight);
           });
         }
-        this.render();
       },
       remove: () => {
         layer.removeChildren();
       }
     };
-  }
-
-  renderCursor(x, y) {
-    const { cellSize } = this;
-    this.cursor.x = x * cellSize;
-    this.cursor.y = y * cellSize;
-    this.render();
-  }
-
-  renderPickHighlight(x, y) {
-    const layer = this.layer.range;
-    layer.removeChildren();
-
-    const { cellSize } = this;
-    const color = 0xffffff;
-    const highlight = new PIXI.Graphics();
-    highlight.beginFill(color, 0.5);
-    highlight.lineStyle(1, color);
-    highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-    layer.addChild(highlight);
-    this.render();
-  }
-
-  removePickHighlight() {
-    const layer = this.layer.range;
-    layer.removeChildren();
-    this.render();
   }
 
 }

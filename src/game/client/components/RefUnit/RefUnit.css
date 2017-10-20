@@ -7,10 +7,10 @@
   color: white;
 }
 #refunit.offense {
-  background-color: brown;
+  background: linear-gradient(to bottom, #b44545, #722323);
 }
 #refunit.defense {
-  background-color: steelblue;
+  background: linear-gradient(to bottom, steelblue, #234f72);
 }
 
 #refunit-table {

@@ -4,8 +4,9 @@ import Controller from './Controller.js';
 import * as socket from './websocket.js';
 
 const State = Record({
-  step: Step.get('LOBBY'),
+  step: new Step(),
   roomId: null,
+  isMatched: false,
   player: null,
   opponent: null,
   controller: null,
@@ -19,19 +20,21 @@ export default function reducer(state = new State(), action) {
     case 'leaveRoom':
       return state.withMutations(mnt => {
         mnt.delete('roomId')
-          .delete('controller');
+          .delete('player')
+          .delete('opponent')
+          .delete('controller')
+          .set('isMatched', false);
       });
+    case 'matched':
+      return state.set('isMatched', true);
+    case 'unmatched':
+      return state.set('isMatched', false);
     case 'startToSelectUnits':
       return state.withMutations(mnt => {
         const { you, opponent } = payload;
-        mnt.set('step', Step.get('SELECT'))
+        mnt.set('step', mnt.step.forward())
           .set('player', you)
           .set('opponent', opponent);
-      });
-    case 'startToLineup':
-      return state.withMutations(mnt => {
-        mnt.set('step', Step.get('GAME'))
-          .set('controller', new Controller().set('offense', mnt.player.offense).sync(payload));
       });
     case 'selectCell':
       return state.set('controller', 
@@ -45,12 +48,23 @@ export default function reducer(state = new State(), action) {
       );
     case 'hoverCell':
       return state.set('controller', state.controller.hoverCell(payload.cellId));
-    case 'syncGame':
     case 'engage':
+      return state.withMutations(mnt => {
+        mnt.set('step', mnt.step.forward())
+          .set('controller', new Controller().set('offense', mnt.player.offense).sync(payload));
+      });
     case 'act':
+    case 'changeTurn':
       return state.set('controller', state.controller.sync(payload));
     case 'rejectAction':
       return state.set('controller', state.controller.clearUI());
+    case 'returnRoom':
+      return state.withMutations(mnt => {
+        mnt.set('step', mnt.step.forward())
+          .delete('player')
+          .delete('opponent')
+          .delete('controller');
+      });
   }
   return state;
 }

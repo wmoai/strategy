@@ -26,11 +26,12 @@ body {
 
 #lobby-list li {
   display: flex;
-  margin-bottom: 1.4em;
+  margin-bottom: 2px;
 }
 
 .lobby-btn {
   flex: 1;
+  display: block;
   height: 44px;
   margin: 0;
   padding: 0 20px;
@@ -40,6 +41,15 @@ body {
   font-size: 1.1em;
   color: #ddd;
   border-radius: 8px;
+  cursor: pointer;
+}
+.lobby-btn:active {
+  background: #666;
+}
+.lobby-btn[disabled] {
+  cursor: default;
+  background: #333;
+  color: #777;
 }
 
 .lobby-input {
@@ -54,6 +64,10 @@ body {
   font-size: 1.1em;
   text-align: center;
   color: #222;
+}
+
+#lobby-join {
+  margin-top: 10px;
 }
 
 #lobby-join .lobby-input {
@@ -83,4 +97,16 @@ body {
 
 #lobby-room .lobby-input {
   font-size: 1.5em;
+}
+
+#lobby-wait {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 30px;
+}
+
+#lobby-room-leave {
+  margin-top: 10px;
 }

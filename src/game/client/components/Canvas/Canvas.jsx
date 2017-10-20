@@ -22,11 +22,11 @@ export default class Canvas extends React.Component {
   }
 
   async componentDidMount() {
-    const { game, cellSize, isOffense } = this.props;
+    const { game, cellSize, isOffense, onInit } = this.props;
     const { field, units } = game;
 
-    await Engine.preload();
     const engine = new Engine(this.pixiCanvas, field.width, field.height, cellSize);
+    await engine.setup();
     engine.renderTerrain(field);
     this.setState({
       initialized: true,
@@ -36,13 +36,11 @@ export default class Canvas extends React.Component {
       lineupUIRenderer: engine.lineupUIRenderer(),
     }, () => {
       this.state.unitsRenderer.render(units);
-      if (game.stateIs('BEFORE')) {
-        this.state.lineupUIRenderer.renderInitialPos(field);
-      }
       const myUnit = units.filter(unit => unit.offense == isOffense ).first();
       if (myUnit) {
         this.forcusCell(myUnit.cellId);
       }
+      onInit();
     });
 
     // FIXME
@@ -61,22 +59,8 @@ export default class Canvas extends React.Component {
       this.state.unitsRenderer.render(units);
     }
 
-    const { field } = game;
-    const { pickedCell } = ui;
-    if (game.stateIs('BEFORE')) {
-      // Lineup operation
-      if (pickedCell) {
-        if (this.props.ui.pickedCell != pickedCell) {
-          const [ y, x ] = field.coordinates(pickedCell);
-          this.state.lineupUIRenderer.renderPickMarker(x, y);
-        }
-      } else {
-        this.state.lineupUIRenderer.removePickMarker();
-      }
-    } else {
-      this.state.rangeRenderer.remove();
-      this.state.rangeRenderer.render(ui);
-    }
+    this.state.rangeRenderer.remove();
+    this.state.rangeRenderer.render(ui);
 
     // FIXME
     // if (game.won != undefined) {
@@ -95,6 +79,17 @@ export default class Canvas extends React.Component {
     const y = Math.floor(cellId / game.field.width);
     this.screen.scrollTop = y * cellSize - this.screen.clientHeight/2 + cellSize/2;
     this.screen.scrollLeft = x * cellSize - this.screen.clientWidth/2 + cellSize/2;
+  }
+
+  cellPoint(event) {
+    const { cellSize } = this.props;
+    const rect = event.target.getBoundingClientRect();
+    const innerOffsetX = event.clientX - rect.left + event.target.scrollLeft;
+    const innerOffsetY = event.clientY - rect.top + event.target.scrollTop;
+    return {
+      y: Math.floor(innerOffsetY / cellSize),
+      x: Math.floor(innerOffsetX / cellSize)
+    };
   }
 
   render() {
@@ -129,11 +124,7 @@ export default class Canvas extends React.Component {
             if (!this.state.initialized) {
               return;
             }
-            const rect = e.target.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left
-              , offsetY = e.clientY - rect.top;
-            const y = Math.floor(offsetY / cellSize)
-              , x = Math.floor(offsetX / cellSize);
+            const { x, y } = this.cellPoint(e);
             if (!field.isActiveCell(y, x)) {
               return;
             }
@@ -141,28 +132,24 @@ export default class Canvas extends React.Component {
             this.setState({
               mouseX: e.pageX,
               mouseY: e.pageY,
-            }, () => {
-              const cellId = field.cellId(y, x);
-              onHoverCell(cellId);
             });
+            const cellId = field.cellId(y, x);
+            onHoverCell(cellId);
           }}
           onClick={e => {
-            if (onSelectCell && typeof onSelectCell === 'function') {
-              const rect = e.target.getBoundingClientRect();
-              const offsetX = e.clientX - rect.left
-                , offsetY = e.clientY - rect.top;
-              const y = Math.floor(offsetY / cellSize)
-                , x = Math.floor(offsetX / cellSize);
-              if (!field.isActiveCell(y, x)) {
-                return;
-              }
-              const cellId = field.cellId(y, x);
-              onSelectCell(cellId);
+            if (!onSelectCell || typeof onSelectCell !== 'function') {
+              return;
             }
+            const { x, y } = this.cellPoint(e);
+            if (!field.isActiveCell(y, x)) {
+              return;
+            }
+            const cellId = field.cellId(y, x);
+            onSelectCell(cellId);
           }}
         >
           <canvas
-            className="screen-layer"
+            id="screen-canvas"
             width={width}
             height={height}
             ref={canvas => { this.pixiCanvas = canvas; }}

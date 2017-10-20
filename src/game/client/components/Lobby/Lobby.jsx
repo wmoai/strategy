@@ -4,6 +4,13 @@ import './Lobby.css';
 
 export default class Lobby extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      isReady: false
+    };
+  }
+
   lobby() {
     const { onCreateRoom, onJoinRoom } = this.props;
     return (
@@ -37,7 +44,7 @@ export default class Lobby extends React.Component {
   }
 
   room() {
-    const { roomId, onLeaveRoom } = this.props;
+    const { roomId, isMatched, onLeaveRoom, onReady } = this.props;
     return (
       <ul id="lobby-list">
         <li id="lobby-room">
@@ -50,12 +57,32 @@ export default class Lobby extends React.Component {
             readOnly/>
         </li>
         <li>
+          <div id="lobby-wait">
+            {isMatched ? '対戦相手が見つかりました' : '対戦相手を待っています...'}
+          </div>
+        </li>
+        <li>
           <button
             className="lobby-btn"
+            disabled={!isMatched || this.state.isReady}
+            onClick={() => {
+              this.setState({
+                isReady: true
+              }, () => {
+                onReady();
+              });
+            }}>
+            対戦開始
+          </button>
+        </li>
+        <li id="lobby-room-leave">
+          <button
+            className="lobby-btn"
+            disabled={this.state.isReady}
             onClick={() => {
               onLeaveRoom();
             }}>
-            退出
+            ルーム退出
           </button>
         </li>
       </ul>

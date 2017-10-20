@@ -3,8 +3,9 @@ const socket = socketIOClient('/game');
 
 const listeningEvents = [
   'enterRoom',
+  'matched',
+  'unmatched',
   'startToSelectUnits',
-  'startToLineup',
   'engage',
   'act',
   'changeTurn',

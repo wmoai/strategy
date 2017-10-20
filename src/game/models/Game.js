@@ -2,34 +2,17 @@ const Immutable = require('immutable');
 const Unit = require('./Unit.js');
 const Field = require('./Field.js');
 
-const STATE = Immutable.Map({
-  BEFORE: 0,
-  BATTLE: 10,
-  AFTER: 20
-});
 const defenceTurn = 15;
 
 module.exports = class Game extends Immutable.Record({
-  _state: STATE.get('BEFORE'),
   cost: 16,
   field: null,
   units: Immutable.List(),
-  turnCount: 0,
+  turnCount: 1,
   turn: true,
-  won: undefined,
+  isEnd: false,
+  winner: undefined,
 }) {
-
-  stateIs(str) {
-    return this._state == STATE.get(str);
-  }
-
-  setState(str) {
-    const state = STATE.get(str);
-    if (state) {
-      return this.set('_state', state);
-    }
-    return this;
-  }
 
   toData(initial=false) {
     const data = {
@@ -37,20 +20,14 @@ module.exports = class Game extends Immutable.Record({
       units: this.units.map(unit => unit.toJS()),
       turnCount: this.turnCount,
       turn: this.turn,
-      won: this.won,
+      isEnd: this.isEnd,
+      winner: this.winner,
     };
     if (initial) {
       //FIXME
       data.field = null;
     }
     return data;
-  }
-
-  linedupData() {
-    // units' [ cellId ]
-    return this.units.map(unit => {
-      return unit.cellId;
-    }).toJSON();
   }
 
   static restore(data) {
@@ -61,17 +38,6 @@ module.exports = class Game extends Immutable.Record({
 
   initUnits(units) {
     return  this.set('units', Immutable.List(units));
-  }
-
-  engage() {
-    return this.withMutations(mnt => {
-      mnt.setState('BATTLE')
-        .set('turnCount', 1);
-    });
-  }
-
-  isRun() {
-    return this.turnCount > 0;
   }
 
   remainingTurn() {
@@ -250,7 +216,10 @@ module.exports = class Game extends Immutable.Record({
 
     // Annihilation victory
     if (flags.count() == 1) {
-      return this.set('won', flags.first());
+      return this.withMutations(mnt => {
+        mnt.set('isEnd', true)
+          .set('winner', flags.first());
+      });
     }
 
     // Occupation victory
@@ -262,12 +231,18 @@ module.exports = class Game extends Immutable.Record({
       }
     });
     if (occupied) {
-      return this.set('won', true);
+      return this.withMutations(mnt => {
+        mnt.set('isEnd', true)
+          .set('winner', true);
+      });
     }
 
     // Defence victory
     if (this.turnCount >= defenceTurn*2) {
-      return this.set('won', false);
+      return this.withMutations(mnt => {
+        mnt.set('isEnd', true)
+          .set('winner', false);
+      });
     }
 
     return this;

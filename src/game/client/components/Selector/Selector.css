@@ -22,7 +22,7 @@
   background-color: #222;
 }
 
-#sel-container section {
+.sel-row {
   display: flex;
   flex-direction: column;
   width: 300px;
@@ -67,12 +67,6 @@
 .box-defense {
   background-color: cornflowerblue;
 }
-
-.sel-submitter {
-  margin-top: 10px;
-  text-align: center;
-}
-
 
 .sel-units-list {
   display: flex;
@@ -123,4 +117,36 @@ li.selected .sel-unit-name {
   color: white;
 }
 
+.sel-footer {
+  display: flex;
+  margin-top: 10px;
+  text-align: center;
+  justify-content: center;
+}
+
+#sel-totalcost {
+  height: 34px;
+  line-height: 34px;
+  margin-left: auto;
+}
+
+#sel-submitter {
+  display: block;
+  height: 34px;
+  margin-left: 15px;
+  padding: 0 15px;
+  box-sizing: border-box;
+  background: seagreen;
+  border: 1px solid darkgreen;
+  font-size: 1.2em;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#sel-submitter[disabled] {
+  color: #555;
+  background: none;
+  border-color: #555;
+  cursor: default;
+}
 

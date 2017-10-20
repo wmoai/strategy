@@ -4,9 +4,16 @@ import './Game.css';
 import Canvas from '../../components/Canvas/Canvas.jsx';
 import StatusBar from '../../components/StatusBar/StatusBar.jsx';
 import Result from '../../components/Result/Result.jsx';
-import StartTurn from '../../components/StartTurn/StartTurn.jsx';
+import Notifier from '../../components/Notifier/Notifier.jsx';
 
 export default class Game extends React.Component {
+
+  constructor(props)  {
+    super(props);
+    this.state = {
+      init: false
+    };
+  }
 
   render() {
     const cellSize = 50;
@@ -16,6 +23,7 @@ export default class Game extends React.Component {
       onHoverCell,
       onLineup,
       onEndTurn,
+      onReturnRoom,
     } = this.props;
     const { game, ui } = controller;
     if (!game) {
@@ -42,6 +50,11 @@ export default class Game extends React.Component {
             cellSize={cellSize}
             game={game}
             ui={ui}
+            onInit={() => {
+              this.setState({
+                init: true
+              });
+            }}
             onSelectCell={cellId => {
               onSelectCell(cellId);
             }}
@@ -51,10 +64,16 @@ export default class Game extends React.Component {
             isOffense={controller.offense}
           />
         </div>
-        {game.stateIs('BATTLE') && game.won == undefined &&
-            <StartTurn isMyTurn={game.turn == controller.offense} />
+        {this.state.init && !game.isEnd &&
+            <Notifier game={game} controller={controller} />
         }
-        <Result won={game.won == undefined ? undefined : game.won == controller.offense} />
+        <Result
+          isEnd={game.isEnd}
+          won={game.winner == controller.offense}
+          onReturnRoom={()  => {
+            onReturnRoom();
+          }}
+        />
       </div>
     );
   }

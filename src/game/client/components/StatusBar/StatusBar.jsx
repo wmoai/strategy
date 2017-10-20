@@ -12,40 +12,12 @@ export default class StatusBar extends React.Component {
   }
 
   render() {
-    const { game, isOffense } = this.props;
+    const { isOffense } = this.props;
 
     return (
       <div id="statusbar" className={isOffense != undefined ? (isOffense ? 'offense' : 'defense') : null}>
-        {
-          game.stateIs('BEFORE') ? this.lineupList()
-            : game.stateIs('BATTLE') ? this.battleList()
-            : null
-        }
+        {this.battleList()}
       </div>
-    );
-  }
-
-  lineupList() {
-    const { onLineup } = this.props;
-    return (
-      <ul>
-        {this.state.lineupSubmitted ? (
-          <li className="center">
-            <span>相手の布陣を待っています</span>
-          </li>
-        ) : (
-          <li className="center">
-            <button onClick={
-              () => {
-                this.setState({ lineupSubmitted: true }, () => {
-                  onLineup();
-                });
-              }}>
-              出撃準備完了
-            </button>
-          </li>
-        )}
-      </ul>
     );
   }
 
@@ -54,38 +26,44 @@ export default class StatusBar extends React.Component {
     const { turn, field } = game;
     const remainingTurn = game.remainingTurn();
     const terrain = field.cellTerrain(ui.hoveredCell);
-
-    let turnControl;
-    if (isOffense == undefined || isOffense == turn) {
-      turnControl = (
-        <button onClick={
-          () => {
-            onEndTurn();
-          }}>
-          ターン終了
-        </button>
-      );
-    } else {
-      turnControl = (
-        <span>相手のターン</span>
-      );
-    }
+    const isMyTurn = isOffense === turn;
 
     return (
       <ul>
-        <li>{turnControl}</li>
-        {remainingTurn <= 1 ? (
-          <li>最終ターン</li>
-        ) : (
-          <li>
-            残り<b>{remainingTurn}</b>ターン
-          </li>
-        )}
-        {terrain &&
-            <li className="right">
-              {terrain.name} 回避 {terrain.avoidance > 0 ? `+${terrain.avoidance}` : terrain.avoidance}
-            </li>
-        }
+        <li>
+          <button
+            id="turn-end-button"
+            disabled={!isMyTurn}
+            onClick={() => {
+              onEndTurn();
+            }}>
+            {isMyTurn ? (
+              <span>ターン<br/>終了</span>
+            ) : (
+              <span>相手の<br/>ターン</span>
+            )}
+          </button>
+        </li>
+        <li id="sb-remained-turn">
+          {remainingTurn <= 1 ? (
+            <span>最終ターン</span>
+          ) : (
+            <span>
+              残り<b>{remainingTurn}</b>ターン
+            </span>
+          )}
+        </li>
+        <li id="sb-terrain">
+          {terrain && [
+            <div key="name" className="name">{terrain.name}</div>,
+            <div key="inf" className="influence">
+              <span className="avoid">回避</span>
+              <span>
+                {terrain.avoidance > 0 ? `+${terrain.avoidance}` : terrain.avoidance}
+              </span>
+            </div>
+          ]}
+        </li>
       </ul>
     );
 

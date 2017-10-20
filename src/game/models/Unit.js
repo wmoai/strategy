@@ -1,5 +1,5 @@
 const Immutable = require('immutable');
-const Data = require('../data/Data.js');
+const Data = require('../data/');
 
 
 module.exports = class Unit extends Immutable.Record({
@@ -8,7 +8,6 @@ module.exports = class Unit extends Immutable.Record({
   cellId: null,
   hp: 0,
   acted: false,
-  // skill: null,
 }) {
 
   static create(args) {

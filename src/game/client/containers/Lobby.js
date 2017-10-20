@@ -1,10 +1,11 @@
 import { connect } from 'react-redux';
 import Component from '../components/Lobby/Lobby.jsx';
-import { createRoom, joinRoom, leaveRoom } from '../actions';
+import { createRoom, joinRoom, leaveRoom, ready } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    roomId: state.roomId
+    roomId: state.roomId,
+    isMatched: state.isMatched,
   };
 };
 
@@ -18,6 +19,9 @@ const mapDispatchToProps = dispatch => {
     },
     onLeaveRoom: () => {
       dispatch(leaveRoom());
+    },
+    onReady: () => {
+      dispatch(ready());
     },
   };
 };

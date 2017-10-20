@@ -36,9 +36,7 @@ export default class Controller extends Record({
     if (game.won != undefined) {
       return this;
     }
-    if (game.stateIs('BEFORE')) {
-      return this.changeCell(cellId);
-    } else if (ui.stateIs('FREE')) {
+    if (ui.stateIs('FREE')) {
       return this.forcus(cellId);
     } else if (ui.stateIs('MOVE')) {
       return this.tryMove(cellId);
@@ -48,6 +46,7 @@ export default class Controller extends Record({
     return this;
   }
 
+    /*
   changeCell(cellId) {
     if (this.ui.stateIs('FREE')) {
       return this.pickToChange(cellId);
@@ -76,6 +75,7 @@ export default class Controller extends Record({
     }
     return this.clearUI();
   }
+  */
 
   forcus(cellId) {
     const { game, ui } = this;

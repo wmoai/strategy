@@ -12,16 +12,12 @@ module.exports = {
         test: /\.(js|jsx)$/,
         loader: 'babel-loader',
         options: {
-          presets: ['es2015', 'react']
+          presets: ['es2017', 'react']
         }
       },
       {
         test: /\.css$/,
         use: [ 'style-loader', 'css-loader' ]
-      },
-      {
-        test: /\.(jpg|png)$/,
-        loaders: 'file-loader'
       },
     ]
   },

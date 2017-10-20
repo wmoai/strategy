@@ -3,6 +3,7 @@
 public/bundle.css
 public/game.js
 public/matching.js
+config/secret.json
 
 
 # Logs

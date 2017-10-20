@@ -5,15 +5,24 @@ import './Result.css';
 export default class Result extends React.Component {
 
   render() {
-    const { won } = this.props;
-    if (won == undefined) {
+    const { isEnd, won, onReturnRoom } = this.props;
+    if (!isEnd) {
       return null;
     }
 
     return (
-      <div id="result-container">
+      <div id="result-base">
         <div id="result-contents">
-          {won ? '勝利' : '敗北'}
+          <div id="result-head">
+            {won ? '勝利' : '敗北'}
+          </div>
+          <button
+            id="result-return"
+            onClick={() => {
+              onReturnRoom();
+            }}>
+            戻る
+          </button>
         </div>
       </div>
     );

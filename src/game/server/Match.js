@@ -7,11 +7,10 @@ const Unit = require('../models/Unit.js');
 const Field = require('../models/Field.js');
 
 const STATE = Immutable.Map({
-  ROOM: 1,
-  SELECT: 10,
-  LINEUP: 20,
-  BATTLE: 30,
-  END: 40,
+  ROOM: Symbol(),
+  SELECT: Symbol(),
+  BATTLE: Symbol(),
+  END: Symbol(),
 });
 
 module.exports = class Match extends Immutable.Record({
@@ -19,9 +18,7 @@ module.exports = class Match extends Immutable.Record({
   io: null,
   state: STATE.get('ROOM'),
   players: Immutable.Map([]),
-  game: new Game({
-    field: Field.init()
-  }),
+  game: null,
 }) {
 
   forwardState() {
@@ -31,13 +28,10 @@ module.exports = class Match extends Immutable.Record({
         next = STATE.get('SELECT');
         break;
       case STATE.get('SELECT'):
-        next = STATE.get('LINEUP');
-        break;
-      case STATE.get('LINEUP'):
         next = STATE.get('BATTLE');
         break;
       case STATE.get('BATTLE'):
-        next = STATE.get('END');
+        next = STATE.get('ROOM');
         break;
     }
     return this.set('state', next);
@@ -73,11 +67,16 @@ module.exports = class Match extends Immutable.Record({
 
     return this.withMutations(mnt => {
       mnt.set('players', mnt.players.set(userId, player))
-        .mightPrepareBattle();
+        .mightNotifyMatched();
     });
   }
 
+  broadcast(name, args={}) {
+    this.io.to(this.id).emit(name, args);
+  }
+
   leave(userId) {
+    this.broadcast('unmatched');
     return this.set('players', this.players.delete(userId));
   }
 
@@ -85,6 +84,52 @@ module.exports = class Match extends Immutable.Record({
     return this.players.count();
   }
 
+  mightNotifyMatched() {
+    if (this.state !== STATE.get('ROOM') || this.players.count() < 2) {
+      return this;
+    }
+    this.broadcast('matched');
+  }
+
+  ready(socket) {
+    const { userId } = socket;
+    const player = this.players.get(userId);
+    const match = this.set(
+      'players',
+      this.players.set(userId, player.set('ready', true))
+    );
+
+    return match.mightStartGame();
+  }
+
+  mightStartGame() {
+    if (this.state !== STATE.get('ROOM') || this.players.count() < 2 || !this.players.reduce((pre, cur) => pre.ready && cur.ready)) {
+      return this;
+    }
+    let tgl = Math.random() >= 0.5;
+
+    const match = this.withMutations(mnt => {
+      mnt.set('game', new Game({
+        field: Field.init()
+      })).set('players', mnt.players.map(player => {
+        // decide offense side
+        tgl = !tgl;
+        return player.set('offense', tgl);
+      })).forwardState();
+    });
+    match.getSockets().then(sockets => {
+      sockets.forEach(socket => {
+        socket.emit('startToSelectUnits', {
+          you: match.player(socket),
+          opponent: match.opponent(socket.userId)
+        });
+      });
+    });
+    return match;
+
+  }
+
+    /*
   mightPrepareBattle() {
     if (this.players.count() < 2 || this.state !== STATE.get('ROOM')) {
       return this;
@@ -108,24 +153,25 @@ module.exports = class Match extends Immutable.Record({
     });
     return match;
   }
+  */
 
   selectUnits(socket, list) {
     if (this.state !== STATE.get('SELECT')) {
       return this;
     }
-    const id = socket.userId;
-    const deck = socket.deck;
-    const player = this.players.get(id);
+    const { userId, deck } = socket;
+    const player = this.players.get(userId);
     const units = list.map(index => Unit.create({
       offense: player.offense,
       unitId: deck[index],
     }));
     //FIXME check cost and reject
 
-    const match = this.set('players', this.players.set(id, player.set('selection', units)));
-    return match.mightStartLineup();
+    const match = this.set('players', this.players.set(userId, player.set('selection', units)));
+    return match.mightEngage();
   }
 
+    /*
   mightStartLineup() {
     let enable = true;
     this.players.forEach(player => {
@@ -148,6 +194,7 @@ module.exports = class Match extends Immutable.Record({
     });
     return match;
   }
+  */
 
   initUnits() {
     const { field } = this.game;
@@ -163,6 +210,7 @@ module.exports = class Match extends Immutable.Record({
     return this.set('game', this.game.initUnits(units));
   }
 
+    /*
   lineup(socket, list) {
     // list is Array of all my units' cellId
     if (this.state !== STATE.get('LINEUP')) {
@@ -203,6 +251,24 @@ module.exports = class Match extends Immutable.Record({
     });
     return match;
   }
+  */
+
+  mightEngage() {
+    const canEngage = this.players.reduce((pre, cur) => {
+      return pre.selection && pre.selection.length > 0 && cur.selection && cur.selection.length > 0;
+    });
+    if (!canEngage) {
+      return this;
+    }
+
+    const match = this.withMutations(mnt => {
+      mnt.initUnits().forwardState();
+    });
+    match.io.to(match.id).emit('engage', {
+      game: match.game.toData() 
+    });
+    return match;
+  }
 
   isTurnPlayer(socket) {
     const player = this.player(socket);
@@ -226,10 +292,7 @@ module.exports = class Match extends Immutable.Record({
         .actUnit(to, target)
         .mightChangeTurn()
         .mightEndGame()
-      );
-      if (mnt.game.won != undefined) {
-        mnt.forwardState();
-      }
+      ).mightResetPlayers();
     });
     match.broadcast('act', {
       move: { from: from, to: to },
@@ -244,10 +307,8 @@ module.exports = class Match extends Immutable.Record({
       return this;
     }
     const match = this.withMutations(mnt => {
-      mnt.set('game', this.game.changeTurn().mightEndGame());
-      if (mnt.game.won != undefined) {
-        mnt.forwardState();
-      }
+      mnt.set('game', mnt.game.changeTurn().mightEndGame())
+        .mightResetPlayers();
     });
     match.broadcast('changeTurn', {
       game: match.game.toData() 
@@ -256,8 +317,16 @@ module.exports = class Match extends Immutable.Record({
     return match;
   }
 
-  broadcast(name, args={}) {
-    this.io.to(this.id).emit(name, args);
+  mightResetPlayers() {
+    if (!this.game.isEnd) {
+      return this;
+    }
+    return this.withMutations(mnt => {
+      mnt.set(
+        'players',
+        mnt.players.map(player => player.reset())
+      ).forwardState();
+    });
   }
 
 };

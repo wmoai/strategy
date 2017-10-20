@@ -7,6 +7,8 @@ import App from './containers/App.js';
 import * as socket from './websocket.js';
 import reducer from './reducer.js';
 
+import * as Data from '../data/';
+
 const socketEmitter = store => next => action => {
   const { payload } = action;
   switch (action.type) {
@@ -17,10 +19,10 @@ const socketEmitter = store => next => action => {
     case 'leaveRoom':
       socket.emit('leaveRoom', store.getState().roomId);
       break;
+    case 'ready':
+      return socket.emit('ready');
     case 'selectUnits':
       return socket.emit('selectUnits', {list: payload.selectedList});
-    case 'lineup':
-      return socket.emit('lineup', {list: store.getState().controller.game.linedupData()});
     case 'endTurn':
       return socket.emit('endTurn');
   }
@@ -34,11 +36,13 @@ const store = createStore(
 socket.init(store);
 
 window.onload = function() {
-  render(
-    <Provider store={store}>
-      <App />
-    </Provider>,
-    document.getElementById('contents')
-  );
+  Data.init().then(() => {
+    render(
+      <Provider store={store}>
+        <App />
+      </Provider>,
+      document.getElementById('contents')
+    );
+  });
 };
 

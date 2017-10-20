@@ -22,17 +22,7 @@ module.exports = class GameServer {
       });
 
       socket.on('leaveRoom', matchId => {
-        let match = this.matches.get(matchId);
-        if (!match) {
-          return;
-        }
-        socket.leave(matchId);
-        match = match.leave(socket.userId);
-        if (match.playerCount() == 0) {
-          this.matches.delete(matchId);
-        } else {
-          this.matches.set(matchId, match);
-        }
+        this.leave(matchId, socket);
       });
 
       socket.on('disconnect', () => {
@@ -61,13 +51,13 @@ module.exports = class GameServer {
     });
     this.matches.set(matchId, match.join(socket.userId, socket.deck));
 
+    socket.on('ready', () => {
+      const match = this.matches.get(matchId);
+      this.matches.set(matchId, match.ready(socket));
+    });
     socket.on('selectUnits', ({ list }) => {
       const match = this.matches.get(matchId);
       this.matches.set(matchId, match.selectUnits(socket, list));
-    });
-    socket.on('lineup', ({ list }) => {
-      const match = this.matches.get(matchId);
-      this.matches.set(matchId, match.lineup(socket, list));
     });
     socket.on('act', ({ from, to, target }) => {
       const match = this.matches.get(matchId);
@@ -77,6 +67,24 @@ module.exports = class GameServer {
       const match = this.matches.get(matchId);
       this.matches.set(matchId, match.endTurn(socket));
     });
+  }
+
+  leave(matchId, socket) {
+    let match = this.matches.get(matchId);
+    if (!match) {
+      return;
+    }
+    socket.removeAllListeners('ready');
+    socket.removeAllListeners('selectUnits');
+    socket.removeAllListeners('act');
+    socket.removeAllListeners('endTurn');
+    socket.leave(matchId);
+    match = match.leave(socket.userId);
+    if (match.playerCount() == 0) {
+      this.matches.delete(matchId);
+    } else {
+      this.matches.set(matchId, match);
+    }
   }
 
 };

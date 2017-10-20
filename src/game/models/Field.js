@@ -1,5 +1,5 @@
 const Immutable = require('immutable');
-const Data = require('../data/Data.js');
+const Data = require('../data/');
 
 module.exports = class Field extends Immutable.Record({
   id: null,

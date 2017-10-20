@@ -14,6 +14,10 @@ export function leaveRoom() {
   return { type: 'leaveRoom' };
 }
 
+export function ready() {
+  return { type: 'ready' };
+}
+
 export function selectUnits(selectedList) {
   return {
     type: 'selectUnits',
@@ -41,5 +45,9 @@ export function lineup() {
 
 export function endTurn() {
   return { type: 'endTurn' };
+}
+
+export function returnRoom() {
+  return { type: 'returnRoom' };
 }
 
