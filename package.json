@@ -1,10 +1,13 @@
 {
   "name": "strategy",
   "version": "1.0.0",
+  "engine": {
+    "node": "8.4.0"
+  },
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "webpack",
+    "postinstall": "./node_modules/.bin/webpack",
     "start": "node src/app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js"
   },
