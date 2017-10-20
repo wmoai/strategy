@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "webpack",
     "start": "node src/app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js"
   },
