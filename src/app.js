@@ -93,7 +93,8 @@ app.use((err, req, res, next) => {
 
 const server = require('http').createServer(app);
 Data.init().then(() => {
-  server.listen(3005);
+  // server.listen(3005);
+  server.listen(80);
 });
 
 const io = require('socket.io').listen(server);
