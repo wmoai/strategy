@@ -6,7 +6,8 @@ const app = express();
 const uid = require('uid-safe').sync;
 const jwt = require('jsonwebtoken');
 const config = require('../config/secret.json');
-const JWT_SECRET = config.jwtSecret;
+// const JWT_SECRET = config.jwtSecret;
+const JWT_SECRET = 'Jq;dsi(jjkqwl;dba';
 
 app.set('view engine', 'pug');
 app.set('views', Path.join(__dirname, '../views'));
