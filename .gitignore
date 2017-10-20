@@ -1,8 +1,7 @@
 .DS_Store
 
 public/bundle.css
-public/game.js
-public/matching.js
+public/app.js
 config/secret.json
 
 
