@@ -3,7 +3,7 @@ const Data = require('../data/');
 
 
 module.exports = class Unit extends Immutable.Record({
-  offense: undefined,
+  offense: null,
   unitId: null,
   cellId: null,
   hp: 0,

@@ -9,7 +9,7 @@ import reducer from './reducer.js';
 
 import * as Data from '../data/';
 
-const socketEmitter = store => next => action => {
+const middleware = store => next => action => {
   const { payload } = action;
   switch (action.type) {
     case 'createRoom':
@@ -31,7 +31,7 @@ const socketEmitter = store => next => action => {
 
 const store = createStore(
   reducer,
-  applyMiddleware(socketEmitter)
+  applyMiddleware(middleware)
 );
 socket.init(store);
 

@@ -33,7 +33,7 @@ export default class StatusBar extends React.Component {
         <li>
           <button
             id="turn-end-button"
-            disabled={!isMyTurn}
+            disabled={!isMyTurn || game.isEnd}
             onClick={() => {
               onEndTurn();
             }}>

@@ -1,14 +1,8 @@
+const firebase = require('../services/firebase.js');
 let master;
 
 exports.init = function() {
   return new Promise(resolve => {
-    const firebase = require('firebase/app');
-    require('firebase/database');
-    firebase.initializeApp({
-      apiKey: 'AIzaSyAhcpuo8blTSLD_sGosWeWpox-drQJr7Es',
-      databaseURL: 'https://instant-strategy.firebaseio.com',
-      projectId: 'instant-strategy',
-    });
     const database = firebase.database();
     database.ref('/master').once('value').then(snapshot => {
       master = snapshot.val();

@@ -78,10 +78,10 @@ export default class Engine {
     const layer = this.layer.ui;
 
     const { cellSize } = this;
-    const left = 0
+    const left = -1
       , top = 0
       , right = cellSize
-      , bottom = cellSize;
+      , bottom = cellSize+1;
     const width = 15;
     const size = 4;
 
@@ -139,9 +139,9 @@ export default class Engine {
       const x = bp % field.width;
 
       const base = new PIXI.Graphics();
-      const width = 6;
-      base.lineStyle(width, 0x0000ff, 0.5);
-      base.drawRect(x*cellSize+width/2+1, y*cellSize+width/2+1, cellSize-width-2, cellSize-width-2);
+      base.beginFill(0x0000ff, 0.15);
+      base.lineStyle(4, 0x0000ff, 0.5);
+      base.drawRect(x*cellSize+1, y*cellSize+2, cellSize-3, cellSize-4);
       layer.addChild(base);
     });
   }

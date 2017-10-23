@@ -6,6 +6,8 @@ const Game = require('../models/Game.js');
 const Unit = require('../models/Unit.js');
 const Field = require('../models/Field.js');
 
+const firebaseAdmin = require('../services/firebase-admin.js');
+
 const STATE = Immutable.Map({
   ROOM: Symbol(),
   SELECT: Symbol(),
@@ -299,6 +301,8 @@ module.exports = class Match extends Immutable.Record({
       act: { to: target },
       game: match.game.toData() ,
     });
+
+    // firebaseAdmin.database().ref(`rooms/${match.id}`).set(match.game.toData());
     return match;
   }
 

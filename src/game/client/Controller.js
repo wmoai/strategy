@@ -6,7 +6,7 @@ const Game = require('../models/Game.js');
 export default class Controller extends Record({
   game: null,
   ui: new UI(),
-  offense: undefined,
+  offense: null,
 }) {
 
   sync({ game }) {
@@ -17,7 +17,7 @@ export default class Controller extends Record({
 
   hoverCell(cellId) {
     const { game, ui } = this;
-    if (game.won != undefined) {
+    if (game.isEnd) {
       return this;
     }
     if (ui.stateIs('ACT')
@@ -33,7 +33,7 @@ export default class Controller extends Record({
 
   selectCell(cellId, onAct) {
     const { game, ui } = this;
-    if (game.won != undefined) {
+    if (game.isEnd) {
       return this;
     }
     if (ui.stateIs('FREE')) {

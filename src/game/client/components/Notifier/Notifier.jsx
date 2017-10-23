@@ -27,9 +27,9 @@ export default class Notifier extends React.Component {
   }
 
   update(props) {
-    const { game, controller } = props;
-    if (game.won == undefined) {
-      if (game.turn == controller.offense) {
+    const { game, isOffense } = props;
+    if (!game.isEnd) {
+      if (game.turn == isOffense) {
         if (this.state.step != Step.get('MY_TURN')) {
           this.setState({
             show: true,

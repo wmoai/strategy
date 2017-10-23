@@ -3,8 +3,6 @@ import './Game.css';
 
 import Canvas from '../../components/Canvas/Canvas.jsx';
 import StatusBar from '../../components/StatusBar/StatusBar.jsx';
-import Result from '../../components/Result/Result.jsx';
-import Notifier from '../../components/Notifier/Notifier.jsx';
 
 export default class Game extends React.Component {
 
@@ -14,6 +12,20 @@ export default class Game extends React.Component {
       init: false
     };
   }
+
+  // FIXME
+  // componentDidMount() {
+    // window.onbeforeunload = () => {
+      // return true;
+    // };
+  // }
+  // componentWillReceiveProps(nextProps) {
+    // if (nextProps.controller.game.isEnd) {
+      // window.onbeforeunload = () => {
+        // return null;
+      // };
+    // }
+  // }
 
   render() {
     const cellSize = 50;
@@ -48,6 +60,7 @@ export default class Game extends React.Component {
         <div id="game-main">
           <Canvas
             cellSize={cellSize}
+            isOffense={controller.offense}
             game={game}
             ui={ui}
             onInit={() => {
@@ -61,19 +74,12 @@ export default class Game extends React.Component {
             onHoverCell={cellId => {
               onHoverCell(cellId);
             }}
+            onReturnRoom={()  => {
+              onReturnRoom();
+            }}
             isOffense={controller.offense}
           />
         </div>
-        {this.state.init && !game.isEnd &&
-            <Notifier game={game} controller={controller} />
-        }
-        <Result
-          isEnd={game.isEnd}
-          won={game.winner == controller.offense}
-          onReturnRoom={()  => {
-            onReturnRoom();
-          }}
-        />
       </div>
     );
   }

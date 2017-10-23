@@ -2,7 +2,7 @@ const Immutable = require('immutable');
 const Unit = require('./Unit.js');
 const Field = require('./Field.js');
 
-const defenceTurn = 15;
+const defenceTurn = 10;
 
 module.exports = class Game extends Immutable.Record({
   cost: 16,
@@ -11,20 +11,19 @@ module.exports = class Game extends Immutable.Record({
   turnCount: 1,
   turn: true,
   isEnd: false,
-  winner: undefined,
+  winner: null,
 }) {
 
   toData(initial=false) {
     const data = {
-      _state: this._state,
-      units: this.units.map(unit => unit.toJS()),
+      units: this.units.map(unit => unit.toJSON()).toArray(),
       turnCount: this.turnCount,
       turn: this.turn,
       isEnd: this.isEnd,
       winner: this.winner,
     };
+    //FIXME
     if (initial) {
-      //FIXME
       data.field = null;
     }
     return data;

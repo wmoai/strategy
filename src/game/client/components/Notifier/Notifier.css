@@ -1,6 +1,6 @@
 
 #notify-base {
-  /* pointer-events: none; */
+  pointer-events: none;
   display: flex;
   justify-content: center;
   align-items: center;

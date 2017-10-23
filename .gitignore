@@ -1,5 +1,6 @@
 .DS_Store
 
+.env
 public/bundle.css
 public/app.js
 config/secret.json
