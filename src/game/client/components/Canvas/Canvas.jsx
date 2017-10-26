@@ -94,8 +94,8 @@ export default class Canvas extends React.Component {
     const rect = target.getBoundingClientRect();
     const xr = (pageX-rect.left) / target.clientWidth;
     const yr = (pageY-rect.top) / target.clientHeight;
-    const dx = xr > 0.85 ? 5 : xr < 0.15 ? -5 : 0;
-    const dy = yr > 0.85 ? 5 : yr < 0.15 ? -5 : 0;
+    const dx = xr > 0.9 ? 5 : xr < 0.1 ? -5 : 0;
+    const dy = yr > 0.9 ? 5 : yr < 0.1 ? -5 : 0;
     if (dx === 0 && dy === 0) {
       clearInterval(scroller.timer);
     }

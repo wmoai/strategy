@@ -30,14 +30,14 @@ export default class Game extends React.Component {
   render() {
     const cellSize = 50;
     const {
-      controller,
+      me,
+      game,
+      ui,
       onSelectCell,
       onHoverCell,
-      onLineup,
       onEndTurn,
       onReturnRoom,
     } = this.props;
-    const { game, ui } = controller;
     if (!game) {
       return <div>ERR</div>;
     }
@@ -46,12 +46,9 @@ export default class Game extends React.Component {
       <div id="game-container">
         <div id="game-header">
           <StatusBar
-            isOffense={controller.offense}
+            isOffense={me.offense}
             game={game}
             ui={ui}
-            onLineup={() => {
-              onLineup();
-            }}
             onEndTurn={() => {
               onEndTurn();
             }}
@@ -60,7 +57,7 @@ export default class Game extends React.Component {
         <div id="game-main">
           <Canvas
             cellSize={cellSize}
-            isOffense={controller.offense}
+            isOffense={me.offense}
             game={game}
             ui={ui}
             onInit={() => {
@@ -77,7 +74,7 @@ export default class Game extends React.Component {
             onReturnRoom={()  => {
               onReturnRoom();
             }}
-            isOffense={controller.offense}
+            isOffense={me.offense}
           />
         </div>
       </div>

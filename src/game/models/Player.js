@@ -3,10 +3,9 @@ const Immutable = require('immutable');
 module.exports = class Player extends Immutable.Record({
   id: null,
   offense: null,
-  cost: 10,
-  deck: null, // [ unitId ]
+  deck: [], // [ unitId ]
   ready: false,
-  selection: null,
+  selection: [], // [ Unit ]
 }) {
 
   toData() {
@@ -14,6 +13,7 @@ module.exports = class Player extends Immutable.Record({
       id: this.id,
       offense: this.offense,
       deck: this.deck,
+      ready: this.ready,
     };
   }
 
@@ -24,7 +24,6 @@ module.exports = class Player extends Immutable.Record({
         .delete('selection');
     });
   }
-
 
 };
 

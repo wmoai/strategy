@@ -4,7 +4,7 @@ import { selectUnits } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    player: state.player,
+    me: state.me,
     opponent: state.opponent,
   };
 };

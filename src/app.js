@@ -93,9 +93,7 @@ app.use((err, req, res, next) => {
 
 
 const server = require('http').createServer(app);
-Data.init().then(() => {
-  server.listen(process.env.PORT || 3005);
-});
+server.listen(process.env.PORT || 3005);
 
 const io = require('socket.io').listen(server);
 const gameNS = io.of('/game');
@@ -111,5 +109,5 @@ gameNS.use((socket, next) => {
     return next();
   });
 });
-gameServer.initSocket(gameNS);
+gameServer.listen(gameNS);
 

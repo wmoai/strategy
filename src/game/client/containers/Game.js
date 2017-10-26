@@ -3,14 +3,15 @@ import Component from '../components/Game/Game.jsx';
 import {
   selectCell,
   hoverCell,
-  lineup,
   endTurn,
   returnRoom,
 } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    controller: state.controller,
+    me: state.me,
+    game: state.room.game,
+    ui: state.ui,
   };
 };
 
@@ -21,9 +22,6 @@ const mapDispatchToProps = dispatch => {
     },
     onHoverCell: cellId => {
       dispatch(hoverCell(cellId));
-    },
-    onLineup: () => {
-      dispatch(lineup());
     },
     onEndTurn: () => {
       dispatch(endTurn());

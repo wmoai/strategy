@@ -2,14 +2,9 @@ import socketIOClient from 'socket.io-client';
 const socket = socketIOClient('/game');
 
 const listeningEvents = [
-  'enterRoom',
-  'matched',
-  'unmatched',
-  'startToSelectUnits',
-  'engage',
-  'act',
-  'changeTurn',
-  'rejectAction',
+  'init',
+  'syncRoom',
+  'syncGame',
 ];
 
 export function init(store) {

@@ -3,7 +3,7 @@ import Component from '../components/App.jsx';
 
 const mapStateToProps = state => {
   return {
-    step: state.step
+    room: state.room
   };
 };
 

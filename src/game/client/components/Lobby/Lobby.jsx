@@ -12,9 +12,16 @@ export default class Lobby extends React.Component {
   }
 
   lobby() {
-    const { onCreateRoom, onJoinRoom } = this.props;
+    const { onSoloPlay, onCreateRoom, onJoinRoom } = this.props;
     return (
       <ul id="lobby-list">
+        <li>
+          <button
+            className="lobby-btn"
+            onClick={() => { onSoloPlay(); }}>
+            ソロプレイ
+          </button>
+        </li>
         <li>
           <button
             className="lobby-btn"
@@ -44,7 +51,8 @@ export default class Lobby extends React.Component {
   }
 
   room() {
-    const { roomId, isMatched, onLeaveRoom, onReady } = this.props;
+    const { room, onLeaveRoom, onReady } = this.props;
+    const isMatched = room.players.count() >= 2;
     return (
       <ul id="lobby-list">
         <li id="lobby-room">
@@ -52,7 +60,7 @@ export default class Lobby extends React.Component {
           <input
             type="text"
             className="lobby-input"
-            value={roomId}
+            value={room.id}
             onClick={e => e.target.select()}
             readOnly/>
         </li>
@@ -90,11 +98,11 @@ export default class Lobby extends React.Component {
   }
 
   render() {
-    const { roomId } = this.props;
+    const { room } = this.props;
     return (
       <div id="lobby-base">
         <div id="lobby-container">
-          {(roomId && roomId != '') ? (
+          {room ? (
             this.room()
           ) : (
             this.lobby()

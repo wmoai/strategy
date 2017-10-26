@@ -1,4 +1,8 @@
 
+export function soloPlay() {
+  return { type: 'soloPlay' };
+}
+
 export function createRoom() {
   return { type: 'createRoom' };
 }
@@ -37,10 +41,6 @@ export function hoverCell(cellId) {
     type: 'hoverCell',
     payload: { cellId: cellId }
   };
-}
-
-export function lineup() {
-  return { type: 'lineup' };
 }
 
 export function endTurn() {

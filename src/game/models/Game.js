@@ -14,7 +14,7 @@ module.exports = class Game extends Immutable.Record({
   winner: null,
 }) {
 
-  toData(initial=false) {
+  toData() {
     const data = {
       units: this.units.map(unit => unit.toJSON()).toArray(),
       turnCount: this.turnCount,
@@ -22,10 +22,6 @@ module.exports = class Game extends Immutable.Record({
       isEnd: this.isEnd,
       winner: this.winner,
     };
-    //FIXME
-    if (initial) {
-      data.field = null;
-    }
     return data;
   }
 

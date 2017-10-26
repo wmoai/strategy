@@ -6,13 +6,11 @@ const Game = require('../models/Game.js');
 const Unit = require('../models/Unit.js');
 const Field = require('../models/Field.js');
 
-const firebaseAdmin = require('../services/firebase-admin.js');
-
 const STATE = Immutable.Map({
-  ROOM: Symbol(),
-  SELECT: Symbol(),
-  BATTLE: Symbol(),
-  END: Symbol(),
+  ROOM: 10,
+  SELECT: 20,
+  BATTLE: 30,
+  END: 40,
 });
 
 module.exports = class Match extends Immutable.Record({
@@ -22,6 +20,13 @@ module.exports = class Match extends Immutable.Record({
   players: Immutable.Map([]),
   game: null,
 }) {
+
+  toJSON() {
+    const json = super.toJSON();
+    delete json.io;
+    json.players = this.players.map(player => player.toData()).toJSON();
+    return json;
+  }
 
   forwardState() {
     let next = this.state;
@@ -131,32 +136,6 @@ module.exports = class Match extends Immutable.Record({
 
   }
 
-    /*
-  mightPrepareBattle() {
-    if (this.players.count() < 2 || this.state !== STATE.get('ROOM')) {
-      return this;
-    }
-    let tgl = Math.random() >= 0.5;
-
-    const match = this.withMutations(mnt => {
-      mnt.set('players', this.players.map(player => {
-        // decide offense side
-        tgl = !tgl;
-        return player.set('offense', tgl);
-      })).forwardState();
-    });
-    match.getSockets().then(sockets => {
-      sockets.forEach(socket => {
-        socket.emit('startToSelectUnits', {
-          you: match.player(socket),
-          opponent: match.opponent(socket.userId)
-        });
-      });
-    });
-    return match;
-  }
-  */
-
   selectUnits(socket, list) {
     if (this.state !== STATE.get('SELECT')) {
       return this;
@@ -173,31 +152,6 @@ module.exports = class Match extends Immutable.Record({
     return match.mightEngage();
   }
 
-    /*
-  mightStartLineup() {
-    let enable = true;
-    this.players.forEach(player => {
-      enable &= player.selection && player.selection.length > 0;
-    });
-    if (!enable) {
-      return this;
-    }
-
-    const match = this.withMutations(mnt => {
-      mnt.initUnits().forwardState();
-    });
-    match.getSockets().then(sockets => {
-      sockets.forEach(socket => {
-        const player = match.player(socket);
-        socket.emit('startToLineup', {
-          game: match.game.set('units', match.game.myUnits(player.offense))
-        });
-      });
-    });
-    return match;
-  }
-  */
-
   initUnits() {
     const { field } = this.game;
 
@@ -212,49 +166,6 @@ module.exports = class Match extends Immutable.Record({
     return this.set('game', this.game.initUnits(units));
   }
 
-    /*
-  lineup(socket, list) {
-    // list is Array of all my units' cellId
-    if (this.state !== STATE.get('LINEUP')) {
-      return this;
-    }
-    const player = this.player(socket);
-    if (player.lineup) {
-      return this;
-    }
-
-    const match = this.set('players', this.players.set(socket.userId,
-      player.set('lineup', list))
-    );
-
-    return match.mightEngage();
-  }
-
-  mightEngage() {
-    let canEngage = true;
-    this.players.forEach(player => {
-      canEngage &= player.lineup != null;
-    });
-    if (!canEngage) {
-      return this;
-    }
-    let units = Immutable.List();
-    this.players.forEach(player => {
-      const punits = this.game.myUnits(player.offense).map((unit, i) => {
-        return unit.set('cellId', player.lineup[i]);
-      });
-      units = units.concat(punits);
-    });
-
-    const match = this.set('game', this.game.set('units', units).engage())
-      .forwardState();
-    match.io.to(match.id).emit('engage', {
-      game: match.game.toData() 
-    });
-    return match;
-  }
-  */
-
   mightEngage() {
     const canEngage = this.players.reduce((pre, cur) => {
       return pre.selection && pre.selection.length > 0 && cur.selection && cur.selection.length > 0;
@@ -266,7 +177,7 @@ module.exports = class Match extends Immutable.Record({
     const match = this.withMutations(mnt => {
       mnt.initUnits().forwardState();
     });
-    match.io.to(match.id).emit('engage', {
+    match.broadcast('engage', {
       game: match.game.toData() 
     });
     return match;
@@ -302,7 +213,6 @@ module.exports = class Match extends Immutable.Record({
       game: match.game.toData() ,
     });
 
-    // firebaseAdmin.database().ref(`rooms/${match.id}`).set(match.game.toData());
     return match;
   }
 
