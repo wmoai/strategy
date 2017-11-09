@@ -66,6 +66,10 @@ body {
   color: #222;
 }
 
+#lobby-create {
+  margin-top: 10px;
+}
+
 #lobby-join {
   margin-top: 10px;
 }

@@ -13,30 +13,32 @@ export default class Game extends React.Component {
     };
   }
 
-  // FIXME
-  // componentDidMount() {
-    // window.onbeforeunload = () => {
-      // return true;
-    // };
-  // }
-  // componentWillReceiveProps(nextProps) {
-    // if (nextProps.controller.game.isEnd) {
-      // window.onbeforeunload = () => {
-        // return null;
-      // };
-    // }
-  // }
+    /*
+  componentDidMount() {
+    window.onbeforeunload = () => {
+      return true;
+    };
+  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.game.isEnd) {
+      window.onbeforeunload = () => {
+        return null;
+      };
+    }
+  }
+  */
 
   render() {
     const cellSize = 50;
     const {
-      me,
+      isOffense,
       game,
       ui,
       onSelectCell,
       onHoverCell,
       onEndTurn,
       onReturnRoom,
+      onEndMyTurn,
     } = this.props;
     if (!game) {
       return <div>ERR</div>;
@@ -46,7 +48,7 @@ export default class Game extends React.Component {
       <div id="game-container">
         <div id="game-header">
           <StatusBar
-            isOffense={me.offense}
+            isOffense={isOffense}
             game={game}
             ui={ui}
             onEndTurn={() => {
@@ -57,7 +59,7 @@ export default class Game extends React.Component {
         <div id="game-main">
           <Canvas
             cellSize={cellSize}
-            isOffense={me.offense}
+            isOffense={isOffense}
             game={game}
             ui={ui}
             onInit={() => {
@@ -65,16 +67,11 @@ export default class Game extends React.Component {
                 init: true
               });
             }}
-            onSelectCell={cellId => {
-              onSelectCell(cellId);
-            }}
-            onHoverCell={cellId => {
-              onHoverCell(cellId);
-            }}
-            onReturnRoom={()  => {
-              onReturnRoom();
-            }}
-            isOffense={me.offense}
+            onSelectCell={onSelectCell}
+            onHoverCell={onHoverCell}
+            onReturnRoom={onReturnRoom}
+            onEndMyTurn={onEndMyTurn}
+            isOffense={isOffense}
           />
         </div>
       </div>

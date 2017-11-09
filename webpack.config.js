@@ -5,6 +5,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: {
+    portal: './src/portal/',
     app: './src/game/client/',
   },
   output: {

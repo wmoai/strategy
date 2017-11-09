@@ -1,11 +1,13 @@
 const Immutable = require('immutable');
 const Unit = require('./Unit.js');
-const Field = require('./Field.js');
+
+const resource = require('../data');
 
 const defenceTurn = 10;
 
 module.exports = class Game extends Immutable.Record({
   cost: 16,
+  fieldId: 2,
   field: null,
   units: Immutable.List(),
   turnCount: 1,
@@ -16,6 +18,8 @@ module.exports = class Game extends Immutable.Record({
 
   toData() {
     const data = {
+      cost: this.cost,
+      fieldId: this.fieldId,
       units: this.units.map(unit => unit.toJSON()).toArray(),
       turnCount: this.turnCount,
       turn: this.turn,
@@ -26,9 +30,18 @@ module.exports = class Game extends Immutable.Record({
   }
 
   static restore(data) {
-    return new Game(data)
-      .set('field', Field.init())
-      .set('units', Immutable.List(data.units.map(unit => new Unit(unit))));
+    return (new Game(data)).withMutations(mnt => {
+      mnt.setField()
+        .set('units', Immutable.List(data.units.map(unit => new Unit(unit))));
+    });
+  }
+
+  setField(fieldId) {
+    const fid = fieldId ? fieldId : this.fieldId;
+    return this.withMutations(mnt => {
+      mnt.set('fieldId', fid)
+        .set('field', resource.field[fid]);
+    });
   }
 
   initUnits(units) {
@@ -43,8 +56,10 @@ module.exports = class Game extends Immutable.Record({
     return this.units.filter(unit => unit.cellId == cellId && unit.isAlive()).first();
   }
 
-  myUnits(offense) {
-    return this.units.filter(unit => unit.offense == offense);
+  ownedUnits(offense) {
+    return this.units.filter(unit => {
+      return unit.isAlive() && unit.offense === offense;
+    });
   }
 
   checkMovable(from, to) {
@@ -55,7 +70,7 @@ module.exports = class Game extends Immutable.Record({
     if (!unit || this.unit(to)) {
       return false;
     }
-    const klass = unit.klass();
+    const klass = unit.klass;
     let movable = false;
     let movableMap = new Map();
 
@@ -86,8 +101,8 @@ module.exports = class Game extends Immutable.Record({
         }
       }
     };
-    const [y, x] = this.field.coordinates(from);
-    search4(y, x, unit.status().move, true);
+    const { y, x } = this.field.coordinates(from);
+    search4(y, x, unit.status.move, true);
     return movable;
   }
 
@@ -116,7 +131,7 @@ module.exports = class Game extends Immutable.Record({
     if (!unit || unit.acted || unit.hp <= 0 || !target || target.hp <= 0) {
       return false;
     }
-    if (unit.klass().healer) {
+    if (unit.klass.healer) {
       if (unit.offense != target.offense) {
         return false;
       }
@@ -128,44 +143,31 @@ module.exports = class Game extends Immutable.Record({
 
     let actionable = false;
     const dist = this.field.distance(from, to);
-    actionable = (unit.status().min_range <= dist && dist <= unit.status().max_range);
+    actionable = (unit.status.min_range <= dist && dist <= unit.status.max_range);
     return actionable;
   }
 
   actUnit(from, to) {
     let actor = this.unit(from);
     let target = this.unit(to);
+
     return this.set('units', this.units.withMutations(mnt => {
-      if (!actor) {
-        return;
-      }
       const actorIndex = mnt.indexOf(actor);
       actor = actor.set('acted', 1);
-      mnt.set(actorIndex, actor);
-    
+
       if (target) {
-        let active = actor 
-          , passive = target;
-        // FIXME matibuse
-        // if (!active.klass().healer && passive.skill && passive.skill.is('ambush')) {
-          // active = target;
-          // passive = actor;
-        // }
-
-        const passiveIndex = mnt.indexOf(passive);
-        passive = passive.actBy(active);
-        mnt.set(passiveIndex, passive);
-
-        // counter
-        if (!active.klass().healer
-          && !passive.klass().healer
-          && this.checkActionable(passive, to, from)) {
-
-          const activeIndex = mnt.indexOf(active);
-          active = active.actBy(passive);
-          mnt.set(activeIndex, active);
+        const targetIndex = mnt.indexOf(target);
+        target = target.actBy(actor);
+        if (
+          !actor.klass.healer
+          && !target.klass.healer
+          && this.checkActionable(target, to, from)
+        ) {
+          actor = actor.actBy(target);
         }
+        mnt.set(targetIndex, target);
       }
+      mnt.set(actorIndex, actor);
     }));
   }
 
@@ -178,7 +180,9 @@ module.exports = class Game extends Immutable.Record({
 
   shouldEndTurn() {
     let ended = true;
-    this.units.filter(unit => unit.isAlive()).forEach(unit => {
+    this.units.filter(unit => {
+      return unit.isAlive();
+    }).forEach(unit => {
       if (this.turn == unit.offense) {
         ended = unit.acted && ended;
       }
@@ -239,7 +243,6 @@ module.exports = class Game extends Immutable.Record({
           .set('winner', false);
       });
     }
-
     return this;
   }
 

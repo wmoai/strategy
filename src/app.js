@@ -5,9 +5,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const uid = require('uid-safe').sync;
 const jwt = require('jsonwebtoken');
-// const config = require('../config/secret.json');
-// const JWT_SECRET = config.jwtSecret;
-const JWT_SECRET = 'Jq;dsi(jjkqwl;dba';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 app.set('view engine', 'pug');
 app.set('views', Path.join(__dirname, '../views'));
@@ -18,13 +16,13 @@ app.use(cookieParser());
 
 const GameServer = require('./game/server/Server.js');
 const gameServer = new GameServer();
-const Data = require('./game/data');
+const resource = require('./game/data').init();
 
 app.get('/', (req, res) => {
   res.render('index', {
-    units: req.cookies.sealed ? (
-      req.cookies.sealed.map(unitId => {
-        return Data.unitStatus(unitId);
+    units: req.cookies.deck ? (
+      req.cookies.deck.map(unitId => {
+        return resource.unit[unitId];
       })
     ) : []
   });
@@ -44,31 +42,37 @@ function sealPack(units, count) {
 }
 
 app.post('/sealed', (req, res) => {
-  const common = Data.units().filter(unit => unit.cost == 2);
-  const elite = Data.units().filter(unit => unit.cost == 3);
-  const epic = Data.units().filter(unit => unit.cost == 5);
+  const common = Object.values(resource.unit).filter(unit => unit.cost == 2);
+  const elite = Object.values(resource.unit).filter(unit => unit.cost == 3);
+  const epic = Object.values(resource.unit).filter(unit => unit.cost == 5);
   const deck = [].concat(
     sealPack(common, 6),
     sealPack(elite, 4),
     sealPack(epic, 2)
   );
 
-  res.cookie('sealed', deck);
+  res.cookie('deck', deck);
   res.redirect('/');
 });
 
 app.post('/app', (req, res) => {
   res.cookie('jwt', jwt.sign({
     userId: uid(24),
-    // deck: Array.prototype.concat([], req.body.deck)
-    deck: req.cookies.sealed
+    deck: req.cookies.deck
   }, JWT_SECRET));
   res.render('app');
 });
-app.get('/test', (req, res) => {
-  res.render('test');
+
+app.get('/deck.json', (req, res) => {
+  if (!req.cookies.deck) {
+    return res.status(404).end('deck not found');
+  }
+  res.send(req.cookies.deck.map(unitId => {
+    return resource.unit[unitId];
+  }));
 });
 
+/*
 app.get('/game/:id', (req, res, next) => {
   const mid = req.params.id;
   if (!gameServer.existsMatch(mid)) {
@@ -79,8 +83,9 @@ app.get('/game/:id', (req, res, next) => {
 app.get('/game/:id/stat', (req, res) => {
   res.send('data');
 });
+*/
 app.get('/favicon.ico', function(req, res) {
-  res.sendState(204);
+  res.sendStatus(204);
 });
 
 app.use((req, res, next) => {

@@ -1,12 +1,14 @@
 html
   head
     link(rel="stylesheet", href="/css/strategy.css")
+    script(src="/portal.js")
   body
     #contents
       form(action="sealed", method="POST")
-        input(type="submit", value="デッキ生成")
+        input.portal-button(type="submit", value="デッキ生成")
       if units.length > 0
         form(action="app", method="POST", target="_blank")
+          input.portal-button(type="submit", value="対戦")
           table
             thead
               tr
@@ -36,4 +38,4 @@ html
                   td= unit.move
                   td #{unit.min_range}~#{unit.max_range}
                   td= unit.cost
-          input(type="submit", value="マッチング")
+      #deck

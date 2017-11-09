@@ -51,3 +51,12 @@ export function returnRoom() {
   return { type: 'returnRoom' };
 }
 
+export function endMyTurn(dispatch) {
+  setTimeout(() => {
+    dispatch({
+      type: 'endMyTurn'
+    });
+  }, 2000);
+}
+
+

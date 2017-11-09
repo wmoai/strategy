@@ -32,11 +32,8 @@ module.exports = class GameServer {
     this.io = io;
     io.on('connection', socket => {
       socket.emit('init', {
-        userId: socket.userId
-      });
-
-      socket.on('soloPlay', () => {
-
+        userId: socket.userId,
+        deck: socket.deck,
       });
 
       socket.on('createRoom', () => {
@@ -58,12 +55,12 @@ module.exports = class GameServer {
     });
   }
 
-  updateRoom(room) {
+  syncRoom(room) {
     this.saveRoom(room);
     this.io.to(room.id).emit('syncRoom', room.toJSON());
   }
 
-  updateGame(room) {
+  syncGame(room) {
     this.saveRoom(room);
     this.io.to(room.id).emit('syncGame', room.game.toData());
   }
@@ -75,48 +72,23 @@ module.exports = class GameServer {
 
     const { userId, deck } = socket;
     room = room.join(userId, deck);
-    this.updateRoom(room);
+    this.syncRoom(room);
 
     socket.on('ready', () => {
       let room = this.getRoom(roomId);
-      this.updateRoom(room.ready(userId).mightStartGame());
+      this.syncRoom(room.ready(userId).mightStartGame());
     });
     socket.on('selectUnits', ({ list }) => {
       let room = this.getRoom(roomId);
-      this.updateRoom(room.selectUnits(userId, list).mightEngage());
+      this.syncRoom(room.selectUnits(userId, list).mightEngage());
     });
     socket.on('act', ({ from, to, target }) => {
       let room = this.getRoom(roomId);
-      this.updateGame(room.actInGame(userId, from, to, target));
+      this.syncGame(room.actInGame(userId, from, to, target).mightResetPlayers());
     });
     socket.on('endTurn', () => {
       let room = this.getRoom(roomId);
-      this.updateGame(room.endTurn(userId));
-    });
-  }
-
-  soloPlay(roomId, socket) {
-    let room = this.getRoom(roomId);
-
-    const { userId, deck } = socket;
-    room = room.join(userId, deck);
-    this.updateRoom(room);
-
-    socket.on('ready', () => {
-      let room = this.getRoom(roomId);
-      this.updateRoom(room.ready(userId).mightStartGame());
-    });
-    socket.on('selectUnits', ({ list }) => {
-      let room = this.getRoom(roomId);
-      this.updateRoom(room.selectUnits(userId, list).mightEngage());
-    });
-    socket.on('act', ({ from, to, target }) => {
-      let room = this.getRoom(roomId);
-      this.updateGame(room.actInGame(userId, from, to, target));
-    });
-    socket.on('endTurn', () => {
-      let room = this.getRoom(roomId);
-      this.updateGame(room.endTurn(userId));
+      this.syncGame(room.endTurn(userId).mightResetPlayers());
     });
   }
 
@@ -137,5 +109,4 @@ module.exports = class GameServer {
   }
 
 };
-
 

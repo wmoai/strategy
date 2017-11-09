@@ -1,5 +1,7 @@
 
 import { Record, Map as IMMap } from 'immutable';
+import Ranges from './Ranges.js';
+
 const STATE = IMMap({
   FREE: Symbol(),
   MOVE: Symbol(),
@@ -16,8 +18,8 @@ export default class UI extends Record({
   forcusedUnit: null,
   movedCell: null,
   actionForecast: null,
-  movables: null,
-  actionables: null
+
+  ranges: null,
 }) {
 
   stateIs(str) {
@@ -86,16 +88,12 @@ export default class UI extends Record({
     const { field } = game;
 
     if (this.stateIs('FREE') || !unit || unit.acted) {
-      return this.withMutations(mnt => {
-        mnt.delete('movables')
-          .delete('actionables');
-      });
+      return this.delete('ranges');
     }
-    const movable = new Map();
-    const actionable = new Map();
+    const ranges = new Ranges();
 
-    const status = unit.status();
-    const klass = unit.klass();
+    const status = unit.status;
+    const klass = unit.klass;
 
     const search4 = (y, x, stamina, init) => {
       if (!field.isActiveCell(y, x)) {
@@ -114,8 +112,8 @@ export default class UI extends Record({
         stamina -= cost;
       }
       if (stamina >= 0) {
-        if (!movable.get(ccid) || stamina > movable.get(ccid)) {
-          movable.set(ccid, stamina);
+        if (ranges.canUpdateMovable(ccid, stamina)) {
+          ranges.addMovable(ccid, stamina);
           for (let range=status.min_range; range<=status.max_range; range++) {
             const bd = 90 / range;
             for(let i=0; i<360; i+=bd) {
@@ -123,7 +121,7 @@ export default class UI extends Record({
               const ax = x + (range * Math.cos(i * (Math.PI / 180)) | 0);
               const acid = field.cellId(ay, ax);
               if (field.isActiveCell(ay, ax)) {
-                actionable.set(acid, true);
+                ranges.addActionable(acid, ccid);
               }
             }
           }
@@ -134,17 +132,14 @@ export default class UI extends Record({
         }
       }
     };
-    const [y, x] = field.coordinates(cellId);
+    const { y, x } = field.coordinates(cellId);
     let move = status.move;
     if (this.stateIs('ACT') || this.stateIs('EMITED')) {
       move = 0;
     }
     search4(y, x, move, true);
 
-    return this.withMutations(mnt => {
-      mnt.set('movables', Array.from(movable.keys()))
-      .set('actionables', Array.from(actionable.keys()));
-    });
+    return this.set('ranges', ranges);
   }
 
   clear() {
@@ -153,8 +148,7 @@ export default class UI extends Record({
         .delete('forcusedUnit')
         .delete('movedCell')
         .delete('actionForecast')
-        .delete('movables')
-        .delete('actionables')
+        .delete('ranges')
         .delete('pickedCell')
         .setState('FREE');
     });

@@ -115,7 +115,7 @@ export default class Engine {
     const terrains = new PIXI.Graphics();
     field.rows().forEach((row, y) => {
       row.forEach((terrain, x) => {
-        const same = field.neighborSame(y, x);
+        const same = field.isSameTerrainWithNeighbor(y, x);
         terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, true));
         terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, false));
         terrains.addChild(this.createTerrainSprite(x, y, terrain, same, false, true));
@@ -251,7 +251,7 @@ export default class Engine {
           if (!unit.isAlive()) {
             return;
           }
-          const [ y, x ] = field.coordinates(unit.cellId);
+          const { y, x } = field.coordinates(unit.cellId);
 
           const container = new PIXI.Container();
 
@@ -271,10 +271,10 @@ export default class Engine {
           container.addChild(greenLine);
 
           const colorI = unit.acted ? 0 : (unit.offense ? 1 : 2);
-          chara.texture = this.app.loader.resources[`unit${unit.klass().id}_${colorI}`].texture;
+          chara.texture = this.app.loader.resources[`unit${unit.klass.id}_${colorI}`].texture;
           container.x =  x * cellSize;
           container.y = y * cellSize;
-          greenLine.width = (cellSize-4) * unit.hp / unit.status().hp;
+          greenLine.width = (cellSize-4) * unit.hp / unit.status.hp;
 
           layer.addChild(container);
         });
@@ -288,11 +288,16 @@ export default class Engine {
 
     return {
       render: (ui) => {
-        const { movables, actionables } = ui;
+        const { ranges } = ui;
+        if (!ranges) {
+          return;
+        }
+        const movables = ranges.getMovables();
+        const actionables = ranges.getActionables();
         if (actionables) {
-          const isHealer = ui.forcusedUnit ? ui.forcusedUnit.klass().healer : false;
+          const isHealer = ui.forcusedUnit ? ui.forcusedUnit.klass.healer : false;
           actionables.filter(cid => !movables || !movables.includes(cid)).map(cid => {
-            const [ y, x ] = field.coordinates(cid);
+            const { y, x } = field.coordinates(cid);
             const color = isHealer ? 0x87ceeb : 0xffd700;
             const highlight = new PIXI.Graphics();
             highlight.beginFill(color, 0.5);
@@ -303,7 +308,7 @@ export default class Engine {
         }
         if (movables) {
           movables.map(cid => {
-            const [ y, x ] = field.coordinates(cid);
+            const { y, x } = field.coordinates(cid);
             const color = 0x98fb98;
             const highlight = new PIXI.Graphics();
             highlight.beginFill(color, 0.5);

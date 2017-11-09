@@ -4,7 +4,6 @@ const Player = require('../models/Player.js');
 const Game = require('../models/Game.js');
 
 const Unit = require('../models/Unit.js');
-const Field = require('../models/Field.js');
 
 const STATE = Immutable.Map({
   ROOM: 10,
@@ -116,13 +115,13 @@ module.exports = class Match extends Immutable.Record({
     let tgl = Math.random() >= 0.5;
 
     const match = this.withMutations(mnt => {
-      mnt.set('game', new Game({
-        field: Field.init()
-      })).set('players', mnt.players.map(player => {
-        // decide offense side
-        tgl = !tgl;
-        return player.set('offense', tgl);
-      })).forwardState();
+      mnt.set('game', (new Game()).setField(2))
+        .set('players', mnt.players.map(player => {
+          // decide offense side
+          tgl = !tgl;
+          return player.set('offense', tgl);
+        }))
+        .forwardState();
     });
     match.getSockets().then(sockets => {
       sockets.forEach(socket => {

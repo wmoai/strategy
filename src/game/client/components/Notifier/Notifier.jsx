@@ -41,6 +41,7 @@ export default class Notifier extends React.Component {
           show: true,
           step: Step.get('ENEMY_TURN')
         }, this.setEnd);
+        this.props.onEndMyTurn();
       }
     }
   }

@@ -5,11 +5,12 @@ import {
   hoverCell,
   endTurn,
   returnRoom,
+  endMyTurn,
 } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    me: state.me,
+    isOffense: state.me.offense,
     game: state.room.game,
     ui: state.ui,
   };
@@ -28,6 +29,9 @@ const mapDispatchToProps = dispatch => {
     },
     onReturnRoom: () => {
       dispatch(returnRoom());
+    },
+    onEndMyTurn: () => {
+      endMyTurn(dispatch);
     },
   };
 };

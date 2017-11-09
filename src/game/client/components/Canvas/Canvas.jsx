@@ -99,13 +99,13 @@ export default class Canvas extends React.Component {
     if (dx === 0 && dy === 0) {
       clearInterval(scroller.timer);
     }
-    if (scroller.x !== dx || scroller.y !== dy) {
-      clearInterval(scroller.timer);
-      scroller.timer = setInterval(() => {
-        this.screen.scrollLeft += dx;
-        this.screen.scrollTop += dy;
-      }, 10);
-    }
+    // if (scroller.x !== dx || scroller.y !== dy) {
+      // clearInterval(scroller.timer);
+      // scroller.timer = setInterval(() => {
+        // this.screen.scrollLeft += dx;
+        // this.screen.scrollTop += dy;
+      // }, 10);
+    // }
     scroller.x = dx;
     scroller.y = dy;
   }
@@ -171,8 +171,6 @@ export default class Canvas extends React.Component {
         >
           <canvas
             id="screen-canvas"
-            width={width}
-            height={height}
             ref={canvas => { this.pixiCanvas = canvas; }}
           />
         </div>
@@ -187,13 +185,15 @@ export default class Canvas extends React.Component {
               </div>
             </div>
         }
-        <Notifier game={game} isOffense={isOffense} />
+        <Notifier
+          game={game}
+          isOffense={isOffense}
+          onEndMyTurn={this.props.onEndMyTurn}
+        />
         <Result
           isEnd={game.isEnd}
           won={game.winner == isOffense}
-          onReturnRoom={()  => {
-            onReturnRoom();
-          }}
+          onReturnRoom={onReturnRoom}
         />
       </div>
     );

@@ -1,6 +1,5 @@
 const Immutable = require('immutable');
-const Data = require('../data/');
-
+const resource = require('../data/');
 
 module.exports = class Unit extends Immutable.Record({
   offense: null,
@@ -8,19 +7,23 @@ module.exports = class Unit extends Immutable.Record({
   cellId: null,
   hp: 0,
   acted: false,
+
+  status: null,
+  klass: null,
 }) {
+
+  constructor(options) {
+    super(options);
+    return this.withMutations(mnt => {
+      const status = resource.unit[this.unitId];
+      mnt.set('status', status)
+        .set('klass', resource.klass[status.klass]);
+    });
+  }
 
   static create(args) {
     const unit = new Unit(args);
-    return unit.set('hp', Data.unitStatus(unit.unitId).hp);
-  }
-
-  status() {
-    return Data.unitStatus(this.unitId);
-  }
-
-  klass() {
-    return Data.klass(this.status().klass);
+    return unit.set('hp', unit.status.hp);
   }
 
   isAlive() {
@@ -35,10 +38,10 @@ module.exports = class Unit extends Immutable.Record({
     if (!actor) {
       return this;
     }
-    if (actor.klass().healer) {
+    if (actor.klass.healer) {
       return this.set(
         'hp',
-        Math.min(this.hp + actor.status().pow, this.status().hp)
+        Math.min(this.hp + actor.status.pow, this.status.hp)
       );
     } else {
       if (Math.random()*100 < this.hitRateBy(actor, terrainAvoidance)) {
@@ -55,20 +58,20 @@ module.exports = class Unit extends Immutable.Record({
     if (!actor) {
       return 0;
     }
-    if (actor.klass().healer) {
+    if (actor.klass.healer) {
       return 100;
     }
-    const hitr = actor.status().hit;
-    const avoidr = this.status().luc;
+    const hitr = actor.status.hit;
+    const avoidr = this.status.luc;
     return Math.min(Math.max(Math.floor(hitr - avoidr - terrainAvoidance), 0), 100);
   }
 
   critRateBy(actor) {
-    if (actor.klass().healer) {
+    if (actor.klass.healer) {
       return 0;
     }
-    const crtr = actor.status().skl;
-    const prtr = this.status().luc;
+    const crtr = actor.status.skl;
+    const prtr = this.status.luc;
     return Math.min(Math.max(Math.floor(crtr - prtr), 0), 100);
   }
 
@@ -77,10 +80,10 @@ module.exports = class Unit extends Immutable.Record({
       return 0;
     }
     let result = 0;
-    if (actor.klass().magical) {
-      result = Math.max(actor.status().pow - this.status().fth, 1);
+    if (actor.klass.magical) {
+      result = Math.max(actor.status.pow - this.status.fth, 1);
     } else {
-      result = Math.max(actor.status().pow - this.status().dff, 1);
+      result = Math.max(actor.status.pow - this.status.dff, 1);
     }
     return result;
   }
@@ -92,5 +95,13 @@ module.exports = class Unit extends Immutable.Record({
     }
     return val;
   }
+
+  expectedEvaluationBy(actor, terrainAvoidance=0) {
+    return this.effectValueBy(actor)
+      * this.hitRateBy(actor, terrainAvoidance) / 100
+      * (this.critRateBy(actor) / 100 + 1);
+  }
+
+
 
 };

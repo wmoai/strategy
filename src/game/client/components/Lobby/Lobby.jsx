@@ -1,10 +1,25 @@
+// @flow
 import React from 'react';
 
 import './Lobby.css';
 
-export default class Lobby extends React.Component {
+type Props = {
+  roomId: string,
+  isMatched: boolean,
+  onSoloPlay: () => void,
+  onCreateRoom: () => void,
+  onJoinRoom: string => void,
+  onLeaveRoom: () => void,
+  onReady: () => void,
+};
+type State = {
+  isReady: boolean,
+};
 
-  constructor(props) {
+export default class Lobby extends React.Component<Props, State> {
+  roomIdInput: ?HTMLInputElement;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       isReady: false
@@ -22,7 +37,7 @@ export default class Lobby extends React.Component {
             ソロプレイ
           </button>
         </li>
-        <li>
+        <li id="lobby-create">
           <button
             className="lobby-btn"
             onClick={() => { onCreateRoom(); }}>
@@ -38,6 +53,9 @@ export default class Lobby extends React.Component {
           <button
             className="lobby-btn"
             onClick={() => {
+              if (!this.roomIdInput) {
+                return;
+              }
               const roomId = this.roomIdInput.value;
               if (roomId != '') {
                 onJoinRoom(roomId);
@@ -51,8 +69,7 @@ export default class Lobby extends React.Component {
   }
 
   room() {
-    const { room, onLeaveRoom, onReady } = this.props;
-    const isMatched = room.players.count() >= 2;
+    const { roomId, isMatched, onLeaveRoom, onReady } = this.props;
     return (
       <ul id="lobby-list">
         <li id="lobby-room">
@@ -60,7 +77,7 @@ export default class Lobby extends React.Component {
           <input
             type="text"
             className="lobby-input"
-            value={room.id}
+            value={roomId}
             onClick={e => e.target.select()}
             readOnly/>
         </li>
@@ -98,11 +115,11 @@ export default class Lobby extends React.Component {
   }
 
   render() {
-    const { room } = this.props;
+    const { roomId } = this.props;
     return (
       <div id="lobby-base">
         <div id="lobby-container">
-          {room ? (
+          {roomId ? (
             this.room()
           ) : (
             this.lobby()

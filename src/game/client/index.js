@@ -7,17 +7,21 @@ import App from './containers/App.js';
 import * as socket from './websocket.js';
 import reducer from './reducer.js';
 
+require('../data').init();
+
 const middleware = store => next => action => {
   const { payload } = action;
+  const state = store.getState();
+  if (state.isSolo()) {
+    return next(action);
+  }
   switch (action.type) {
-    case 'soloPlay':
-      return socket.emit('soroPlay');
     case 'createRoom':
       return socket.emit('createRoom');
     case 'joinRoom':
       return socket.emit('joinRoom', payload.roomId);
     case 'leaveRoom':
-      socket.emit('leaveRoom', store.getState().room.id);
+      socket.emit('leaveRoom', state.room.id);
       break;
     case 'ready':
       return socket.emit('ready');
@@ -35,12 +39,12 @@ const store = createStore(
 );
 socket.init(store);
 
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', () => {
   render(
     <Provider store={store}>
       <App />
     </Provider>,
     document.getElementById('contents')
   );
-};
+});
 

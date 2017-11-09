@@ -5,7 +5,7 @@ export default function RefUnit({ unit }) {
   if (!unit) {
     return null;
   }
-  const status = unit.status();
+  const status = unit.status;
   return (
     <div id="refunit" className={unit.offense ? 'offense' : 'defense'}>
       <table id="refunit-table">

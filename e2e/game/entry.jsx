@@ -1,15 +1,16 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-const Unit = require('../../../src/game/models/Unit.js');
-const Field = require('../../../src/game/models/Field.js');
-const Room = require('../../../src/game/models/Room.js');
-const Game = require('../../../src/game/models/Game.js');
+const Unit = require('../../src/game/models/Unit.js');
+const Room = require('../../src/game/models/Room.js');
+const Game = require('../../src/game/models/Game.js');
 
 
-import Component from '../../../src/game/client/components/Game/Game.jsx';
-import State from '../../../src/game/client/State.js';
-import Player from '../../../src/game/models/Player.js';
+import Component from '../../src/game/client/components/Game/Game.jsx';
+import State from '../../src/game/client/State.js';
+import Player from '../../src/game/models/Player.js';
+
+require('../../src/game/data').init();
 
 class Container extends React.Component {
   constructor(props) {
@@ -17,9 +18,7 @@ class Container extends React.Component {
     this.state = {
       state: new State({
         room: new Room({
-          game: new Game({
-            field: Field.init(),
-          }).initUnits([
+          game: new Game().setField(2).initUnits([
             Unit.create({ offense:true, unitId:29, cellId:33 }),
             // Unit.create({ offense:true, unitId:34, cellId:32 }),
             Unit.create({ offense:false, unitId:15, cellId:35 }),
@@ -93,7 +92,7 @@ class Container extends React.Component {
         onEndTurn={() => this.endTurn()}
         game={this.state.state.room.game}
         ui={this.state.state.ui}
-        me={this.state.state.me}
+        isOffense={this.state.state.me.offense}
       />
     );
   }

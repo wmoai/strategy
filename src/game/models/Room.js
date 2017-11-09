@@ -1,8 +1,8 @@
 const Immutable = require('immutable');
 const Game = require('./Game.js');
 const Player = require('./Player.js');
-const Field = require('./Field.js');
 const Unit = require('./Unit.js');
+const COM = require('./COM.js');
 
 const STATE = Immutable.Map({
   ROOM: 10,
@@ -33,12 +33,31 @@ module.exports = class Room extends Immutable.Record({
         players[player.id] = player;
       });
       
-      mnt.set('game', data.game ? Game.restore(data.game) : null)
+      mnt.syncGame(data.game)
         .set('players', data.players
           ? Immutable.Map(players)
           : Immutable.Map()
         );
     });
+  }
+
+  static soloRoom(userId, deck) {
+    const room = new Room({
+      id: 1,
+      isSolo: true,
+    });
+    const com = new COM();
+    return room.withMutations(mnt => {
+      mnt.join(userId, deck)
+        .set('players', mnt.players.set(com.id, com))
+        .ready(userId)
+        .mightStartGame()
+        .selectUnits(com.id, Object.keys(com.deck));
+    });
+  }
+
+  syncGame(data) {
+    return this.set('game', data ? Game.restore(data) : null);
   }
 
   forwardState() {
@@ -75,14 +94,18 @@ module.exports = class Room extends Immutable.Record({
   }
 
   player(userId) {
-    return this.players.get(userId);
+    const player = this.players.get(userId);
+    if (!player) {
+      throw `player[${userId}] is not exists.`;
+    }
+    return player;
   }
 
   opponent(userId) {
     let opponent;
     this.players.keySeq().forEach(key => {
       if (key !== userId) {
-        opponent = this.players.get(key);
+        opponent = this.player(key);
       }
     });
     return opponent;
@@ -102,32 +125,36 @@ module.exports = class Room extends Immutable.Record({
   }
 
   mightStartGame() {
-    if (this.state !== STATE.get('ROOM') || this.players.count() < 2 || !this.players.reduce((pre, cur) => pre.ready && cur.ready)) {
+    if (
+      this.state !== STATE.get('ROOM')
+      || this.players.count() < 2
+      || !this.players.reduce((pre, cur) => pre.ready && cur.ready)
+    ) {
       return this;
     }
     let tgl = Math.random() >= 0.5;
 
     return this.withMutations(mnt => {
-      mnt.set('game', new Game({
-        field: Field.init()
-      })).set('players', mnt.players.map(player => {
-        // decide offense side
-        tgl = !tgl;
-        return player.set('offense', tgl);
-      })).forwardState();
+      mnt.set('game', (new Game()).setField(2))
+        .set('players', mnt.players.map(player => {
+          // decide offense side
+          tgl = !tgl;
+          return player.set('offense', tgl);
+        }))
+        .forwardState();
     });
   }
 
   selectUnits(userId, list) {
-    if (this.state !== STATE.get('SELECT')) {
-      return this;
-    }
-    const player = this.players.get(userId);
+    // if (this.state !== STATE.get('SELECT')) {
+      // return this;
+    // }
+    const player = this.player(userId);
     const units = list.map(index => Unit.create({
       offense: player.offense,
       unitId: player.deck[index],
     }));
-    //FIXME check cost and reject
+    //FIXME Check cost and Reject
 
     return this.set('players', this.players.set(userId, player.set('selection', units)));
   }
@@ -165,25 +192,22 @@ module.exports = class Room extends Immutable.Record({
       return this;
     }
 
-    return this.withMutations(mnt => {
-      mnt.set('game',
-        mnt.game
-        .moveUnit(from, to)
+    return this.set('game', this.game.withMutations(mnt => {
+      mnt.moveUnit(from, to)
         .actUnit(to, target)
         .mightChangeTurn()
-        .mightEndGame()
-      ).mightResetPlayers();
-    });
+        .mightEndGame();
+    }));
   }
 
   endTurn(userId) {
     if (this.state !== STATE.get('BATTLE') || !this.isTurnPlayer(userId)) {
       return this;
     }
-    return this.withMutations(mnt => {
-      mnt.set('game', mnt.game.changeTurn().mightEndGame())
-        .mightResetPlayers();
-    });
+    return this.set('game', this.game.withMutations(mnt => {
+      mnt.changeTurn()
+        .mightEndGame();
+    }));
   }
 
   mightResetPlayers() {
