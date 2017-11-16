@@ -7,7 +7,7 @@ import Intro from '../Intro/index.jsx';
 import Notifier from '../Notifier/Notifier.jsx';
 import Result from '../Result/Result.jsx';
 
-import Engine from './Engine.js';
+import GraphicRenderer from '../../GraphicRenderer.js';
 
 const scroller = {
   x: 0,
@@ -21,10 +21,7 @@ export default class Canvas extends React.Component {
     this.state = {
       initialized: false,
       introduction: false,
-      cursorRenderer: null,
-      unitsRenderer: null,
-      rangeRenderer: null,
-      lineupUIRenderer: null,
+      renderer: null,
       mouseX: 0,
       mouseY: 0,
     };
@@ -35,17 +32,13 @@ export default class Canvas extends React.Component {
     const { game, cellSize, isOffense, onInit } = this.props;
     const { field, units } = game;
 
-    const engine = new Engine(this.pixiCanvas, field.width, field.height, cellSize);
-    await engine.setup();
-    engine.renderTerrain(field);
+    const renderer = new GraphicRenderer(this.pixiCanvas, field, cellSize);
+    renderer.renderTerrain();
     this.setState({
       initialized: true,
-      cursorRenderer: engine.cursorRenderer(),
-      unitsRenderer: engine.unitsRenderer(field),
-      rangeRenderer: engine.rangeRenderer(field),
-      lineupUIRenderer: engine.lineupUIRenderer(),
+      renderer: renderer
     }, () => {
-      this.state.unitsRenderer.render(units);
+      this.state.renderer.renderUnits(units);
       const myUnit = units.filter(unit => unit.offense == isOffense ).first();
       if (myUnit) {
         this.forcusCell(myUnit.cellId);
@@ -65,11 +58,11 @@ export default class Canvas extends React.Component {
     const { game, ui } = nextProps;
     if (game.units != this.props.game.units) {
       const { units } = game;
-      this.state.unitsRenderer.render(units);
+      this.state.renderer.renderUnits(units);
     }
 
-    this.state.rangeRenderer.remove();
-    this.state.rangeRenderer.render(ui);
+    this.state.renderer.clearRange();
+    this.state.renderer.renderRange(ui);
   }
 
   forcusCell(cellId) {
@@ -158,7 +151,7 @@ export default class Canvas extends React.Component {
             if (!field.isActiveCell(y, x)) {
               return;
             }
-            this.state.cursorRenderer.render(x, y);
+            this.state.renderer.renderCursor(x, y);
             const cellId = field.cellId(y, x);
             onHoverCell(cellId);
           }}

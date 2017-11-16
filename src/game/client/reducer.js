@@ -13,7 +13,7 @@ import {
   END_MY_TURN,
 } from './actions';
 
-import State from './State.js';
+import State from './State';
 
 export default function reducer(state = new State(), action) {
   const { payload } = action;

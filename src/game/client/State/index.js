@@ -1,6 +1,6 @@
 import { Record } from 'immutable';
 
-import Room from '../models/Room.js';
+import Room from '../../models/Room.js';
 import UI from './UI.js';
 import Ranges from './Ranges.js';
 

@@ -7,10 +7,12 @@ const Game = require('../../src/game/models/Game.js');
 
 
 import Component from '../../src/game/client/components/Game/Game.jsx';
-import State from '../../src/game/client/State.js';
+import State from '../../src/game/client/State';
 import Player from '../../src/game/models/Player.js';
 
 require('../../src/game/data').init();
+import GraphicRenderer from '../../src/game/client/GraphicRenderer.js';
+
 
 const me = new Player({ id:1,  offense: true });
 const opp = new Player({ id:2,  offense: false });
@@ -107,7 +109,9 @@ class Container extends React.Component {
   }
 }
 
-render(
-  <Container />,
-  document.getElementById('root')
-);
+GraphicRenderer.preload().then(() => {
+  render(
+    <Container />,
+    document.getElementById('root')
+  );
+});
