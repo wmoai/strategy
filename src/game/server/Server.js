@@ -1,4 +1,5 @@
 const Room = require('../models/Room.js');
+const Player = require('../models/Player.js');
 
 module.exports = class GameServer {
   constructor() {
@@ -71,12 +72,18 @@ module.exports = class GameServer {
     console.log(`join ${socket.userId} to room ${roomId}`);
 
     const { userId, deck } = socket;
-    room = room.join(userId, deck);
+    const player = new Player({
+      id: userId,
+      deck: deck
+    });
+    room = room.addPlayer(player);
+
+
     this.syncRoom(room);
 
-    socket.on('ready', () => {
+    socket.on('readyToBattle', () => {
       let room = this.getRoom(roomId);
-      this.syncRoom(room.ready(userId).mightStartGame());
+      this.syncRoom(room.readyToBattle(userId).mightStartGame());
     });
     socket.on('selectUnits', ({ list }) => {
       let room = this.getRoom(roomId);
@@ -95,7 +102,7 @@ module.exports = class GameServer {
   leave(roomId, socket) {
     let room = this.getRoom(roomId);
 
-    socket.removeAllListeners('ready');
+    socket.removeAllListeners('readyToBattle');
     socket.removeAllListeners('selectUnits');
     socket.removeAllListeners('act');
     socket.removeAllListeners('endTurn');

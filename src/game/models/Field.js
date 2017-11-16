@@ -68,6 +68,10 @@ module.exports = class Field extends Immutable.Record({
     return resource.terrain[this.terrain[cellId]].avoidance;
   }
 
+  bases() {
+    return this.info.base;
+  }
+
   rows() {
     const rows = [];
     for (var i=0; i<this.terrain.length; i+=this.width) {

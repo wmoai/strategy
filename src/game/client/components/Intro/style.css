@@ -1,0 +1,31 @@
+#intro-base {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+
+#intro-box {
+  max-width: 400px;
+  padding: 10px 30px;
+  text-align: center;
+  background: #eee;
+}
+
+#intro-win {
+  font-size: 1.3em;
+  color: orangered;
+}
+
+#intro-lose {
+  font-size: 1.3em;
+  color: mediumblue;
+}
+
+

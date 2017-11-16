@@ -97,11 +97,16 @@ module.exports = class Unit extends Immutable.Record({
   }
 
   expectedEvaluationBy(actor, terrainAvoidance=0) {
+    if (actor.klass.healer) {
+      return Math.min(actor.status.pow, this.accumulatedDamage());
+    }
     return this.effectValueBy(actor)
       * this.hitRateBy(actor, terrainAvoidance) / 100
       * (this.critRateBy(actor) / 100 + 1);
   }
 
-
+  accumulatedDamage() {
+    return this.status.hp - this.hp;
+  }
 
 };

@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import Component from '../components/Lobby/Lobby.jsx';
-import { soloPlay, createRoom, joinRoom, leaveRoom, ready } from '../actions';
+import { startSoloPlay, createRoom, joinRoom, leaveRoom, readyToBattle } from '../actions';
 
 const mapStateToProps = state => {
   const { room } = state;
@@ -12,8 +12,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onSoloPlay: () => {
-      dispatch(soloPlay());
+    onClickSoloPlay: () => {
+      dispatch(startSoloPlay());
     },
     onCreateRoom: () => {
       dispatch(createRoom());
@@ -25,7 +25,7 @@ const mapDispatchToProps = dispatch => {
       dispatch(leaveRoom());
     },
     onReady: () => {
-      dispatch(ready());
+      dispatch(readyToBattle());
     },
   };
 };

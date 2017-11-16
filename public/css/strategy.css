@@ -2,13 +2,14 @@ body {
   background-color: #222;
 }
 
-#contents {
+#container {
   display: flex;
   flex-direction: column;
 
   width: 600px;
   margin: auto;
-  padding: 40px 0;
+  padding: 40px 20px;
+  color: #bbb;
 }
 
 

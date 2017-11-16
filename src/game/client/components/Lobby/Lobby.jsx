@@ -6,7 +6,7 @@ import './Lobby.css';
 type Props = {
   roomId: string,
   isMatched: boolean,
-  onSoloPlay: () => void,
+  onClickSoloPlay: () => void,
   onCreateRoom: () => void,
   onJoinRoom: string => void,
   onLeaveRoom: () => void,
@@ -27,13 +27,13 @@ export default class Lobby extends React.Component<Props, State> {
   }
 
   lobby() {
-    const { onSoloPlay, onCreateRoom, onJoinRoom } = this.props;
+    const { onClickSoloPlay, onCreateRoom, onJoinRoom } = this.props;
     return (
       <ul id="lobby-list">
         <li>
           <button
             className="lobby-btn"
-            onClick={() => { onSoloPlay(); }}>
+            onClick={() => { onClickSoloPlay(); }}>
             ソロプレイ
           </button>
         </li>

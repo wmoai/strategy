@@ -72,18 +72,6 @@ app.get('/deck.json', (req, res) => {
   }));
 });
 
-/*
-app.get('/game/:id', (req, res, next) => {
-  const mid = req.params.id;
-  if (!gameServer.existsMatch(mid)) {
-    return next(new Error('game not found'));
-  }
-  res.render('game', {mid: mid});
-});
-app.get('/game/:id/stat', (req, res) => {
-  res.send('data');
-});
-*/
 app.get('/favicon.ico', function(req, res) {
   res.sendStatus(204);
 });

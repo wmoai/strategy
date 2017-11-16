@@ -24,14 +24,14 @@ const mapDispatchToProps = dispatch => {
     onHoverCell: cellId => {
       dispatch(hoverCell(cellId));
     },
-    onEndTurn: () => {
+    onClickEndTurn: () => {
       dispatch(endTurn());
     },
     onReturnRoom: () => {
       dispatch(returnRoom());
     },
     onEndMyTurn: () => {
-      endMyTurn(dispatch);
+      dispatch(endMyTurn());
     },
   };
 };

@@ -2,6 +2,7 @@ import { Record } from 'immutable';
 
 import Room from '../models/Room.js';
 import UI from './UI.js';
+import Ranges from './Ranges.js';
 
 export default class State extends Record({
   userId: null,
@@ -127,7 +128,7 @@ export default class State extends Record({
   forcus(cellId) {
     const { room, ui } = this;
     const { game } = room;
-    return this.set('ui', ui.forcus(game.unit(cellId)).setRange(game));
+    return this.set('ui', ui.forcus(game.unit(cellId)).setMoveRange(game));
   }
 
   mightMove(cellId) {
@@ -142,7 +143,7 @@ export default class State extends Record({
       if (game.checkMovable(ui.forcusedCell, cellId)) {
         return this.withMutations(mnt => {
           mnt.set('room', mnt.room.set('game', game.moveUnit(ui.forcusedCell, cellId)))
-            .set('ui', ui.move(cellId).setRange(game));
+            .set('ui', ui.move(cellId).setActRange(game));
         });
       } else {
         return this.clearUI();
@@ -220,75 +221,131 @@ export default class State extends Record({
     }
     return this.withMutations(mnt => {
       for (let i=0; i<20; i++) {
-        if (!mnt.isCOMTurn() || mnt.room.game.isEnd) {
+        const action = mnt.getActionByAI();
+        if (!action) {
           break;
         }
-        mnt.actByAI();
+        const { userId, from, to, target } = action;
+        mnt.set('room', mnt.room.actInGame(userId, from, to, target));
+      }
+      mnt.moveByAI();
+      if (mnt.isCOMTurn()) {
+        const { room } = mnt;
+        const com = room.opponent(mnt.userId);
+        mnt.set('room', room.endTurn(com.id));
       }
     });
   }
 
-  actByAI() {
-    const { room, ui } = this;
+  getActionByAI() {
+    const { room } = this;
     const com = room.opponent(this.userId);
     const { game } = room;
     const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
 
+    if (!this.isCOMTurn() || this.room.game.isEnd) {
+      return null;
+    }
+
     let priUnit, priAction;
     units.forEach(unit => {
-      const bufferUi = ui.forcus(unit).setRange(game);
-      if (!unit.klass.healer) {
-        // 行動対象セル抽出
-        const targetCellIds = bufferUi.ranges.getActionables().filter(acell => {
-          const target = game.unit(acell);
+      const ranges = Ranges.calculate(game, unit.cellId, unit);
+      // 行動対象セル抽出
+      const targetCellIds = ranges.getActionables().filter(acell => {
+        const target = game.unit(acell);
+        if (target === unit) {
+          return;
+        }
+        if (!unit.klass.healer) {
           return target && target.offense !== unit.offense;
-        });
-        // 行動パラメータを算出
-        const actions = targetCellIds.map(tcell => {
-          const froms = bufferUi.ranges.getActionableFrom(tcell);
-          let from;
-          // 空のfromセルを抽出
-          froms.forEach(_from => {
-            if (game.unit(_from) == null) {
-              from = _from;
-            }
-          });
-          const target = game.unit(tcell);
-          return {
-            from,
-            to: tcell,
-            value: (
-              // 行動評価値
-              from != undefined
-              ? target.expectedEvaluationBy(unit, game.field.avoidance(target.cellId))
-              : null
-            )
-          };
-        }).filter(actionCell => {
-          return actionCell.from != undefined;
-        });
-
-        if (actions.length > 0) {
-          // 最大評価値の行動抽出
-          const action = actions.reduce((pre, cur) => {
-            return pre.value < cur.value ? cur : pre;
-          });
-          if (!priAction || priAction.value < action.value) {
-            priAction = action;
-            priUnit = unit;
+        } else {
+          return target && target.offense === unit.offense && target.accumulatedDamage() !== 0;
+        }
+      });
+      // 行動パラメータを算出
+      const actions = targetCellIds.map(tcell => {
+        const froms = ranges.getActionableFrom(tcell);
+        let from;
+        // 空のfromセルを抽出
+        // FIXME 地形を加味した評価値
+        froms.forEach(_from => {
+          const funit = game.unit(_from);
+          if (funit == null || funit === unit) {
+            from = _from;
           }
+        });
+        const target = game.unit(tcell);
+        return {
+          from,
+          to: tcell,
+          value: (
+            // 行動評価値
+            from != undefined
+            ? target.expectedEvaluationBy(unit, game.field.avoidance(target.cellId))
+            : null
+          )
+        };
+      }).filter(actionCell => {
+        return actionCell.from != undefined;
+      });
+
+      if (actions.length > 0) {
+        // 最大評価値の行動抽出
+        const action = actions.reduce((pre, cur) => {
+          return pre.value < cur.value ? cur : pre;
+        });
+        if (!priAction || priAction.value < action.value) {
+          priAction = action;
+          priUnit = unit;
         }
       }
     });
-    if (priUnit && priAction) {
-      // 行動確定
-      return this.set(
-        'room',
-        this.room.actInGame(com.id, priUnit.cellId, priAction.from, priAction.to)
-      );
-    } else {
-      return this.set('room', this.room.endTurn(com.id));
+
+    if (!priUnit || !priAction) {
+      return null;
     }
+    // 行動確定
+    return {
+      userId: com.id,
+      from: priUnit.cellId,
+      to: priAction.from,
+      target: priAction.to
+    };
+  }
+
+  moveByAI() {
+    const { room } = this;
+    const com = room.opponent(this.userId);
+    const { game } = room;
+    const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
+    const enemies = game.ownedUnits(!com.offense);
+
+    return this.withMutations(mnt => {
+      units.forEach(unit => {
+        const ranges = Ranges.calculate(game, unit.cellId, unit, true);
+        let shortestD = Infinity;
+        let goal;
+        // 最短ターゲット探索
+        enemies.forEach(enemy => {
+          const d = ranges.getDistance(enemy.cellId);
+          if (d < shortestD) {
+            shortestD = d;
+            goal = enemy.cellId;
+          }
+        });
+        if (!goal) {
+          return;
+        }
+        const route = ranges.getMoveRoute(goal).reverse();
+        for (let i=0; i<route.length; i++) {
+          const target = route[i];
+          if (ranges.cell(target).isMovable && !mnt.room.game.unit(target)) {
+            mnt.set('room', mnt.room.actInGame(com.id, unit.cellId, target));
+            break;
+          }
+        }
+      });
+    });
   }
 
 }

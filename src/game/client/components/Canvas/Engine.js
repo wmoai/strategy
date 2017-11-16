@@ -134,7 +134,7 @@ export default class Engine {
     layer.addChild(shadow);
 
     // bases mark
-    field.info.base.map(bp => {
+    field.bases().map(bp => {
       const y = Math.floor(bp / field.width);
       const x = bp % field.width;
 

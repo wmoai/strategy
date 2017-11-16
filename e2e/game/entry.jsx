@@ -12,6 +12,9 @@ import Player from '../../src/game/models/Player.js';
 
 require('../../src/game/data').init();
 
+const me = new Player({ id:1,  offense: true });
+const opp = new Player({ id:2,  offense: false });
+
 class Container extends React.Component {
   constructor(props) {
     super(props);
@@ -19,15 +22,19 @@ class Container extends React.Component {
       state: new State({
         room: new Room({
           game: new Game().setField(2).initUnits([
-            Unit.create({ offense:true, unitId:29, cellId:33 }),
+            Unit.create({ offense:true, unitId:29, cellId:333 }),
             // Unit.create({ offense:true, unitId:34, cellId:32 }),
             Unit.create({ offense:false, unitId:15, cellId:35 }),
+            Unit.create({ offense:false, unitId:11, cellId:55 }),
             // Unit.create({ offense:false, unitId:15, cellId:265 }),
             // Unit.create({ offense:false, unitId:32, cellId:4 }),
             // Unit.create({ offense:false, unitId:9, cellId:1 }),
-          ])
-        }),
-        me: new Player({ offense: true })
+          ]),
+          isSolo: true,
+        }).addPlayer(me).addPlayer(opp).setState('BATTLE'),
+        me: me,
+        opponent: opp,
+        userId: 1,
       })
     };
   }
@@ -46,13 +53,13 @@ class Container extends React.Component {
                 .mightChangeTurn().mightEndGame()
               );
             })
-          ).clearUI()
-        }, () => {
-          setTimeout(() => {
-            this.setState({
-              state: this.state.state.set('me', new Player({ offense: this.state.state.room.game.turn })).clearUI()
-            });
-          }, 2000);
+          ).clearUI().mightStartAITurn()
+        // }, () => {
+          // setTimeout(() => {
+            // this.setState({
+              // state: this.state.state.set('me', new Player({ offense: this.state.state.room.game.turn })).clearUI()
+            // });
+          // }, 2000);
         });
       })
     });
@@ -75,12 +82,12 @@ class Container extends React.Component {
           ).clearUI();
         })
       )
-    }, () => {
-      setTimeout(() => {
-        this.setState({
-          state: this.state.state.set('me', new Player({ offense: this.state.state.room.game.turn })).clearUI()
-        });
-      }, 2000);
+    // }, () => {
+      // setTimeout(() => {
+        // this.setState({
+          // state: this.state.state.set('me', new Player({ offense: this.state.state.room.game.turn })).clearUI()
+        // });
+      // }, 2000);
     });
   }
 
@@ -89,7 +96,9 @@ class Container extends React.Component {
       <Component
         onSelectCell={cellId => this.selectCell(cellId)}
         onHoverCell={cellId => this.hoverCell(cellId)}
-        onEndTurn={() => this.endTurn()}
+        onClickEndTurn={() => this.endTurn()}
+        onEndMyTurn={() => {
+        }}
         game={this.state.state.room.game}
         ui={this.state.state.ui}
         isOffense={this.state.state.me.offense}

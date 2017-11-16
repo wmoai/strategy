@@ -48,7 +48,7 @@ module.exports = class Game extends Immutable.Record({
     return  this.set('units', Immutable.List(units));
   }
 
-  remainingTurn() {
+  turnRemained() {
     return defenceTurn - Math.floor(this.turnCount / 2);
   }
 

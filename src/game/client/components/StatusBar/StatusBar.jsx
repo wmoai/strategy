@@ -22,9 +22,9 @@ export default class StatusBar extends React.Component {
   }
 
   battleList() {
-    const { onEndTurn, isOffense, game, ui } = this.props;
+    const { onClickEndTurn, isOffense, game, ui } = this.props;
     const { turn, field } = game;
-    const remainingTurn = game.remainingTurn();
+    const turnRemained = game.turnRemained();
     const terrain = field.cellTerrain(ui.hoveredCell);
     const isMyTurn = isOffense === turn;
 
@@ -35,7 +35,7 @@ export default class StatusBar extends React.Component {
             id="turn-end-button"
             disabled={!isMyTurn || game.isEnd}
             onClick={() => {
-              onEndTurn();
+              onClickEndTurn();
             }}>
             {isMyTurn ? (
               <span>ターン<br/>終了</span>
@@ -45,11 +45,11 @@ export default class StatusBar extends React.Component {
           </button>
         </li>
         <li id="sb-remained-turn">
-          {remainingTurn <= 1 ? (
+          {turnRemained <= 1 ? (
             <span>最終ターン</span>
           ) : (
             <span>
-              残り<b>{remainingTurn}</b>ターン
+              残り<b>{turnRemained}</b>ターン
             </span>
           )}
         </li>

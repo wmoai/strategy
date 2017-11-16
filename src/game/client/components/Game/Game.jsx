@@ -36,7 +36,7 @@ export default class Game extends React.Component {
       ui,
       onSelectCell,
       onHoverCell,
-      onEndTurn,
+      onClickEndTurn,
       onReturnRoom,
       onEndMyTurn,
     } = this.props;
@@ -51,8 +51,8 @@ export default class Game extends React.Component {
             isOffense={isOffense}
             game={game}
             ui={ui}
-            onEndTurn={() => {
-              onEndTurn();
+            onClickEndTurn={() => {
+              onClickEndTurn();
             }}
           />
         </div>

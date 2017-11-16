@@ -3,8 +3,9 @@ import React from 'react';
 import './Canvas.css';
 import RefUnit from '../RefUnit//RefUnit.jsx';
 import Forecast from '../Forecast/Forecast.jsx';
-import Notifier from '../../components/Notifier/Notifier.jsx';
-import Result from '../../components/Result/Result.jsx';
+import Intro from '../Intro/index.jsx';
+import Notifier from '../Notifier/Notifier.jsx';
+import Result from '../Result/Result.jsx';
 
 import Engine from './Engine.js';
 
@@ -19,6 +20,7 @@ export default class Canvas extends React.Component {
     super(props);
     this.state = {
       initialized: false,
+      introduction: false,
       cursorRenderer: null,
       unitsRenderer: null,
       rangeRenderer: null,
@@ -51,6 +53,9 @@ export default class Canvas extends React.Component {
       onInit();
     });
 
+    setTimeout(() => {
+      this.setState({introduction: false});
+    }, 2000);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -90,15 +95,15 @@ export default class Canvas extends React.Component {
   }
 
   hover(event) {
-    const { target, pageX, pageY } = event;
-    const rect = target.getBoundingClientRect();
-    const xr = (pageX-rect.left) / target.clientWidth;
-    const yr = (pageY-rect.top) / target.clientHeight;
-    const dx = xr > 0.9 ? 5 : xr < 0.1 ? -5 : 0;
-    const dy = yr > 0.9 ? 5 : yr < 0.1 ? -5 : 0;
-    if (dx === 0 && dy === 0) {
-      clearInterval(scroller.timer);
-    }
+    // const { target, pageX, pageY } = event;
+    // const rect = target.getBoundingClientRect();
+    // const xr = (pageX-rect.left) / target.clientWidth;
+    // const yr = (pageY-rect.top) / target.clientHeight;
+    // const dx = xr > 0.9 ? 5 : xr < 0.1 ? -5 : 0;
+    // const dy = yr > 0.9 ? 5 : yr < 0.1 ? -5 : 0;
+    // if (dx === 0 && dy === 0) {
+      // clearInterval(scroller.timer);
+    // }
     // if (scroller.x !== dx || scroller.y !== dy) {
       // clearInterval(scroller.timer);
       // scroller.timer = setInterval(() => {
@@ -106,8 +111,8 @@ export default class Canvas extends React.Component {
         // this.screen.scrollTop += dy;
       // }, 10);
     // }
-    scroller.x = dx;
-    scroller.y = dy;
+    // scroller.x = dx;
+    // scroller.y = dy;
   }
 
   render() {
@@ -127,7 +132,7 @@ export default class Canvas extends React.Component {
     if (ui.hoveredCell != null) {
       const vr = this.state.mouseY / window.innerHeight;
       const hr = this.state.mouseX / window.innerWidth;
-      naviStyle[vr < 0.5 ? 'top' : 'bottom'] = 20;
+      naviStyle[vr < 0.5 ? 'bottom' : 'top'] = 20;
       naviStyle[hr < 0.5 ? 'right': 'left'] = 20;
     }
 
@@ -185,11 +190,18 @@ export default class Canvas extends React.Component {
               </div>
             </div>
         }
-        <Notifier
-          game={game}
-          isOffense={isOffense}
-          onEndMyTurn={this.props.onEndMyTurn}
-        />
+        {this.state.introduction ? (
+          <Intro
+            game={game}
+            isOffense={isOffense}
+          />
+        ) : (
+          <Notifier
+            game={game}
+            isOffense={isOffense}
+            onEndMyTurn={this.props.onEndMyTurn}
+          />
+        )}
         <Result
           isEnd={game.isEnd}
           won={game.winner == isOffense}

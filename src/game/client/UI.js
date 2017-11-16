@@ -82,63 +82,22 @@ export default class UI extends Record({
     return this.setState('EMITED');
   }
 
-  setRange(game) {
+  setMoveRange(game) {
     const cellId = this.movedCell || this.forcusedCell;
     const unit = this.forcusedUnit;
-    const { field } = game;
-
     if (this.stateIs('FREE') || !unit || unit.acted) {
       return this.delete('ranges');
     }
-    const ranges = new Ranges();
+    const ranges = Ranges.calculate(game, cellId, unit);
+    return this.set('ranges', ranges);
+  }
 
-    const status = unit.status;
-    const klass = unit.klass;
+  setActRange(game) {
+    const cellId = this.movedCell || this.forcusedCell;
+    const unit = this.forcusedUnit;
 
-    const search4 = (y, x, stamina, init) => {
-      if (!field.isActiveCell(y, x)) {
-        return;
-      }
-      const ccid = field.cellId(y, x);
-      const cost = field.cost(ccid, klass.move);
-      if (cost == 0) {
-        return;
-      }
-      const eunit = game.unit(ccid);
-      if (eunit && unit.offense != eunit.offense) {
-        return;
-      }
-      if (!init) {
-        stamina -= cost;
-      }
-      if (stamina >= 0) {
-        if (ranges.canUpdateMovable(ccid, stamina)) {
-          ranges.addMovable(ccid, stamina);
-          for (let range=status.min_range; range<=status.max_range; range++) {
-            const bd = 90 / range;
-            for(let i=0; i<360; i+=bd) {
-              const ay = y + (range * Math.sin(i * (Math.PI / 180)) | 0);
-              const ax = x + (range * Math.cos(i * (Math.PI / 180)) | 0);
-              const acid = field.cellId(ay, ax);
-              if (field.isActiveCell(ay, ax)) {
-                ranges.addActionable(acid, ccid);
-              }
-            }
-          }
-          search4(y-1, x, stamina);
-          search4(y+1, x, stamina);
-          search4(y, x-1, stamina);
-          search4(y, x+1, stamina);
-        }
-      }
-    };
-    const { y, x } = field.coordinates(cellId);
-    let move = status.move;
-    if (this.stateIs('ACT') || this.stateIs('EMITED')) {
-      move = 0;
-    }
-    search4(y, x, move, true);
-
+    const ranges = new Ranges(game);
+    ranges.setMovable(unit, cellId);
     return this.set('ranges', ranges);
   }
 

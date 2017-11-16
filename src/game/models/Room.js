@@ -46,11 +46,15 @@ module.exports = class Room extends Immutable.Record({
       id: 1,
       isSolo: true,
     });
+    const player = new Player({
+      id: userId,
+      deck: deck
+    });
     const com = new COM();
     return room.withMutations(mnt => {
-      mnt.join(userId, deck)
-        .set('players', mnt.players.set(com.id, com))
-        .ready(userId)
+      mnt.addPlayer(player)
+        .addPlayer(com)
+        .readyToBattle(userId)
         .mightStartGame()
         .selectUnits(com.id, Object.keys(com.deck));
     });
@@ -60,33 +64,16 @@ module.exports = class Room extends Immutable.Record({
     return this.set('game', data ? Game.restore(data) : null);
   }
 
-  forwardState() {
-    let next = this.state;
-    switch (this.state) {
-      case STATE.get('ROOM'):
-        next = STATE.get('SELECT');
-        break;
-      case STATE.get('SELECT'):
-        next = STATE.get('BATTLE');
-        break;
-      case STATE.get('BATTLE'):
-        next = STATE.get('ROOM');
-        break;
-    }
-    return this.set('state', next);
+  setState(str) {
+    return this.set('state', STATE.get(str));
   }
-
 
   stateIs(str) {
     return this.state === STATE.get(str);
   }
 
-  join(userId, deck) {
-    const player = new Player({
-      id: userId,
-      deck: deck
-    });
-    return this.set('players', this.players.set(userId, player));
+  addPlayer(player) {
+    return this.set('players', this.players.set(player.id, player));
   }
 
   leave(userId) {
@@ -116,7 +103,7 @@ module.exports = class Room extends Immutable.Record({
     return this.game && player && player.offense == this.game.turn;
   }
 
-  ready(userId) {
+  readyToBattle(userId) {
     const player = this.player(userId);
     return this.set(
       'players',
@@ -141,7 +128,7 @@ module.exports = class Room extends Immutable.Record({
           tgl = !tgl;
           return player.set('offense', tgl);
         }))
-        .forwardState();
+        .setState('SELECT');
     });
   }
 
@@ -178,7 +165,7 @@ module.exports = class Room extends Immutable.Record({
 
     return this.withMutations(mnt => {
       mnt.set('game', mnt.game.initUnits(units))
-        .forwardState();
+        .setState('BATTLE');
     });
   }
 
@@ -218,7 +205,7 @@ module.exports = class Room extends Immutable.Record({
       mnt.set(
         'players',
         mnt.players.map(player => player.reset())
-      ).forwardState();
+      ).setState('ROOM');
     });
   }
 
