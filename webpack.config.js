@@ -37,14 +37,12 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    })
   ],
-  // plugins: [
-    // new webpack.optimize.UglifyJsPlugin({
-      // compress: {
-        // warnings: false
-      // }
-    // })
-  // ]
   devServer: {
     port: 8081,
     contentBase: path.join(__dirname, 'public')
