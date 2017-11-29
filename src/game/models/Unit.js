@@ -2,6 +2,7 @@ const Immutable = require('immutable');
 const resource = require('../data/');
 
 module.exports = class Unit extends Immutable.Record({
+  seq: null,
   offense: null,
   unitId: null,
   cellId: null,

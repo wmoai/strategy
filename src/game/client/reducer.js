@@ -11,6 +11,7 @@ import {
   END_TURN,
   RETURN_ROOM,
   END_MY_TURN,
+  END_ANIMATION,
 } from './actions';
 
 import State from './State';
@@ -59,7 +60,13 @@ function soloPlayReducer(state, action) {
     case END_TURN:
       return state.endTurnSolo();
     case END_MY_TURN:
-      return state.mightStartAITurn();
+      // return state.mightStartAITurn();
+      return state.mightActAI();
+    case END_ANIMATION:
+      if (payload.turn !== state.room.game.turn) {
+        return state;
+      }
+      return state.mightActAI();
     case RETURN_ROOM:
       return state.leaveRoom();
   }

@@ -9,7 +9,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: scroll;
+  overflow: hidden;
 }
 
 #screen-canvas {
@@ -19,7 +19,7 @@
   left: 0;
 }
 
-#screen-overlay {
+#screen-transparent-overlay {
   pointer-events: none;
   user-select: none;
   position: absolute;

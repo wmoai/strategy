@@ -7,22 +7,27 @@ const MOVE_TYPES = [
   'fly',
 ];
 
-module.exports = class Terrain extends Immutable.Record({
-  id: null,
-  name: null,
+const TerrainRecord = Immutable.Record({
+  id: 0,
+  name: '',
   avoidance: 0,
   cost: Immutable.Map(),
-}) {
+});
+
+module.exports = class Terrain extends TerrainRecord {
 
   constructor(arg) {
-    super(arg);
+    super({
+      id: arg.id,
+      name: arg.name,
+    });
+    const costs = {};
+    MOVE_TYPES.forEach(TYPE => {
+      costs[TYPE] = arg[TYPE];
+    });
     return this.withMutations(mnt => {
       mnt.set('avoidance', arg.avoid)
-        .set('cost', mnt.cost.withMutations(mmnt => {
-          MOVE_TYPES.forEach(TYPE => {
-            mmnt.set(TYPE, arg[TYPE]);
-          });
-        }));
+        .set('cost', Immutable.Map(costs));
     });
   }
 

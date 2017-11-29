@@ -1,3 +1,5 @@
+// @flow
+
 const Immutable = require('immutable');
 const resource = require('../data/');
 
@@ -8,12 +10,19 @@ module.exports = class Field extends Immutable.Record({
   terrain: [],
   info: {},
 }) {
+/*::
+  id: ?number;
+  width: number;
+  height: number;
+  terrain: Array<any>;
+  info: any;
+*/
 
-  initialPos(offense) {
+  initialPos(offense/*: boolean*/) {
     return offense ? this.info['oinit'] : this.info['dinit'];
   }
 
-  existsCell(y, x) {
+  existsCell(y/*: number*/, x/*: number*/) {
     return (
       y >= 0
       && y < this.height
@@ -22,7 +31,7 @@ module.exports = class Field extends Immutable.Record({
     );
   }
 
-  isEdgeCell(y, x) {
+  isEdgeCell(y/*: number*/, x/*: number*/) {
     if (!this.existsCell(y, x)) {
       return false;
     }
@@ -34,15 +43,15 @@ module.exports = class Field extends Immutable.Record({
     );
   }
 
-  isActiveCell(y, x) {
+  isActiveCell(y/*: number*/, x/*: number*/) {
     return this.existsCell(y, x) && !this.isEdgeCell(y, x);
   }
 
-  cellId(y, x) {
+  cellId(y/*: number*/, x/*: number*/) {
     return y * this.width + x;
   }
 
-  isSameTerrainWithNeighbor(y, x) {
+  isSameTerrainWithNeighbor(y/*: number*/, x/*: number*/) {
     const land = this.terrain[this.cellId(y, x)];
     return {
       top: !this.existsCell(y-1, x) || land == this.terrain[this.cellId(y-1, x)],
@@ -56,15 +65,15 @@ module.exports = class Field extends Immutable.Record({
     };
   }
 
-  cost(cellId, type='foot') {
+  cost(cellId/*: number*/, type/*: string*/='foot') {
     return resource.terrain[this.terrain[cellId]].cost.get(type);
   }
 
-  cellTerrain(cellId) {
+  cellTerrain(cellId/*: number*/) {
     return resource.terrain[this.terrain[cellId]];
   }
 
-  avoidance(cellId) {
+  avoidance(cellId/*: number*/) {
     return resource.terrain[this.terrain[cellId]].avoidance;
   }
 
@@ -80,14 +89,14 @@ module.exports = class Field extends Immutable.Record({
     return rows;
   }
 
-  coordinates(cellId) {
+  coordinates(cellId/*: number*/) {
     return {
       y: Math.floor(cellId / this.width),
       x: Math.floor(cellId % this.width)
     };
   }
 
-  distance(cid1, cid2) {
+  distance(cid1/*: number*/, cid2/*: number*/) {
     const c1 = this.coordinates(cid1);
     const c2 = this.coordinates(cid2);
     return Math.abs(c1.y - c2.y) + Math.abs(c1.x - c2.x);

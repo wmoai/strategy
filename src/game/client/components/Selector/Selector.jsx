@@ -2,13 +2,11 @@
 import React from 'react';
 import './Selector.css';
 
-import UnitMaster from '../../../data/json/unit.json';
-
 type Props = {
   costLimit: number,
-  myDeck: Array<number>,
+  myUnits: Array<any>,
   isOffense: boolean,
-  opponentsDeck: Array<number>,
+  opponentUnits: Array<any>,
   onSubmit: Array<number> => void,
 };
 type State = {
@@ -41,19 +39,17 @@ export default class Selector extends React.Component<Props, State> {
   }
 
   render() {
-    const { myDeck, isOffense, opponentsDeck, onSubmit } = this.props;
+    const { myUnits, isOffense, opponentUnits, onSubmit } = this.props;
     let { costLimit } = this.props;
     if (isOffense === false) {
       costLimit += 2;
     }
+    const ssize = 48;
     const { selected } = this.state;
-
-    const army = myDeck.map(id => UnitMaster[id]);
-    const enemy = opponentsDeck.map(id => UnitMaster[id]);
 
     let cost = 0;
     selected.forEach(i => {
-      cost += army[i].cost;
+      cost += myUnits[i].cost;
     });
 
     let costStyle = (cost > costLimit) ? {
@@ -71,9 +67,14 @@ export default class Selector extends React.Component<Props, State> {
             <div className={'sel-box ' + (isOffense ? 'box-offense' : 'box-defense')}>
               <div className="sel-roll">{isOffense ? '攻撃' : '防衛'}</div>
               <ul className="sel-units-list">
-                {army.map((unit, i) => {
+                {myUnits.map((unit, i) => {
                   const isSelected = (selected.indexOf(i) >= 0);
-                  const imageName = `${unit.klass}_${!isSelected ? 0 : isOffense ? 1 : 2}`;
+                  const bgposition = {
+                    width: ssize,
+                    height: ssize,
+                    backgroundPositionX: -(unit.klass-1)*ssize,
+                    backgroundPositionY: !isSelected ? 0 : isOffense ? -ssize*2 : -ssize,
+                  };
                   return (
                     <li
                       key={i}
@@ -84,7 +85,7 @@ export default class Selector extends React.Component<Props, State> {
                         }
                         this.selectSortie(i);
                       }}>
-                      <img src={`/image/units/${imageName}.png`} />
+                      <div className="sel-unit-image" style={bgposition} />
                       <div className="sel-unit-name">{unit.name}</div>
                       <div className="sel-unit-cost">{unit.cost}</div>
                     </li>
@@ -117,10 +118,16 @@ export default class Selector extends React.Component<Props, State> {
             <div className={'sel-box ' + (!isOffense ? 'box-offense' : 'box-defense')}>
               <div className="sel-roll">{!isOffense ? '攻撃' : '防衛'}</div>
               <ul className="sel-units-list">
-                {enemy.map((unit, i) => {
+                {opponentUnits.map((unit, i) => {
+                  const bgposition = {
+                    width: ssize,
+                    height: ssize,
+                    backgroundPositionX: -(unit.klass-1)*ssize,
+                    backgroundPositionY: 0,
+                  };
                   return (
                     <li key={i}>
-                      <img src={`/image/units/${unit.klass}_0.png`} />
+                      <div className="sel-unit-image" style={bgposition} />
                       <div className="sel-unit-name">{unit.name}</div>
                       <div className="sel-unit-cost">{unit.cost}</div>
                     </li>

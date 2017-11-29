@@ -3,11 +3,11 @@ import Component from '../components/Lobby/Lobby.jsx';
 import { startSoloPlay, createRoom, joinRoom, leaveRoom, readyToBattle } from '../actions';
 
 const mapStateToProps = state => {
-  const { room } = state;
-  return room ? {
-    roomId: room.id,
-    isMatched: room.players.count() >= 2,
-  } : {};
+  const { room, me, opponent } = state;
+  return {
+    roomId: room ? room.id : null,
+    isMatched: (me && opponent),
+  };
 };
 
 const mapDispatchToProps = dispatch => {

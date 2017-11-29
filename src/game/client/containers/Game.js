@@ -6,6 +6,7 @@ import {
   endTurn,
   returnRoom,
   endMyTurn,
+  endAnimation,
 } from '../actions';
 
 const mapStateToProps = state => {
@@ -33,6 +34,9 @@ const mapDispatchToProps = dispatch => {
     onEndMyTurn: () => {
       dispatch(endMyTurn());
     },
+    onEndAnimation: turn => {
+      dispatch(endAnimation(turn));
+    }
   };
 };
 

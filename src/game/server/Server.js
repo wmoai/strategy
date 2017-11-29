@@ -67,19 +67,22 @@ module.exports = class GameServer {
   }
 
   join(roomId, socket) {
-    let room = this.getRoom(roomId);
-    socket.join(roomId);
-    console.log(`join ${socket.userId} to room ${roomId}`);
-
     const { userId, deck } = socket;
-    const player = new Player({
-      id: userId,
-      deck: deck
-    });
-    room = room.addPlayer(player);
+    try {
+      let room = this.getRoom(roomId);
+      socket.join(roomId);
+      console.log(`join ${socket.userId} to room ${roomId}`);
 
+      const player = new Player({
+        id: userId,
+        deck: deck
+      });
+      room = room.addPlayer(player);
 
-    this.syncRoom(room);
+      this.syncRoom(room);
+    } catch (e) {
+      return;
+    }
 
     socket.on('readyToBattle', () => {
       let room = this.getRoom(roomId);
@@ -111,7 +114,7 @@ module.exports = class GameServer {
     if (room.players.count() == 0) {
       this.rooms.delete(roomId);
     } else {
-      this.updateRoom(room);
+      this.syncRoom(room);
     }
   }
 

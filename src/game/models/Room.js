@@ -98,7 +98,7 @@ module.exports = class Room extends Immutable.Record({
     return opponent;
   }
 
-  isTrunPlayer(userId) {
+  isTurnPlayer(userId) {
     const player = this.player(userId);
     return this.game && player && player.offense == this.game.turn;
   }
@@ -169,32 +169,22 @@ module.exports = class Room extends Immutable.Record({
     });
   }
 
-  isTurnPlayer(userId) {
-    const player = this.player(userId);
-    return this.game && player && player.offense == this.game.turn;
+  canAct(userId) {
+    return this.state === STATE.get('BATTLE') && this.isTurnPlayer(userId);
   }
 
   actInGame(userId, from, to, target) {
-    if (this.state !== STATE.get('BATTLE') || !this.isTurnPlayer(userId)) {
+    if (!this.canAct(userId)) {
       return this;
     }
-
-    return this.set('game', this.game.withMutations(mnt => {
-      mnt.moveUnit(from, to)
-        .actUnit(to, target)
-        .mightChangeTurn()
-        .mightEndGame();
-    }));
+    return this.set('game', this.game.fixAction(from, to, target));
   }
 
   endTurn(userId) {
-    if (this.state !== STATE.get('BATTLE') || !this.isTurnPlayer(userId)) {
+    if (!this.canAct(userId)) {
       return this;
     }
-    return this.set('game', this.game.withMutations(mnt => {
-      mnt.changeTurn()
-        .mightEndGame();
-    }));
+    return this.set('game', this.game.changeTurn());
   }
 
   mightResetPlayers() {

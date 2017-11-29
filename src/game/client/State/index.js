@@ -7,7 +7,9 @@ import Ranges from './Ranges.js';
 export default class State extends Record({
   userId: null,
   deck: null,
+
   room: null,
+
   me: null,
   opponent: null,
   ui: new UI(),
@@ -26,10 +28,11 @@ export default class State extends Record({
   }
 
   setRoom(room) {
+    const { userId } = this;
     return this.withMutations(mnt => {
       mnt.set('room', room)
-        .set('me', room.player(mnt.userId))
-        .set('opponent', room.opponent(mnt.userId));
+        .set('me', room.player(userId))
+        .set('opponent', room.opponent(userId));
     });
   }
 
@@ -41,15 +44,18 @@ export default class State extends Record({
   }
 
   syncGame(data) {
+    const room = this.room.syncGame(data);
+    const ui = this.ui.clear();
     return this.withMutations(mnt => {
-      mnt.set('room', mnt.room.syncGame(data))
-        .set('ui', mnt.ui.clear());
+      mnt.set('room', room)
+        .set('ui', ui);
     });
   }
 
   returnRoom() {
+    const room = this.room.delete('game');
     return this.withMutations(mnt => {
-      mnt.set('room', mnt.room.delete('game'))
+      mnt.set('room', room)
         .delete('ui');
     });
   }
@@ -112,7 +118,7 @@ export default class State extends Record({
   selectCell(cellId, onAct) {
     const { room, ui } = this;
     const { game } = room;
-    if (game.isEnd) {
+    if (game.isEnd || this.isCOMTurn()) {
       return this;
     }
     if (ui.stateIs('FREE')) {
@@ -150,7 +156,6 @@ export default class State extends Record({
       }
     }
     return this.clearUI();
-
   }
 
   undo() {
@@ -166,7 +171,7 @@ export default class State extends Record({
 
   mightAct(cellId, onAct) {
     const { ui } = this;
-    if (this.canAct(cellId)) {
+    if (this.isActionable(cellId)) {
       const actCell = (cellId != ui.movedCell) ? cellId : undefined;
       setImmediate(() => {
         if (onAct && typeof onAct === 'function') {
@@ -184,7 +189,7 @@ export default class State extends Record({
     return this.undo().clearUI();
   }
 
-  canAct(cellId) {
+  isActionable(cellId) {
     const { room, ui } = this;
     const { game } = room;
     return cellId == ui.movedCell
@@ -198,7 +203,7 @@ export default class State extends Record({
   }
 
   isCOMTurn() {
-    return !this.room.isTrunPlayer(this.userId);
+    return !this.room.isTurnPlayer(this.userId);
   }
 
   startSoloPlay() {
@@ -215,27 +220,53 @@ export default class State extends Record({
     return this.set('room', this.room.endTurn(this.userId));
   }
 
-  mightStartAITurn() {
+  mightActAI() {
     if (!this.isCOMTurn()) {
       return this;
     }
+    const { room } = this;
+    const com = room.opponent(this.userId);
+
+    const action = this.getActionByAI();
+    if (action) {
+      const { userId, from, to, target, unit, route } = action;
+      return this.withMutations(mnt => {
+        mnt.set('room', mnt.room.actInGame(userId, from, to, target))
+          .set('ui', mnt.ui.setMoveAction(unit, route));
+      });
+    }
+    const movement = this.getMovementByAI();
+    if (!movement) {
+      return this.set('room', room.endTurn(com.id));
+    }
+    const { userId, from, to, unit, route } = movement;
     return this.withMutations(mnt => {
-      for (let i=0; i<20; i++) {
-        const action = mnt.getActionByAI();
-        if (!action) {
-          break;
-        }
-        const { userId, from, to, target } = action;
-        mnt.set('room', mnt.room.actInGame(userId, from, to, target));
-      }
-      mnt.moveByAI();
-      if (mnt.isCOMTurn()) {
-        const { room } = mnt;
-        const com = room.opponent(mnt.userId);
-        mnt.set('room', room.endTurn(com.id));
-      }
+      mnt.set('room', mnt.room.actInGame(userId, from, to))
+        .set('ui', mnt.ui.setMoveAction(unit, route));
     });
   }
+
+  // mightStartAITurn() {
+    // if (!this.isCOMTurn()) {
+      // return this;
+    // }
+    // return this.withMutations(mnt => {
+      // for (let i=0; i<20; i++) {
+        // const action = mnt.getActionByAI();
+        // if (!action) {
+          // break;
+        // }
+        // const { userId, from, to, target } = action;
+        // mnt.set('room', mnt.room.actInGame(userId, from, to, target));
+      // }
+      // mnt.moveByAI();
+      // if (mnt.isCOMTurn()) {
+        // const { room } = mnt;
+        // const com = room.opponent(mnt.userId);
+        // mnt.set('room', room.endTurn(com.id));
+      // }
+    // });
+  // }
 
   getActionByAI() {
     const { room } = this;
@@ -283,7 +314,8 @@ export default class State extends Record({
             from != undefined
             ? target.expectedEvaluationBy(unit, game.field.avoidance(target.cellId))
             : null
-          )
+          ),
+          ranges,
         };
       }).filter(actionCell => {
         return actionCell.from != undefined;
@@ -309,7 +341,9 @@ export default class State extends Record({
       userId: com.id,
       from: priUnit.cellId,
       to: priAction.from,
-      target: priAction.to
+      target: priAction.to,
+      unit: priUnit,
+      route: priAction.ranges.getMoveRoute(priAction.from),
     };
   }
 
@@ -346,6 +380,53 @@ export default class State extends Record({
         }
       });
     });
+  }
+
+  getMovementByAI() {
+    const { room } = this;
+    const com = room.opponent(this.userId);
+    const { game } = room;
+    const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
+    const enemies = game.ownedUnits(!com.offense);
+
+    if (units.count() == 0) {
+      return null;
+    }
+    const unit = units.first();
+
+    const ranges = Ranges.calculate(game, unit.cellId, unit, true);
+    let shortestD = Infinity;
+    let goal;
+    // 最短ターゲット探索
+    enemies.forEach(enemy => {
+      const d = ranges.getDistance(enemy.cellId);
+      if (d < shortestD) {
+        shortestD = d;
+        goal = enemy.cellId;
+      }
+    });
+    if (!goal) {
+      return {
+        userId: com.id,
+        from: unit.cellId,
+        to: unit.cellId,
+        target: null,
+      };
+    }
+    const route = ranges.getMoveRoute(goal).reverse();
+    for (let i=0; i<route.length; i++) {
+      const target = route[i];
+      if (ranges.cell(target).isMovable && !room.game.unit(target)) {
+        return {
+          userId: com.id,
+          from: unit.cellId,
+          to: target,
+          target: null,
+          unit,
+          route: ranges.getMoveRoute(target),
+        };
+      }
+    }
   }
 
 }

@@ -1,6 +1,6 @@
 #forecast {
-  border: solid 3px white;
-  border-radius: 10px;
+  border: solid 1px #aaa;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -11,12 +11,11 @@
   border-spacing: 0;
 }
 #forecast-table th {
-  font-size: 0.8em;
+  font-size: 0.7em;
   text-align: center;
   padding: 0 3px;
   background-color: antiquewhite;
   color: darkgoldenrod;
-  font-weight: bold;
 }
 #forecast-table td {
   padding: 0 12px;
@@ -30,13 +29,13 @@
 }
 
 #forecast-table td.offense {
-  background-color: #b44545;
+  background: linear-gradient(to left, #5b2f2f, #964c4c);
 }
 #forecast-table td.defense {
-  background-color: steelblue;
+  background: linear-gradient(to left, #30325e, #4c5496);
 }
 #forecast-table td.healer {
-  background-color: yellowgreen;
+  background: linear-gradient(to left, #335e30, #488e43);
 }
 
 #forecast-table tr:first-child td {

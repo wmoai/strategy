@@ -1,8 +1,9 @@
 
-import { Record, Map as IMMap } from 'immutable';
+import { Record, Map } from 'immutable';
 import Ranges from './Ranges.js';
+import Action from './Action.js';
 
-const STATE = IMMap({
+const STATE = Map({
   FREE: Symbol(),
   MOVE: Symbol(),
   ACT: Symbol(),
@@ -20,6 +21,7 @@ export default class UI extends Record({
   actionForecast: null,
 
   ranges: null,
+  action: null,
 }) {
 
   stateIs(str) {
@@ -47,7 +49,10 @@ export default class UI extends Record({
   }
 
   hoverCell(cellId) {
-    return this.set('hoveredCell', cellId);
+    return this.withMutations(mnt => {
+      mnt.set('hoveredCell', cellId)
+        .delete('actionForecast');
+    });
   }
 
   hoverUnit(unit) {
@@ -74,8 +79,13 @@ export default class UI extends Record({
   move(cellId) {
     return this.withMutations(mnt => {
       mnt.set('movedCell', cellId)
+        .setMoveAction(mnt.forcusedUnit, mnt.ranges.getMoveRoute(cellId))
         .setState('ACT');
     });
+  }
+
+  setMoveAction(unit, route) {
+    return this.set('action',  Action.createMove(unit, route));
   }
 
   act() {
@@ -108,6 +118,7 @@ export default class UI extends Record({
         .delete('movedCell')
         .delete('actionForecast')
         .delete('ranges')
+        .delete('action')
         .delete('pickedCell')
         .setState('FREE');
     });

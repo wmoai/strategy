@@ -4,6 +4,7 @@ const Unit = require('./Unit.js');
 const resource = require('../data');
 
 const defenceTurn = 10;
+let unitSeq = 0;
 
 module.exports = class Game extends Immutable.Record({
   cost: 16,
@@ -45,7 +46,7 @@ module.exports = class Game extends Immutable.Record({
   }
 
   initUnits(units) {
-    return  this.set('units', Immutable.List(units));
+    return  this.set('units', Immutable.List(units.map(unit => unit.set('seq', unitSeq++))));
   }
 
   turnRemained() {
@@ -67,7 +68,7 @@ module.exports = class Game extends Immutable.Record({
       return true;
     }
     const unit = this.unit(from);
-    if (!unit || this.unit(to)) {
+    if (!unit || this.unit(to) || unit.acted) {
       return false;
     }
     const klass = unit.klass;
@@ -194,7 +195,8 @@ module.exports = class Game extends Immutable.Record({
     return this.withMutations(mnt => {
       mnt.resetUnitsActed()
         .set('turn', !mnt.turn)
-        .set('turnCount', this.turnCount+1);
+        .set('turnCount', this.turnCount+1)
+        .mightEndGame();
     });
   }
 
@@ -244,6 +246,15 @@ module.exports = class Game extends Immutable.Record({
       });
     }
     return this;
+  }
+
+  fixAction(from, to, target) {
+    return this.withMutations(mnt => {
+      mnt.moveUnit(from, to)
+        .actUnit(to, target)
+        .mightChangeTurn()
+        .mightEndGame();
+    });
   }
 
 };

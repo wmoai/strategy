@@ -4,42 +4,94 @@ import './Canvas.css';
 import RefUnit from '../RefUnit//RefUnit.jsx';
 import Forecast from '../Forecast/Forecast.jsx';
 import Intro from '../Intro/index.jsx';
-import Notifier from '../Notifier/Notifier.jsx';
+import TurnCall from '../TurnCall/index.jsx';
 import Result from '../Result/Result.jsx';
 
-import GraphicRenderer from '../../GraphicRenderer.js';
+import Renderer from '../../Renderer';
 
-const scroller = {
-  x: 0,
-  y: 0,
-  timer: null,
-};
+class Dragger {
+  constructor() {
+    this.isDown = false;
+    this.dragging = false;
+    this.clientX = null;
+    this.clientY = null;
+    this.deltaX = null;
+    this.deltaY = null;
+    this.decelerator = null;
+  }
+  enter(clientX, clientY) {
+    this.isDown = true;
+    this.clientX = clientX;
+    this.clientY = clientY;
+    clearInterval(this.decelerator);
+  }
+  move(clientX, clientY) {
+    if (this.isDown && !this.dragging) {
+      const dx = Math.abs(this.clientX - clientX);
+      const dy = Math.abs(this.clientY - clientY);
+      if (dx > 10 || dy > 10) {
+        this.dragging = true;
+      }
+    }
+    if (this.dragging) {
+      this.deltaX = this.clientX - clientX;
+      this.deltaY = this.clientY - clientY;
+      this.clientX = clientX;
+      this.clientY = clientY;
+    }
+  }
+  leave(callback) {
+    this.isDown = false;
+    if (!this.dragging) {
+      return;
+    }
+    this.dragging = false;
+    clearInterval(this.decelerator);
+    if (callback != null && typeof callback === 'function') {
+      this.decelerator = setInterval(() => {
+        callback();
+        this.deltaX *= 0.95;
+        this.deltaY *= 0.95;
+        if (this.deltaX < 1 && this.deltaY < 1) {
+          clearInterval(this.decelerator);
+        }
+      }, 10);
+    }
+    return true;
+  }
+}
+const dragger = new Dragger();
 
 export default class Canvas extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       initialized: false,
-      introduction: false,
-      renderer: null,
+      introduction: true,
+      rect: null,
       mouseX: 0,
       mouseY: 0,
     };
     this.images = {};
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const { game, cellSize, isOffense, onInit } = this.props;
-    const { field, units } = game;
 
-    const renderer = new GraphicRenderer(this.pixiCanvas, field, cellSize);
-    renderer.renderTerrain();
+    const rect = this.container.getBoundingClientRect();
+
+    this.renderer = new Renderer({
+      canvas: this.pixiCanvas,
+      game,
+      cellSize,
+      width: window.innerWidth - (rect.left * 2),
+      height: window.innerHeight - rect.top
+    });
     this.setState({
       initialized: true,
-      renderer: renderer
+      rect,
     }, () => {
-      this.state.renderer.renderUnits(units);
-      const myUnit = units.filter(unit => unit.offense == isOffense ).first();
+      const myUnit = game.units.filter(unit => unit.offense == isOffense ).first();
       if (myUnit) {
         this.forcusCell(myUnit.cellId);
       }
@@ -47,159 +99,188 @@ export default class Canvas extends React.Component {
     });
 
     setTimeout(() => {
-      this.setState({introduction: false});
-    }, 2000);
+      if (this.state.introduction) {
+        this.setState({introduction: false});
+      }
+    }, 5000);
+    window.addEventListener('resize', this.resizeWindow.bind(this));
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resizeWindow.bind(this));
+  }
+
+  resizeWindow() {
+    const rect = this.container.getBoundingClientRect();
+    this.renderer.resize(window.innerWidth - (rect.left * 2), window.innerHeight - rect.top);
+    this.renderer.scroll(0, 0);
+    this.setState({ rect });
   }
 
   componentWillReceiveProps(nextProps) {
     if (!this.state.initialized) {
       return;
     }
-    const { game, ui } = nextProps;
-    if (game.units != this.props.game.units) {
-      const { units } = game;
-      this.state.renderer.renderUnits(units);
-    }
+    const { game, ui, onEndAnimation } = nextProps;
 
-    this.state.renderer.clearRange();
-    this.state.renderer.renderRange(ui);
+    if (ui.action != this.props.ui.action) {
+      const { action } = ui;
+      this.animating = (action != null);
+      this.renderer.setAnimation(action, () => {
+        // animation callback
+        this.animating = false;
+        this.renderer.updateUnits(game.units);
+        this.renderer.updateRanges(ui.ranges, ui.forcusedUnit);
+        onEndAnimation(game.turn);
+      });
+    }
+    if (game.units != this.props.game.units && !this.animating) {
+      this.renderer.updateUnits(game.units);
+    }
+    if (ui.ranges != this.props.ui.ranges && !this.animating) {
+      this.renderer.updateRanges(ui.ranges, ui.forcusedUnit);
+    }
   }
 
   forcusCell(cellId) {
-    if (!this.screen) {
+    const { y, x } = this.props.game.field.coordinates(cellId);
+    this.renderer.forcusCell(x, y);
+  }
+
+  cellPoint(clientX, clientY) {
+    const { rect } = this.state;
+    return this.renderer.fieldCoordinates(clientX - rect.left, clientY - rect.top);
+  }
+
+  changeScale(deltaY) {
+    const { mouseX, mouseY, rect } = this.state;
+    this.renderer.zoom(
+      deltaY / 500,
+      mouseX - rect.left,
+      mouseY - rect.top,
+    );
+  }
+
+  selectCell(clientX, clientY) {
+    const { game, onSelectCell } = this.props;
+    const { field } = game;
+
+    const { x, y } = this.cellPoint(clientX, clientY);
+    const cellId = field.cellId(y, x);
+    onSelectCell(cellId);
+  }
+
+  hoverCell(clientX, clientY) {
+    const { game, onHoverCell } = this.props;
+    const { field } = game;
+
+    this.setState({
+      mouseX: clientX,
+      mouseY: clientY,
+    });
+    const { x, y } = this.cellPoint(clientX, clientY);
+    if (!field.isActiveCell(y, x)) {
       return;
     }
-    const { game, cellSize } = this.props;
-    const x = cellId % game.field.width;
-    const y = Math.floor(cellId / game.field.width);
-    this.screen.scrollTop = y * cellSize - this.screen.clientHeight/2 + cellSize/2;
-    this.screen.scrollLeft = x * cellSize - this.screen.clientWidth/2 + cellSize/2;
-  }
-
-  cellPoint(event) {
-    const { cellSize } = this.props;
-    const rect = event.target.getBoundingClientRect();
-    const innerOffsetX = event.clientX - rect.left + event.target.scrollLeft;
-    const innerOffsetY = event.clientY - rect.top + event.target.scrollTop;
-    return {
-      y: Math.floor(innerOffsetY / cellSize),
-      x: Math.floor(innerOffsetX / cellSize)
-    };
-  }
-
-  hover(event) {
-    // const { target, pageX, pageY } = event;
-    // const rect = target.getBoundingClientRect();
-    // const xr = (pageX-rect.left) / target.clientWidth;
-    // const yr = (pageY-rect.top) / target.clientHeight;
-    // const dx = xr > 0.9 ? 5 : xr < 0.1 ? -5 : 0;
-    // const dy = yr > 0.9 ? 5 : yr < 0.1 ? -5 : 0;
-    // if (dx === 0 && dy === 0) {
-      // clearInterval(scroller.timer);
-    // }
-    // if (scroller.x !== dx || scroller.y !== dy) {
-      // clearInterval(scroller.timer);
-      // scroller.timer = setInterval(() => {
-        // this.screen.scrollLeft += dx;
-        // this.screen.scrollTop += dy;
-      // }, 10);
-    // }
-    // scroller.x = dx;
-    // scroller.y = dy;
+    this.renderer.updateCursor(x, y);
+    const cellId = field.cellId(y, x);
+    onHoverCell(cellId);
   }
 
   render() {
     const {
-      cellSize,
       isOffense,
       game,
       ui,
-      onSelectCell,
-      onHoverCell,
       onReturnRoom,
     } = this.props;
 
-    const { field } = game;
-
+    const { mouseY, mouseX } = this.state;
     const naviStyle = {};
     if (ui.hoveredCell != null) {
       const vr = this.state.mouseY / window.innerHeight;
       const hr = this.state.mouseX / window.innerWidth;
-      naviStyle[vr < 0.5 ? 'bottom' : 'top'] = 20;
-      naviStyle[hr < 0.5 ? 'right': 'left'] = 20;
+      const { x, y } = this.cellPoint(mouseX, mouseY);
+      if (vr < .5) {
+        naviStyle['top'] = this.renderer.clientYOfCell(y+1.5);
+      } else {
+        naviStyle['bottom'] = this.container.clientHeight - this.renderer.clientYOfCell(y-.5);
+      }
+      if (hr < .5) {
+        naviStyle['left'] = this.renderer.clientXOfCell(x);
+      } else {
+        naviStyle['right'] = this.container.clientWidth - this.renderer.clientXOfCell(x+1);
+      }
     }
 
-    const width = field.width * cellSize
-      , height = field.height * cellSize;
     return (
-      <div id="screen-container">
+      <div
+        id="screen-container"
+        ref={div => this.container = div} 
+      >
         <div
           id="screen-base"
-          width={width}
-          height={height}
-          ref={div => this.screen = div} 
           onMouseMove={e => {
             if (!this.state.initialized) {
               return;
             }
-            this.setState({
-              mouseX: e.pageX,
-              mouseY: e.pageY,
-            });
-            this.hover(e);
-            const { x, y } = this.cellPoint(e);
-            if (!field.isActiveCell(y, x)) {
-              return;
+            this.hoverCell(e.clientX, e.clientY);
+            dragger.move(e.clientX, e.clientY);
+            if (dragger.dragging) {
+              this.renderer.scroll(dragger.deltaX, dragger.deltaY);
             }
-            this.state.renderer.renderCursor(x, y);
-            const cellId = field.cellId(y, x);
-            onHoverCell(cellId);
+
           }}
-          onClick={e => {
-            if (!onSelectCell || typeof onSelectCell !== 'function') {
+          onMouseDown={e => dragger.enter(e.clientX, e.clientY)}
+          onMouseUp={e => {
+            if (dragger.leave(() => {
+              this.renderer.scroll(dragger.deltaX, dragger.deltaY);
+            })) {
               return;
             }
-            const { x, y } = this.cellPoint(e);
-            if (!field.isActiveCell(y, x)) {
-              return;
-            }
-            const cellId = field.cellId(y, x);
-            onSelectCell(cellId);
+            this.selectCell(e.clientX, e.clientY);
           }}
+          onWheel={e => {
+            dragger.leave();
+            this.changeScale(e.deltaY);
+          }}
+          onMouseLeave={() => dragger.leave()}
         >
           <canvas
             id="screen-canvas"
             ref={canvas => { this.pixiCanvas = canvas; }}
           />
         </div>
-        {!game.isEnd &&
-            <div id="screen-overlay">
-              <div id="screen-float-ref" style={naviStyle}>
-                {ui.actionForecast ? (
-                  <Forecast forecast={ui.actionForecast} />
-                ): (
-                  <RefUnit unit={ui.hoveredUnit} />
-                )}
-              </div>
-            </div>
+        {game.isEnd &&
+            <Result
+              won={game.winner == isOffense}
+              onReturnRoom={onReturnRoom}
+            />
         }
         {this.state.introduction ? (
           <Intro
             game={game}
             isOffense={isOffense}
+            onClick={() => this.setState({introduction: false})}
           />
         ) : (
-          <Notifier
+          <TurnCall
             game={game}
             isOffense={isOffense}
+            hidden={game.isEnd}
             onEndMyTurn={this.props.onEndMyTurn}
           />
         )}
-        <Result
-          isEnd={game.isEnd}
-          won={game.winner == isOffense}
-          onReturnRoom={onReturnRoom}
-        />
+
+        <div id="screen-transparent-overlay">
+          <div id="screen-float-ref" style={naviStyle}>
+            {ui.actionForecast ? (
+              <Forecast forecast={ui.actionForecast} />
+            ): (
+              <RefUnit unit={ui.hoveredUnit} />
+            )}
+          </div>
+        </div>
       </div>
     );
   }

@@ -13,7 +13,6 @@ export default class Game extends React.Component {
     };
   }
 
-    /*
   componentDidMount() {
     window.onbeforeunload = () => {
       return true;
@@ -26,10 +25,9 @@ export default class Game extends React.Component {
       };
     }
   }
-  */
 
   render() {
-    const cellSize = 50;
+    const cellSize = 40;
     const {
       isOffense,
       game,
@@ -39,6 +37,7 @@ export default class Game extends React.Component {
       onClickEndTurn,
       onReturnRoom,
       onEndMyTurn,
+      onEndAnimation,
     } = this.props;
     if (!game) {
       return <div>ERR</div>;
@@ -46,6 +45,9 @@ export default class Game extends React.Component {
 
     return (
       <div id="game-container">
+        <style>
+          {'body { overflow:hidden; }'}
+        </style>
         <div id="game-header">
           <StatusBar
             isOffense={isOffense}
@@ -71,6 +73,7 @@ export default class Game extends React.Component {
             onHoverCell={onHoverCell}
             onReturnRoom={onReturnRoom}
             onEndMyTurn={onEndMyTurn}
+            onEndAnimation={onEndAnimation}
             isOffense={isOffense}
           />
         </div>

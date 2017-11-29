@@ -1,15 +1,16 @@
 
-#notify-base {
+#turncall-base {
   pointer-events: none;
   display: flex;
   justify-content: center;
-  align-items: center;
   user-select: none;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
+  padding: 80px 0;
   background: rgba(0,0,0,0);
   animation: dark 1s ease;
 }
@@ -28,7 +29,7 @@
   }
 }
 
-.notify-turn-text {
+.turncall-turn-text {
   width: 100%;
   color: rgba(255,255,255,0.1);
   font-size: 3em;
@@ -42,7 +43,7 @@
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
   animation: slide 1s ease;
 }
-.notify-turn-text.enemy {
+.turncall-turn-text.enemy {
   color: #111;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }

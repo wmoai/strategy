@@ -1,14 +1,14 @@
 import React from 'react';
 import { Map } from 'immutable';
 
-import './Notifier.css';
+import './style.css';
 
 const Step = Map({
   MY_TURN: Symbol(),
   ENEMY_TURN: Symbol(),
 });
 
-export default class Notifier extends React.Component {
+export default class TurnCall extends React.Component {
 
   constructor(props) {
     super(props);
@@ -56,27 +56,27 @@ export default class Notifier extends React.Component {
   }
 
   render() {
-    if (!this.state.show) {
+    const { game, hidden } = this.props;
+    if (hidden || !this.state.show || game.isEnd) {
       return null;
     }
-    const { game } = this.props;
     let body;
 
     switch (this.state.step) {
       case Step.get('MY_TURN'):
         body = (
-          <div className="notify-turn-text">YOUR TURN</div>
+          <div className="turncall-turn-text">YOUR TURN</div>
         );
         break;
       case Step.get('ENEMY_TURN'):
         body = (
-          <div className="notify-turn-text enemy">ENEMY TURN</div>
+          <div className="turncall-turn-text enemy">ENEMY TURN</div>
         );
         break;
     }
 
     return (
-      <div id="notify-base" key={game.turnCount}>
+      <div id="turncall-base" key={game.turnCount}>
         {body}
       </div>
     );

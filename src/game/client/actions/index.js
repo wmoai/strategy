@@ -62,7 +62,7 @@ export const SELECT_CELL = 'SELECT_CELL';
 export function selectCell(cellId) {
   return {
     type: SELECT_CELL,
-    payload: { cellId: cellId }
+    payload: { cellId }
   };
 }
 
@@ -70,7 +70,7 @@ export const HOVER_CELL = 'HOVER_CELL';
 export function hoverCell(cellId) {
   return {
     type: HOVER_CELL,
-    payload: { cellId: cellId }
+    payload: { cellId }
   };
 }
 
@@ -92,6 +92,18 @@ export function endMyTurn() {
         type: END_MY_TURN
       });
     }, 1200);
+  };
+}
+
+export const END_ANIMATION = 'END_ANIMATION';
+export function endAnimation(turn) {
+  return dispatch => {
+    setTimeout(() => {
+      dispatch({
+        type: END_ANIMATION,
+        payload: { turn }
+      });
+    }, 300);
   };
 }
 

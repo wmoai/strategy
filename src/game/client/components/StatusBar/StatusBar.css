@@ -12,12 +12,10 @@
 }
 
 #statusbar.offense {
-  background: -prefix-linear-gradient(top, darkred, #4C191B);
-  background: linear-gradient(to bottom, darkred, #4C191B);
+  background: linear-gradient(to top, #5b2f2f, #964c4c);
 }
 #statusbar.defense {
-  background: -prefix-linear-gradient(top, navy, #101D42);
-  background: linear-gradient(to bottom, navy, #101D42);
+  background: linear-gradient(to top, #30325e, #4c5496);
 }
 
 #statusbar ul {
@@ -39,7 +37,6 @@
   margin-left: 15px;
   border-radius: 50%;
   box-sizing: border-box;
-  background: -prefix-linear-gradient(left top, mediumaquamarine, darkgreen);
   background: linear-gradient(to bottom right, mediumaquamarine, darkgreen);
 
   border: solid 3px #555;
@@ -55,7 +52,6 @@
   cursor: pointer;
 }
 #turn-end-button[disabled] {
-  background: -prefix-linear-gradient(left top, #888, #555);
   background: linear-gradient(to bottom right, #888, #555);
   font-size: 0.9em;
   color: #222;
@@ -77,7 +73,6 @@
   margin-left: auto;
   box-sizing: border-box;
   padding: 0 15px;
-  background: -prefix-linear-gradient(top, #333, #111);
   background: linear-gradient(to bottom, #333, #111);
   border-left: solid 1px #111;
   color: #eee;

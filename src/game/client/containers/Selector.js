@@ -2,11 +2,13 @@ import { connect } from 'react-redux';
 import Component from '../components/Selector/Selector.jsx';
 import { selectUnits } from '../actions';
 
+import data from '../../data';
+
 const mapStateToProps = state => {
   return {
-    myDeck: state.me.deck,
+    myUnits: state.me.deck ? state.me.deck.map(uid => data.unit[uid]) : [],
     isOffense: state.me.offense,
-    opponentsDeck: state.opponent.deck,
+    opponentUnits : state.opponent.deck ? state.opponent.deck.map(uid => data.unit[uid]) : [],
   };
 };
 

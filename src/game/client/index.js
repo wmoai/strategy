@@ -3,13 +3,13 @@ import { init as initSocket } from './websocket.js';
 import { init as initFrontEnd } from './frontend.js';
 
 require('../data').init();
-import GraphicRenderer from './GraphicRenderer.js';
+import Renderer from './Renderer';
 
 const store = initStore();
 initSocket(store);
 
 document.addEventListener('DOMContentLoaded', () => {
-  GraphicRenderer.preload().then(() => {
+  Renderer.preload().then(() => {
     initFrontEnd(store);
   });
 });
