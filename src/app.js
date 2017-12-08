@@ -2,6 +2,7 @@ const express = require('express');
 const Path = require('path');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const app = express();
 const uid = require('uid-safe').sync;
 const jwt = require('jsonwebtoken');
@@ -9,6 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 app.set('view engine', 'pug');
 app.set('views', Path.join(__dirname, '../views'));
+app.use(compression());
 app.use(express.static(Path.join(__dirname, '../public')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
