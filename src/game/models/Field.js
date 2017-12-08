@@ -54,15 +54,34 @@ module.exports = class Field extends Immutable.Record({
   isSameTerrainWithNeighbor(y/*: number*/, x/*: number*/) {
     const land = this.terrain[this.cellId(y, x)];
     return {
-      top: !this.existsCell(y-1, x) || land == this.terrain[this.cellId(y-1, x)],
-      left: !this.existsCell(y, x-1) || land == this.terrain[this.cellId(y, x-1)],
-      right: !this.existsCell(y, x+1) || land == this.terrain[this.cellId(y, x+1)],
-      bottom: !this.existsCell(y+1, x) || land == this.terrain[this.cellId(y+1, x)],
-      tl: !this.existsCell(y-1, x-1) || land == this.terrain[this.cellId(y-1, x-1)],
-      tr: !this.existsCell(y-1, x+1) || land == this.terrain[this.cellId(y-1, x+1)],
-      bl: !this.existsCell(y+1, x-1) || land == this.terrain[this.cellId(y+1, x-1)],
-      br: !this.existsCell(y+1, x+1) || land == this.terrain[this.cellId(y+1, x+1)],
+      // top: !this.existsCell(y-1, x) || land == this.terrain[this.cellId(y-1, x)],
+      // left: !this.existsCell(y, x-1) || land == this.terrain[this.cellId(y, x-1)],
+      // right: !this.existsCell(y, x+1) || land == this.terrain[this.cellId(y, x+1)],
+      // bottom: !this.existsCell(y+1, x) || land == this.terrain[this.cellId(y+1, x)],
+      // tl: !this.existsCell(y-1, x-1) || land == this.terrain[this.cellId(y-1, x-1)],
+      // tr: !this.existsCell(y-1, x+1) || land == this.terrain[this.cellId(y-1, x+1)],
+      // bl: !this.existsCell(y+1, x-1) || land == this.terrain[this.cellId(y+1, x-1)],
+      // br: !this.existsCell(y+1, x+1) || land == this.terrain[this.cellId(y+1, x+1)],
+      top: !this.existsCell(y-1, x) || this.isSameTerrain(land, this.terrain[this.cellId(y-1, x)]),
+      left: !this.existsCell(y, x-1) || this.isSameTerrain(land, this.terrain[this.cellId(y, x-1)]),
+      right: !this.existsCell(y, x+1) || this.isSameTerrain(land, this.terrain[this.cellId(y, x+1)]),
+      bottom: !this.existsCell(y+1, x) || this.isSameTerrain(land, this.terrain[this.cellId(y+1, x)]),
+      tl: !this.existsCell(y-1, x-1) || this.isSameTerrain(land, this.terrain[this.cellId(y-1, x-1)]),
+      tr: !this.existsCell(y-1, x+1) || this.isSameTerrain(land, this.terrain[this.cellId(y-1, x+1)]),
+      bl: !this.existsCell(y+1, x-1) || this.isSameTerrain(land, this.terrain[this.cellId(y+1, x-1)]),
+      br: !this.existsCell(y+1, x+1) || this.isSameTerrain(land, this.terrain[this.cellId(y+1, x+1)]),
     };
+  }
+
+  isSameTerrain(base, other) {
+    const water = [6, 7];
+    const bridge = [9, 10];
+    if (water.includes(base)) {
+      if (bridge.includes(other) || water.includes(other)) {
+        return true;
+      }
+    }
+    return base == other;
   }
 
   cost(cellId/*: number*/, type/*: string*/='foot') {

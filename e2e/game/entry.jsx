@@ -23,12 +23,12 @@ class Container extends React.Component {
     this.state = {
       state: new State({
         room: new Room({
-          game: new Game().setField(2).initUnits([
-            Unit.create({ offense:true, unitId:29, cellId:53 }),
-            Unit.create({ offense:true, unitId:11, cellId:333 }),
+          game: new Game().setField(1).initUnits([
+            Unit.create({ offense:true, unitId:28, cellId:92 }),
+            // Unit.create({ offense:true, unitId:11, cellId:333 }),
             // Unit.create({ offense:true, unitId:34, cellId:32 }),
             Unit.create({ offense:false, unitId:15, cellId:35 }),
-            Unit.create({ offense:false, unitId:11, cellId:55 }),
+            // Unit.create({ offense:false, unitId:11, cellId:55 }),
             // Unit.create({ offense:false, unitId:15, cellId:265 }),
             // Unit.create({ offense:false, unitId:32, cellId:4 }),
             // Unit.create({ offense:false, unitId:9, cellId:1 }),
@@ -56,10 +56,6 @@ class Container extends React.Component {
       clearInterval(this.aiLoop);
       this.aiLoop = null;
     }
-  }
-
-  actAI() {
-
   }
 
   selectCell(cellId) {

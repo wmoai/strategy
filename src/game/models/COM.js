@@ -6,6 +6,7 @@ module.exports = class COM extends Player {
     super(args);
     return this.withMutations(mnt => {
       mnt.set('id', 'com')
+        .set('isHuman', false)
         .set('deck', [1,2,3,4,5,6,11])
         .set('ready', true);
     });

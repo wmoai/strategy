@@ -8,7 +8,7 @@ let unitSeq = 0;
 
 module.exports = class Game extends Immutable.Record({
   cost: 16,
-  fieldId: 2,
+  fieldId: null,
   field: null,
   units: Immutable.List(),
   turnCount: 1,
@@ -38,10 +38,14 @@ module.exports = class Game extends Immutable.Record({
   }
 
   setField(fieldId) {
-    const fid = fieldId ? fieldId : this.fieldId;
+    let fid = fieldId ? fieldId : this.fieldId;
+    const field = resource.getField(fid);
+    if (fid == null) {
+      fid = field.id;
+    }
     return this.withMutations(mnt => {
       mnt.set('fieldId', fid)
-        .set('field', resource.field[fid]);
+        .set('field', field);
     });
   }
 

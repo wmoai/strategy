@@ -2,8 +2,7 @@
 
 .env
 public/bundle.css
-public/app.js
-config/secret.json
+public/*.js
 
 
 # Logs

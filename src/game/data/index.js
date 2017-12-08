@@ -12,9 +12,22 @@ exports.init = () => {
   exports.terrain = terrains;
 
   const Field = require('../models/Field.js');
-  exports.field = {
-    1: new Field(require('../data/json/field/seki.json')),
-    2: new Field(require('../data/json/field/muhi.json')),
+  const fields = [
+    new Field(require('../data/json/field/seki.json')),
+    new Field(require('../data/json/field/muhi.json')),
+    // new Field(require('../data/json/field/perse.json')),
+  ];
+  exports.getField = (fieldId=null) => {
+    if (fieldId == null) {
+      return fields[Math.floor(Math.random() * fields.length)];
+    }
+    let result;
+    fields.forEach(field => {
+      if (fieldId == field.id) {
+        result = field;
+      }
+    });
+    return result;
   };
 
   return this;

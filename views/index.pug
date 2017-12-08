@@ -1,42 +1,43 @@
 html
   head
     link(rel="stylesheet", href="/css/strategy.css")
-    script(src="/portal.js")
   body
-    #container
-      h1 SquareLegion
-      form(action="sealed", method="POST")
-        input.portal-button(type="submit", value="デッキ生成")
-      if units.length > 0
-        form(action="app", method="POST", target="_blank")
-          input.portal-button(type="submit", value="対戦")
-          table
-            thead
+    #portal-container
+      #portal-navigator
+        form(action="sealed", method="POST")
+          input.portal-button(type="submit", value="デッキ生成")
+        if units && units.length > 0
+          form(action="app", method="POST", target="_blank")
+            input.portal-button(type="submit", value="対戦開始")
+      if units && units.length > 0
+        table
+          thead
+            tr
+              th 名
+              th HP
+              th 力
+              th 守
+              th 信
+              th 技
+              th 運
+              th 命中
+              th 移動
+              th 射程
+              th コスト
+          tbody
+            each unit in units
               tr
-                th 名
-                th HP
-                th 力
-                th 守
-                th 信
-                th 技
-                th 運
-                th 命中
-                th 移動
-                th 射程
-                th コスト
-            tbody
-              each unit in units
-                tr
-                  td
-                    label(for=`unit_${unit.id}`)= unit.name
-                  td= unit.hp
-                  td= unit.pow
-                  td= unit.dff
-                  td= unit.fth
-                  td= unit.skl
-                  td= unit.luc
-                  td= unit.hit
-                  td= unit.move
-                  td #{unit.min_range}~#{unit.max_range}
-                  td= unit.cost
-      #deck
+                td
+                  label(for=`unit_${unit.id}`)= unit.name
+                td= unit.hp
+                td= unit.pow
+                td= unit.dff
+                td= unit.fth
+                td= unit.skl
+                td= unit.luc
+                td= unit.hit
+                td= unit.move
+                td #{unit.min_range}~#{unit.max_range}
+                td= unit.cost
+        #deck hoge
+

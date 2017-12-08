@@ -5,8 +5,8 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: {
-    portal: './src/portal/',
-    app: './src/game/client/',
+    bundle: './src/frontend/index.jsx',
+    // app: './src/game/client/',
   },
   output: {
     path: path.resolve('public'),
@@ -24,10 +24,6 @@ module.exports = {
         use: ExtractTextPlugin.extract({
           use: 'css-loader'
         })
-      },
-      {
-        test: /\.(jpg|png)$/,
-        use: ['file-loader']
       },
     ]
   },

@@ -82,9 +82,9 @@ module.exports = class Room extends Immutable.Record({
 
   player(userId) {
     const player = this.players.get(userId);
-    if (!player) {
-      throw `player[${userId}] is not exists.`;
-    }
+    // if (!player) {
+      // throw `player[${userId}] is not exists.`;
+    // }
     return player;
   }
 
@@ -122,7 +122,7 @@ module.exports = class Room extends Immutable.Record({
     let tgl = Math.random() >= 0.5;
 
     return this.withMutations(mnt => {
-      mnt.set('game', (new Game()).setField(2))
+      mnt.set('game', (new Game()).setField())
         .set('players', mnt.players.map(player => {
           // decide offense side
           tgl = !tgl;

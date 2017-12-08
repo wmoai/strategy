@@ -1,0 +1,108 @@
+#lobby-base {
+  height: 100%;
+  background: linear-gradient(to right, #000, #333, #000);
+}
+
+#lobby-container {
+  width: 300px;
+  min-height: 400px;
+  margin: auto;
+  padding: 40px 30px;
+  box-sizing: border-box;
+}
+
+#lobby-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#lobby-list li {
+  display: flex;
+  margin-bottom: 2px;
+}
+
+.lobby-btn {
+  flex: 1;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.2em;
+  padding: 0.2em 0.6em;
+  background: linear-gradient(to top, #666, #777);
+  border: 0.3em solid;
+  border-top-color: #888;
+  border-left-color: #777;
+  border-bottom-color: #444;
+  border-right-color: #555;
+  border-radius: 2px;
+  outline: none;
+
+  color: #333;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+}
+.lobby-btn:active {
+  background: #666;
+}
+.lobby-btn[disabled] {
+  cursor: default;
+  color: #666;
+}
+
+.lobby-input {
+  height: 44px;
+  margin: 0;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: #ccc;
+  border: none;
+  border-right: 2px solid #222;
+  outline: 0;
+  font-size: 1.1em;
+  text-align: center;
+  color: #222;
+}
+
+#lobby-create {
+  margin-top: 10px;
+}
+
+#lobby-join {
+  margin-top: 10px;
+}
+
+#lobby-join .lobby-input {
+  width: 150px;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+#lobby-room {
+  display: flex;
+  flex-direction: column;
+}
+
+#lobby-room span {
+  color: gray;
+  text-align: center;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+#lobby-room .lobby-input {
+  font-size: 1.5em;
+}
+
+#lobby-wait {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 30px;
+}
+
+#lobby-room-leave {
+  margin-top: 10px;
+}

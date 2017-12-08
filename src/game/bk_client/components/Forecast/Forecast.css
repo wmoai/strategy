@@ -1,0 +1,53 @@
+#forecast {
+  border: solid 1px #aaa;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#forecast-table {
+  font-size: 1.1em;
+  color: white;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+#forecast-table th {
+  font-size: 0.7em;
+  text-align: center;
+  padding: 0 3px;
+  background-color: antiquewhite;
+  color: darkgoldenrod;
+}
+#forecast-table td {
+  padding: 0 12px;
+  min-width: 25px;
+  text-align: right;
+  vertical-align: middle;
+  background-color: gray;
+  font-weight: bold;
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 saddlebrown;
+}
+
+#forecast-table td.offense {
+  background: linear-gradient(to left, #5b2f2f, #964c4c);
+}
+#forecast-table td.defense {
+  background: linear-gradient(to left, #30325e, #4c5496);
+}
+#forecast-table td.healer {
+  background: linear-gradient(to left, #335e30, #488e43);
+}
+
+#forecast-table tr:first-child td {
+  text-align: left;
+  padding: 3px 10px;
+  color: white;
+  text-shadow: none;
+}
+#forecast-table tr:last-child td {
+  text-align: right;
+  padding: 3px 10px;
+  color: white;
+  text-shadow: none;
+}
+

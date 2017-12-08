@@ -2,6 +2,7 @@ const Immutable = require('immutable');
 
 module.exports = class Player extends Immutable.Record({
   id: null,
+  isHuman: true,
   offense: null,
   deck: [], // [ unitId ]
   ready: false,
