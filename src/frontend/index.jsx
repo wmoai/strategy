@@ -9,7 +9,6 @@ import Router from './Router.jsx';
 import Renderer from './Renderer';
 
 
-require('../game/data').init();
 import {
   connectSocket,
   CREATE_ROOM,

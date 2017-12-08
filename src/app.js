@@ -18,7 +18,7 @@ app.use(cookieParser());
 // const gameServer = new GameServer();
 const RoomServer = require('./RoomServer.js');
 const roomServer = new RoomServer();
-const resource = require('./game/data').init();
+const resource = require('./game/data');
 
 // app.get('/', (req, res) => {
   // res.render('index', {

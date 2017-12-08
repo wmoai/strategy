@@ -12,7 +12,7 @@ module.exports = {
     path: path.resolve('public'),
     filename: '[name].js'
   },
-  devtool: 'cheap-module-eval-source-map',
+  // devtool: 'cheap-module-eval-source-map',
   module: {
     rules: [
       {
@@ -29,15 +29,9 @@ module.exports = {
   },
   plugins: [
     new ExtractTextPlugin('bundle.css'),
-    new webpack.optimize.UglifyJsPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      }
-    })
   ],
   devServer: {
     port: 8081,

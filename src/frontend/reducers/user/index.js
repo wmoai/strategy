@@ -3,7 +3,7 @@ import {
 } from '../../actions';
 
 import State from './State.js';
-const resource = require('../../../game/data').init();
+const resource = require('../../../game/data');
 
 const user = (state = new State(), action) => {
   const { payload } = action;
