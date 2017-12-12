@@ -13,10 +13,8 @@ export default class Renderer {
   constructor({ canvas, game, cellSize, width, height }) {
     this.game = game;
     const { field } = game;
-    this.domWidth = width;
-    this.domHeight = height;
-    this.baseWidth = field.width * cellSize;
-    this.baseHeight = field.height * cellSize;
+    this.fullWidth = field.width * cellSize;
+    this.fullHeight = field.height * cellSize;
     this.cellSize = cellSize;
     this.scale = 1;
     this.app = new PIXI.Application({
@@ -26,6 +24,12 @@ export default class Renderer {
       sharedLoader: true,
     });
     const stage = new PIXI.Container();
+    stage.interactive = true;
+    // stage.interactiveChildren = true;
+    // stage.on('click', e => {
+      // console.log(e.data.global.x, e.data.global.y);
+    // });
+
     this.layer = {
       terrain: new PIXI.Container(),
       range: new PIXI.Container(),
@@ -43,10 +47,14 @@ export default class Renderer {
       ranges: null,
       animation: null,
     };
+    this.synchronous = {
+      units: null, // { unitSeq: { cellId, hp } }
+    };
 
     this.cursor = new Cursor(cellSize, this.layer.ui);
     this.unitsMap = new Map();
-    this.setUnits(game.units);
+    // this.setUnits(game.units);
+    this.initUnits(game.units);
     this.initTerrain(field);
     this.animation = null;
 
@@ -174,6 +182,36 @@ export default class Renderer {
     }
   }
 
+
+
+
+  moveUnit() {
+
+  }
+
+
+  listen(socket) {
+    socket.on('syncUnits', payload => {
+      payload.units.forEach(data => {
+        const { seq } = data;
+        const unit = this.unitsMap.get(seq);
+        unit.update2(data);
+      });
+    });
+    this.socket = socket;
+  }
+
+
+
+  initUnits(units) {
+    const { game, cellSize } = this;
+    units.forEach(unitModel => {
+      const unit = new Unit(unitModel, game.field, cellSize, this.layer.units);
+      this.unitsMap.set(unitModel.seq, unit);
+      // unit.update(unitModel);
+    });
+  }
+
   setUnits(units) {
     this.buffers.units = units;
   }
@@ -191,7 +229,6 @@ export default class Renderer {
       });
       this.buffers.units = null;
     }
-
   }
 
   setRanges(ranges, unit) {
@@ -258,9 +295,9 @@ export default class Renderer {
   }
 
   scrollTo(x, y) {
-    const { baseWidth, baseHeight, domWidth, domHeight, scale } = this;
-    const maxX = baseWidth * scale - domWidth;
-    const maxY = baseHeight * scale - domHeight;
+    const { app, fullWidth, fullHeight, scale } = this;
+    const maxX = fullWidth * scale - app.renderer.width;
+    const maxY = fullHeight * scale - app.renderer.height;
     this.app.stage.x = (
       (maxX < 0)
       ? -maxX / 2
@@ -292,24 +329,24 @@ export default class Renderer {
   }
 
   forcusCell(x, y) {
-    const { cellSize, domWidth, domHeight, scale } = this;
+    const { cellSize, app, scale } = this;
     this.scrollTo(
-      (x * cellSize + cellSize/2) * scale - domWidth/2,
-      (y * cellSize + cellSize/2) * scale - domHeight/2
+      (x * cellSize + cellSize/2) * scale - app.renderer.width/2,
+      (y * cellSize + cellSize/2) * scale - app.renderer.height/2
     );
 
   }
 
   followUnit(container) {
-    const { domWidth, domHeight, scale } = this;
+    const { app, scale } = this;
     const cellSize = this.clientCellSize();
     const ax = container.x * scale;
     const ay = container.y * scale;
     const sx = this.app.stage.x;
     const sy = this.app.stage.y;
-    const overX = ax + cellSize + sx - domWidth;
+    const overX = ax + cellSize + sx - app.renderer.width;
     const underX = ax + sx;
-    const overY = ay + cellSize + sy - domHeight;
+    const overY = ay + cellSize + sy - app.renderer.height;
     const underY = ay + sy;
 
     let dx = overX > 0 ? overX : underX < 0 ? underX : 0;
@@ -349,8 +386,6 @@ export default class Renderer {
 
   resize(width, height) {
     this.app.renderer.resize(width, height);
-    this.domWidth = width;
-    this.domHeight = height;
   }
 
 }

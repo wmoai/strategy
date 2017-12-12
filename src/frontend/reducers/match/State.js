@@ -104,39 +104,7 @@ export default class State extends Record({
   forecastAction(cellId) {
     const { room, ui } = this;
     const { game } = room;
-    const unit = ui.forcusedUnit;
-    const target = game.unit(cellId);
-    if (!ui.stateIs('ACT') || !unit || !target) {
-      return this;
-    }
-    const result = {
-      me: {
-        name: unit.status.name,
-        hp: unit.hp,
-        offense: unit.offense
-      },
-      tg: {
-        name: target.status.name,
-        hp: target.hp,
-        offense: target.offense
-      }
-    };
-    if (unit.klass.healer) {
-      result.me.val = unit.status.pow;
-    } else {
-      result.me.val = target.effectValueBy(unit);
-      result.me.hit = target.hitRateBy(unit, game.field.avoidance(cellId));
-      result.me.crit = target.critRateBy(unit);
-    }
-    if (!unit.klass.healer && !target.klass.healer) {
-      // counter attack
-      if (game.checkActionable(target, cellId, ui.movedCell)) {
-        result.tg.val = unit.effectValueBy(target);
-        result.tg.hit = unit.hitRateBy(target, game.field.avoidance(ui.movedCell));
-        result.tg.crit = unit.critRateBy(target);
-      }
-    }
-    return this.set('ui', ui.set('actionForecast', result));
+    return this.set('ui', ui.forecast(cellId, game));
   }
 
   selectCell(cellId, onAct) {

@@ -1,12 +1,9 @@
 import React from 'react';
-import { Map } from 'immutable';
 
 import './style.css';
 
-const Step = Map({
-  MY_TURN: Symbol(),
-  ENEMY_TURN: Symbol(),
-});
+const MY_TURN = Symbol();
+const ENEMY_TURN = Symbol();
 
 export default class TurnCall extends React.Component {
 
@@ -30,16 +27,16 @@ export default class TurnCall extends React.Component {
     const { game, isOffense } = props;
     if (!game.isEnd) {
       if (game.turn == isOffense) {
-        if (this.state.step != Step.get('MY_TURN')) {
+        if (this.state.step != MY_TURN) {
           this.setState({
             show: true,
-            step: Step.get('MY_TURN')
+            step: MY_TURN
           }, this.setEnd);
         }
-      } else if (this.state.step != Step.get('ENEMY_TURN')) {
+      } else if (this.state.step != ENEMY_TURN) {
         this.setState({
           show: true,
-          step: Step.get('ENEMY_TURN')
+          step: ENEMY_TURN
         }, this.setEnd);
         this.props.onEndMyTurn();
       }
@@ -63,12 +60,12 @@ export default class TurnCall extends React.Component {
     let body;
 
     switch (this.state.step) {
-      case Step.get('MY_TURN'):
+      case MY_TURN:
         body = (
           <div className="turncall-turn-text">YOUR TURN</div>
         );
         break;
-      case Step.get('ENEMY_TURN'):
+      case ENEMY_TURN:
         body = (
           <div className="turncall-turn-text enemy">ENEMY TURN</div>
         );

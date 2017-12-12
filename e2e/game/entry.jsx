@@ -6,12 +6,12 @@ const Room = require('../../src/game/models/Room.js');
 const Game = require('../../src/game/models/Game.js');
 
 
-import Component from '../../src/game/client/components/Game/Game.jsx';
-import State from '../../src/game/client/State';
+import Component from '../../src/frontend/components/Game/index.jsx';
+import State from '../../src/frontend/reducers/match/State';
 import Player from '../../src/game/models/Player.js';
 
-require('../../src/game/data').init();
-import Renderer from '../../src/game/client/Renderer';
+require('../../src/game/data');
+import Renderer from '../../src/frontend/Renderer';
 
 
 const me = new Player({ id:1,  offense: true });
@@ -23,8 +23,8 @@ class Container extends React.Component {
     this.state = {
       state: new State({
         room: new Room({
-          game: new Game().setField(1).initUnits([
-            Unit.create({ offense:true, unitId:28, cellId:92 }),
+          game: new Game().setField(2).initUnits([
+            Unit.create({ offense:true, unitId:32, cellId:263 }),
             // Unit.create({ offense:true, unitId:11, cellId:333 }),
             // Unit.create({ offense:true, unitId:34, cellId:32 }),
             Unit.create({ offense:false, unitId:15, cellId:35 }),

@@ -121,6 +121,16 @@ module.exports = class RoomServer {
       game: room.game.toData(),
       action,
     });
+    this.io.to(room.id).emit('syncUnits', {
+      units: room.game.units.map(unit => {
+        return {
+          seq: unit.seq,
+          hp: unit.hp,
+          cellId: unit.cellId,
+          acted: unit.acted,
+        };
+      }).toArray(),
+    });
   }
 
   saveRoom(room) {

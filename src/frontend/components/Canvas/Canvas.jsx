@@ -63,7 +63,7 @@ export default class Canvas extends React.Component {
   }
 
   componentDidMount() {
-    const { game, cellSize, isOffense, onInit } = this.props;
+    const { game, cellSize, isOffense, onInit, socket } = this.props;
 
     const rect = this.container.getBoundingClientRect();
 
@@ -74,6 +74,7 @@ export default class Canvas extends React.Component {
       width: window.innerWidth - (rect.left * 2),
       height: window.innerHeight - rect.top
     });
+    this.renderer.listen(socket);
     this.setState({
       initialized: true,
       rect,
@@ -118,17 +119,17 @@ export default class Canvas extends React.Component {
     }
     const { game, ui, onEndAnimation } = nextProps;
 
-    if (ui.action != this.props.ui.action) {
-      const { action } = ui;
-      if (action) {
-        this.renderer.setMoveAnimation(action.unit, action.options.route, () => {
-          onEndAnimation(game.turn);
-        });
-      }
-    }
-    if (game.units != this.props.game.units) {
-      this.renderer.setUnits(game.units);
-    }
+    // if (ui.action != this.props.ui.action) {
+      // const { action } = ui;
+      // if (action) {
+        // this.renderer.setMoveAnimation(action.unit, action.options.route, () => {
+          // onEndAnimation(game.turn);
+        // });
+      // }
+    // }
+    // if (game.units != this.props.game.units) {
+      // this.renderer.setUnits(game.units);
+    // }
     if (ui.ranges != this.props.ui.ranges) {
       this.renderer.setRanges(ui.ranges, ui.forcusedUnit);
     }

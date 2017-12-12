@@ -18,14 +18,19 @@ export default class Websocket {
 
     Object.keys(actionsMap).forEach(key => {
       this.socket.on(key, payload => {
+        console.log(key);
         const action = actionsMap[key];
         dispatch(action(payload));
       });
     });
   }
 
-  emit(type, payload) {
-    this.socket.emit(type, payload);
+  on(...args) {
+    this.socket.on(...args);
+  }
+
+  emit(...args) {
+    this.socket.emit(...args);
   }
 
   close() {

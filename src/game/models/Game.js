@@ -68,48 +68,95 @@ module.exports = class Game extends Immutable.Record({
   }
 
   checkMovable(from, to) {
-    if (from == to) {
-      return true;
-    }
+    const { field } = this;
     const unit = this.unit(from);
-    if (!unit || this.unit(to) || unit.acted) {
-      return false;
-    }
-    const klass = unit.klass;
-    let movable = false;
-    let movableMap = new Map();
+    const { status, klass } = unit;
 
-    const search4 = (y, x, stamina, init) => {
-      if (!this.field.existsCell(y, x) || movable) {
-        return;
+    const ds = field.terrain.map((terrain, i) => {
+      return i == from ? 0 : Infinity;
+    });
+    const qs = Object.keys(ds);
+
+    let isMovable = false;
+    for(let l=0; l<5000; l++) {
+      if (qs.length == 0 || isMovable) {
+        break;
       }
-      const ccid = this.field.cellId(y, x);
-      const cost = this.field.cost(ccid, klass.move);
-      if (cost == 0) {
-        return;
-      }
-      const eunit = this.unit(ccid);
-      if (eunit && unit.offense != eunit.offense) {
-        return;
-      }
-      if (!init) {
-        stamina -= cost;
-      }
-      if (stamina >= 0) {
-        if (!movableMap.get(ccid) || stamina > movableMap.get(ccid)) {
-          movableMap.set(ccid, stamina);
-          movable = (to == ccid);
-          search4(y-1, x, stamina);
-          search4(y+1, x, stamina);
-          search4(y, x-1, stamina);
-          search4(y, x+1, stamina);
+      let minD = Infinity;
+      let u;
+      let spliceI;
+      qs.forEach((q, i) => {
+        if (minD > ds[q]) {
+          minD = ds[q];
+          u = Number(q);
+          spliceI = i;
         }
+      });
+      if (u == null || ds[u] > status.move) {
+        break;
       }
-    };
-    const { y, x } = this.field.coordinates(from);
-    search4(y, x, unit.status.move, true);
-    return movable;
+      qs.splice(spliceI, 1)[0];
+      [u-field.width, u-1, u+1, u+field.width].forEach(v => {
+        const { y, x } = field.coordinates(v);
+        if (!field.isActiveCell(y, x)) {
+          return;
+        }
+        const newD = ds[u] + field.cost(v, klass.move);
+        if (ds[v] <= newD || newD > status.move) {
+          return;
+        }
+        ds[v] = newD;
+        if (to == v) {
+          isMovable = true;
+        }
+      });
+    }
+    return isMovable;
   }
+
+  // checkMovable(from, to) {
+    // if (from == to) {
+      // return true;
+    // }
+    // const unit = this.unit(from);
+    // if (!unit || this.unit(to) || unit.acted) {
+      // return false;
+    // }
+    // const klass = unit.klass;
+    // let movable = false;
+    // let movableMap = new Map();
+
+    // const search4 = (y, x, stamina, init) => {
+      // if (!this.field.existsCell(y, x) || movable) {
+        // return;
+      // }
+      // const ccid = this.field.cellId(y, x);
+      // const cost = this.field.cost(ccid, klass.move);
+      // if (cost == 0) {
+        // return;
+      // }
+      // const eunit = this.unit(ccid);
+      // if (eunit && unit.offense != eunit.offense) {
+        // return;
+      // }
+      // if (!init) {
+        // stamina -= cost;
+      // }
+      // if (stamina >= 0) {
+        // if (!movableMap.get(ccid) || stamina > movableMap.get(ccid)) {
+          // movableMap.set(ccid, stamina);
+          // movable = (to == ccid);
+          // search4(y-1, x, stamina);
+          // search4(y+1, x, stamina);
+          // search4(y, x-1, stamina);
+          // search4(y, x+1, stamina);
+        // }
+      // }
+    // };
+    // const { y, x } = this.field.coordinates(from);
+    // search4(y, x, unit.status.move, true);
+    // return movable;
+  // }
 
   changeUnit(from, to) {
     return this.set('units', this.units.map(unit => {

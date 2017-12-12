@@ -1,4 +1,3 @@
-
 import { Record, Map } from 'immutable';
 import Ranges from './Ranges.js';
 import Action from './Action.js';
@@ -86,6 +85,43 @@ export default class UI extends Record({
 
   setMoveAction(unit, route) {
     return this.set('action',  Action.createMove(unit, route));
+  }
+
+  forecast(cellId, game) {
+    const unit = this.forcusedUnit;
+    const target = game.unit(cellId);
+    if (!this.stateIs('ACT') || !unit || !target) {
+      return this;
+    }
+
+    const result = {
+      me: {
+        name: unit.status.name,
+        hp: unit.hp,
+        offense: unit.offense
+      },
+      tg: {
+        name: target.status.name,
+        hp: target.hp,
+        offense: target.offense
+      }
+    };
+    if (unit.klass.healer) {
+      result.me.val = unit.status.pow;
+    } else {
+      result.me.val = target.effectValueBy(unit);
+      result.me.hit = target.hitRateBy(unit, game.field.avoidance(cellId));
+      result.me.crit = target.critRateBy(unit);
+    }
+    if (!unit.klass.healer && !target.klass.healer) {
+    //counter attack
+      if (game.checkActionable(target, cellId, this.movedCell)) {
+        result.tg.val = unit.effectValueBy(target);
+        result.tg.hit = unit.hitRateBy(target, game.field.avoidance(this.movedCell));
+        result.tg.crit = unit.critRateBy(target);
+      }
+    }
+    return this.set('actionForecast', result);
   }
 
   act() {

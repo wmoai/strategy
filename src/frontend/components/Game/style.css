@@ -11,14 +11,14 @@
 #game-header {
   position: relative;
   height: 50px;
-  max-width: 800px;
+  /* max-width: 800px; */
   margin: auto;
   z-index: 1;
 }
 
 #game-main {
   position: absolute;
-  max-width: 800px;
+  /* max-width: 800px; */
   top: 50px;
   left: 0;
   right: 0;
