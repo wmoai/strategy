@@ -1,26 +1,30 @@
+import PIXI from '../PIXI.js';
 
-import { Record } from 'immutable';
-
-const Attr = Record({
-  isMovable: false,
-  distance: Infinity,
-  movablePrev: null,
-  isActionable: false,
-  actionableFrom: [],
-});
+class Info {
+  constructor() {
+    this.isMovable = false;
+    this.distance = Infinity;
+    this.movablePrev = null;
+    this.isActionable = false;
+    this.actionableFrom = [];
+  }
+}
 
 
 export default class Ranges {
+
   constructor(game) {
     this.game = game;
     this.map = new Map();
+    this.isHealer = false;
   }
 
-  static calculate(game, fromCellId, unit, isFull=false) {
-    const ranges = new Ranges(game);
+  calculate(fromCellId, unit, isFull=false) {
+    const { game } = this;
     const { field } = game;
     const { status, klass } = unit;
-    ranges.setMovable(unit, fromCellId);
+    this.isHealer = unit.klass.healer;
+    this.setMovable(unit, fromCellId);
 
     const ds = field.terrain.map((terrain, i) => {
       return i == fromCellId ? 0 : Infinity;
@@ -53,44 +57,44 @@ export default class Ranges {
         const newD = ds[u] + field.cost(v, klass.move);
         const aunit = game.unit(v);
         if (aunit && unit.offense != aunit.offense) {
-          return ranges.setDistance(v, newD, u);
+          return this.setDistance(v, newD, u);
         }
         if (ds[v] <= newD || (!isFull && newD > status.move)) {
           return;
         }
         ds[v] = newD;
         if (isFull && newD > status.move) {
-          return ranges.setDistance(v, newD, u);
+          return this.setDistance(v, newD, u);
         }
-        ranges.setMovable(unit, v, {
+        this.setMovable(unit, v, {
           distance: newD,
           prev: u
         });
       });
     }
-    return ranges;
   }
 
-  cell(cellId) {
-    let cell = this.map.get(cellId);
-    if (!cell) {
-      cell = new Attr();
+  info(cellId) {
+    let info = this.map.get(cellId);
+    if (!info) {
+      info = new Info();
     }
-    return cell;
+    return info;
   }
 
   setDistance(cellId, distance, prev) {
-    const cell = this.cell(cellId);
-    if (distance < cell.distance) {
-      this.map.set(cellId, cell.withMutations(mnt => {
-        mnt.set('distance', distance)
-        .set('movablePrev', prev);
-      }));
+    const info = this.info(cellId);
+    if (distance < info.distance) {
+      this.map.set(cellId, {
+        ...info,
+        distance,
+        movablePrev: prev
+      });
     }
   }
 
   getDistance(cellId) {
-    return this.cell(cellId).distance;
+    return this.info(cellId).distance;
   }
 
   setMovable(unit, cellId, options) {
@@ -101,12 +105,13 @@ export default class Ranges {
       distance = options.distance;
       prev = options.prev;
     }
-    const cell = this.cell(cellId);
-    this.map.set(cellId, cell.withMutations(mnt => {
-      mnt.set('isMovable', true)
-        .set('distance', distance)
-        .set('movablePrev', prev);
-    }));
+    const info = this.info(cellId);
+    this.map.set(cellId, {
+      ...info,
+      isMovable: true,
+      distance,
+      movablePrev: prev
+    });
 
     const { status } = unit;
     const { y, x } = field.coordinates(cellId);
@@ -125,46 +130,71 @@ export default class Ranges {
 
   getMovables() {
     return Array.from(this.map.keys()).filter(cellId => {
-      const cell = this.cell(cellId);
-      return cell.isMovable;
+      const info = this.info(cellId);
+      return info.isMovable;
     });
   }
 
   setActionable(cellId, from) {
-    const cell = this.cell(cellId);
-    // this.map.set(cellId, cell.set(
-      // 'actionableFrom',
-      // cell.actionableFrom.concat(from)
-    // ));
-    this.map.set(cellId, cell.withMutations(mnt => {
-      mnt.set('isActionable', true)
-        .set('actionableFrom', cell.actionableFrom.concat(from));
-    }));
+    const info = this.info(cellId);
+    this.map.set(cellId, {
+      ...info,
+      isActionable: true,
+      actionableFrom: info.actionableFrom.concat(from),
+    });
   }
 
   getActionables() {
     return Array.from(this.map.keys()).filter(cellId => {
-      const cell = this.cell(cellId);
-      return cell.isActionable;
+      const info = this.info(cellId);
+      return info.isActionable;
     });
   }
 
   getActionableFrom(cellId) {
-    return this.cell(cellId).actionableFrom;
+    return this.info(cellId).actionableFrom;
   }
 
   getMoveRoute(toCellId) {
     let result = [toCellId];
     let current = toCellId;
     for(let l=0; l<500; l++) {
-      const cell = this.cell(current);
-      if (!cell || cell.movablePrev == null) {
+      const info = this.info(current);
+      if (!info || info.movablePrev == null) {
         break;
       }
-      current = cell.movablePrev;
+      current = info.movablePrev;
       result.push(current);
     }
     return result.reverse();
+  }
+
+  render(layer, cellSize) {
+    const { game, isHealer } = this;
+    const movables = this.getMovables();
+    const actionables = this.getActionables();
+    if (actionables) {
+      actionables.filter(cid => !movables || !movables.includes(cid)).map(cid => {
+        const { y, x } = game.field.coordinates(cid);
+        const color = isHealer ? 0x87ceeb : 0xffd700;
+        const highlight = new PIXI.Graphics();
+        highlight.beginFill(color, 0.5);
+        highlight.lineStyle(1, color);
+        highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
+        layer.addChild(highlight);
+      });
+    }
+    if (movables) {
+      movables.map(cid => {
+        const { y, x } = game.field.coordinates(cid);
+        const color = 0x98fb98;
+        const highlight = new PIXI.Graphics();
+        highlight.beginFill(color, 0.5);
+        highlight.lineStyle(1, color);
+        highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
+        layer.addChild(highlight);
+      });
+    }
   }
 
 }

@@ -20,6 +20,7 @@ export default class Game extends React.Component {
       game,
       ui,
       socket,
+      isSolo,
       onSelectCell,
       onHoverCell,
       onClickEndTurn,
@@ -53,6 +54,7 @@ export default class Game extends React.Component {
             game={game}
             ui={ui}
             socket={socket}
+            isSolo={isSolo}
             onInit={() => {
               this.setState({
                 init: true

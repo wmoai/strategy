@@ -249,28 +249,6 @@ export default class State extends Record({
     });
   }
 
-  // mightStartAITurn() {
-    // if (!this.isCOMTurn()) {
-      // return this;
-    // }
-    // return this.withMutations(mnt => {
-      // for (let i=0; i<20; i++) {
-        // const action = mnt.getActionByAI();
-        // if (!action) {
-          // break;
-        // }
-        // const { userId, from, to, target } = action;
-        // mnt.set('room', mnt.room.actInGame(userId, from, to, target));
-      // }
-      // mnt.moveByAI();
-      // if (mnt.isCOMTurn()) {
-        // const { room } = mnt;
-        // const com = room.opponent(mnt.userId);
-        // mnt.set('room', room.endTurn(com.id));
-      // }
-    // });
-  // }
-
   getActionByAI() {
     const { room } = this;
     const com = room.opponent(this.userId);

@@ -7,7 +7,8 @@ import Intro from '../Intro/index.jsx';
 import TurnCall from '../TurnCall/index.jsx';
 import Result from '../Result/Result.jsx';
 
-import Renderer from '../../Renderer';
+// import Renderer from '../../Renderer';
+import Client from '../../../game/client/index.js';
 
 class Dragger {
   constructor() {
@@ -63,18 +64,20 @@ export default class Canvas extends React.Component {
   }
 
   componentDidMount() {
-    const { game, cellSize, isOffense, onInit, socket } = this.props;
+    const { game, cellSize, isOffense, onInit, socket, isSolo } = this.props;
 
     const rect = this.container.getBoundingClientRect();
 
-    this.renderer = new Renderer({
+    this.renderer = new Client({
       canvas: this.pixiCanvas,
       game,
       cellSize,
+      isOffense,
+      socket,
+      isSolo,
       width: window.innerWidth - (rect.left * 2),
       height: window.innerHeight - rect.top
     });
-    this.renderer.listen(socket);
     this.setState({
       initialized: true,
       rect,
@@ -113,27 +116,29 @@ export default class Canvas extends React.Component {
     this.setState({ rect });
   }
 
+    /*
   componentWillReceiveProps(nextProps) {
     if (!this.state.initialized) {
       return;
     }
     const { game, ui, onEndAnimation } = nextProps;
 
-    // if (ui.action != this.props.ui.action) {
-      // const { action } = ui;
-      // if (action) {
-        // this.renderer.setMoveAnimation(action.unit, action.options.route, () => {
-          // onEndAnimation(game.turn);
-        // });
-      // }
-    // }
-    // if (game.units != this.props.game.units) {
-      // this.renderer.setUnits(game.units);
-    // }
+    if (ui.action != this.props.ui.action) {
+      const { action } = ui;
+      if (action) {
+        this.renderer.setMoveAnimation(action.unit, action.options.route, () => {
+          onEndAnimation(game.turn);
+        });
+      }
+    }
+    if (game.units != this.props.game.units) {
+      this.renderer.setUnits(game.units);
+    }
     if (ui.ranges != this.props.ui.ranges) {
       this.renderer.setRanges(ui.ranges, ui.forcusedUnit);
     }
   }
+  */
 
   forcusCell(cellId) {
     const { y, x } = this.props.game.field.coordinates(cellId);
@@ -155,15 +160,18 @@ export default class Canvas extends React.Component {
   }
 
   selectCell(clientX, clientY) {
+    /*
     const { game, onSelectCell } = this.props;
     const { field } = game;
 
     const { x, y } = this.cellPoint(clientX, clientY);
     const cellId = field.cellId(y, x);
     onSelectCell(cellId);
+    */
   }
 
   hoverCell(clientX, clientY) {
+    /*
     const { game, onHoverCell } = this.props;
     const { field } = game;
 
@@ -178,6 +186,7 @@ export default class Canvas extends React.Component {
     this.renderer.setCursor(x, y);
     const cellId = field.cellId(y, x);
     onHoverCell(cellId);
+    */
   }
 
   render() {

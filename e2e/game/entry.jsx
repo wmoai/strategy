@@ -11,7 +11,7 @@ import State from '../../src/frontend/reducers/match/State';
 import Player from '../../src/game/models/Player.js';
 
 require('../../src/game/data');
-import Renderer from '../../src/frontend/Renderer';
+import Renderer from '../../src/game/client/index.js';
 
 
 const me = new Player({ id:1,  offense: true });
@@ -28,7 +28,7 @@ class Container extends React.Component {
             // Unit.create({ offense:true, unitId:11, cellId:333 }),
             // Unit.create({ offense:true, unitId:34, cellId:32 }),
             Unit.create({ offense:false, unitId:15, cellId:35 }),
-            // Unit.create({ offense:false, unitId:11, cellId:55 }),
+            Unit.create({ offense:false, unitId:11, cellId:55 }),
             // Unit.create({ offense:false, unitId:15, cellId:265 }),
             // Unit.create({ offense:false, unitId:32, cellId:4 }),
             // Unit.create({ offense:false, unitId:9, cellId:1 }),
@@ -115,6 +115,7 @@ class Container extends React.Component {
         game={this.state.state.room.game}
         ui={this.state.state.ui}
         isOffense={this.state.state.me.offense}
+        isSolo={true}
       />
     );
   }

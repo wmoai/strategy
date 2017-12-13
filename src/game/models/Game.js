@@ -70,6 +70,9 @@ module.exports = class Game extends Immutable.Record({
   checkMovable(from, to) {
     const { field } = this;
     const unit = this.unit(from);
+    if (!unit) {
+      return false;
+    }
     const { status, klass } = unit;
 
     const ds = field.terrain.map((terrain, i) => {

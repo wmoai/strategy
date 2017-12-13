@@ -9,7 +9,7 @@ import socketIOClient from 'socket.io-client';
 const actionsMap = {
   enterRoom,
   syncRoom,
-  syncGame,
+  // syncGame,
 };
 
 export default class Websocket {

@@ -6,7 +6,8 @@ import thunkMiddleware from 'redux-thunk';
 import reducer from './reducers';
 
 import Router from './Router.jsx';
-import Renderer from './Renderer';
+// import Renderer from './Renderer';
+import Client from '../game/client/index.js';
 
 
 import {
@@ -54,7 +55,7 @@ const store = createStore(
   )
 );
 
-Renderer.preload().then(() => {
+Client.preload().then(() => {
   render(
     <Provider store={store}>
       <Router />

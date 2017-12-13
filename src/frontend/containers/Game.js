@@ -17,6 +17,7 @@ const mapStateToProps = state => {
     game: room.game,
     ui,
     socket,
+    isSolo: room.isSolo,
   };
 };
 

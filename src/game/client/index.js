@@ -1,11 +1,14 @@
-import PIXI, { resources } from './PIXI.js';
+import PIXI, { preload } from './PIXI.js';
 
-import Cursor from '.Sprites/Cursor.js';
+import Game from './Components/Game/';
 
 export default class Client {
 
-  constructor({ canvas, cellSize, width, height, game }) {
-    this.game = game;
+  static preload() {
+    return preload();
+  }
+
+  constructor({ canvas, cellSize, width, height, game, isOffense, socket, isSolo=false }) {
     const { field } = game;
     this.fullWidth = field.width * cellSize;
     this.fullHeight = field.height * cellSize;
@@ -17,37 +20,41 @@ export default class Client {
       view: canvas,
       sharedLoader: true,
     });
-    const stage = new PIXI.Container();
-    stage.interactive = true;
-    // stage.interactiveChildren = true;
-    // stage.on('click', e => {
-      // console.log(e.data.global.x, e.data.global.y);
-    // });
 
-    this.layer = {
-      terrain: new PIXI.Container(),
-      range: new PIXI.Container(),
-      units: new PIXI.Container(),
-      ui: new PIXI.Container()
-    };
-    stage.addChild(this.layer.terrain);
-    stage.addChild(this.layer.range);
-    stage.addChild(this.layer.units);
-    stage.addChild(this.layer.ui);
-    this.app.stage = stage;
-    this.buffers = {
-      cursor: null,
-      units: null,
-      ranges: null,
-      animation: null,
-    };
+    this.game = new Game({
+      game,
+      cellSize,
+      isOffense,
+      stage: this.app.stage,
+      isSolo,
+    });
+    this.run();
 
-    this.cursor = new Cursor(cellSize, this.layer.ui);
-    this.unitsMap = new Map();
-    this.setUnits(game.units);
-    this.initTerrain(field);
-    this.animation = null;
+    this.app.stage.interactive = true;
+    this.app.stage.on('mousemove', e => {
+      this.game.hoverCell(this.fieldCoordinates(e.data.global.x, e.data.global.y));
+    });
+    this.app.stage.on('click', e => {
+      this.game.selectCell(this.fieldCoordinates(e.data.global.x, e.data.global.y), (from, to, target) => {
+        if (!socket) {
+          return;
+        }
+        socket.emit('act', {
+          from: from,
+          to: to,
+          target: target
+        });
+      });
+    });
+    if (socket) {
+      socket.on('syncGame', payload => {
+        this.game.sync(payload.game, payload.action);
+      });
+    }
+  }
 
+  run() {
+    /*
     let angle = 0;
     let amp = 0.1;
     let alpha = 1 - amp;
@@ -56,98 +63,41 @@ export default class Client {
       const diff = Math.sin(angle * Math.PI / 180);
       this.layer.range.alpha = alpha + diff * amp;
 
-      this.updateCursor();
+      // this.updateCursor();
       this.updateAnimation(delta);
       if (!this.animation) {
-        this.updateUnits();
-        this.updateRanges();
+        // this.updateUnits();
       }
+      this.decelerateScroll(delta);
+    });
+    */
+    this.app.ticker.add(delta => {
+      this.game.updateScreen(delta);
       this.decelerateScroll(delta);
     });
 
   }
 
-  initTerrain(field) {
-    const layer = this.layer.terrain;
-    layer.removeChildren();
-    const { cellSize } = this;
+  // listen(socket) {
+    // socket.on('syncUnits', payload => {
+      // payload.units.forEach(data => {
+        // const { seq } = data;
+        // const unit = this.components.units.get(seq);
+        // unit.update2(data);
+      // });
+    // });
+    // this.socket = socket;
+  // }
 
-    const terrains = new PIXI.Graphics();
-    field.rows().forEach((row, y) => {
-      row.forEach((terrain, x) => {
-        const same = field.isSameTerrainWithNeighbor(y, x);
-        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, true));
-        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, true, false));
-        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, false, true));
-        terrains.addChild(this.createTerrainSprite(x, y, terrain, same, false, false));
-      });
-    });
-    terrains.cacheAsBitmap = true;
-    layer.addChild(terrains);
-
-    // outer area shadow
-    const shadow = new PIXI.Graphics();
-    shadow.lineStyle(cellSize*1.5, 0, 0.3);
-    shadow.drawRect(0, 0, field.width*cellSize, field.height*cellSize);
-    shadow.filters = [new PIXI.filters.BlurFilter()];
-    shadow.cacheAsBitmap = true;
-    layer.addChild(shadow);
-
-    // bases mark
-    field.bases().map(bp => {
-      const y = Math.floor(bp / field.width);
-      const x = bp % field.width;
-
-      const base = new PIXI.Graphics();
-      base.beginFill(0x0000ff, 0.15);
-      base.lineStyle(4, 0x0000ff, 0.5);
-      base.drawRect(x*cellSize+1, y*cellSize+2, cellSize-3, cellSize-4);
-      layer.addChild(base);
-    });
-  }
-
-  createTerrainSprite(x, y, terrain, same, top, left) {
-    const { cellSize } = this;
-    let formI = 0;
-    if (top ? same.top : same.bottom) {
-      if (left ? same.left : same.right) {
-        if (top ? (left ? same.tl : same.tr) : (left ? same.bl : same.br)) {
-          formI = 4;
-        } else {
-          formI = 3;
-        }
-      } else {
-        formI = 1;
+  updateAnimation(delta) {
+    if (this.animation) {
+      this.stopScroll();
+      this.animation.update(delta);
+      this.followUnit(this.animation.container);
+      if (this.animation.isEnd) {
+        this.animation = null;
       }
-    } else if (left ? same.left : same.right) {
-      formI = 2;
     }
-    let cornerI = (top ? 0 : 2) + (left ? 0: 1);
-
-    const sprite = new PIXI.Sprite(resources.terrain.get(terrain)[formI][cornerI]);
-    sprite.x = x * cellSize + (left ? 0 : cellSize/2);
-    sprite.y = y * cellSize + (top ? 0 : cellSize/2);
-    sprite.width = cellSize/2;
-    sprite.height = cellSize/2;
-    return sprite;
-  }
-
-  initUnits(units) {
-    this.units.forEach(unitModel => {
-      const unit = this.unitsMap.get(unitModel.seq);
-      if (!unit) {
-        const { game, cellSize } = this;
-        this.unitsMap.set(unitModel.seq, new Unit(unitModel, game.field, cellSize, this.layer.units));
-      } else {
-        unit.update(unitModel);
-      }
-    });
-    this.buffers.units = null;
-  }
-
-  updateUnits(data) {
-    // data { unitSeq: cellId }
-
   }
 
 
@@ -157,19 +107,120 @@ export default class Client {
 
 
 
-  onHoverCell(callback) {
-    //FIXME
-    const cellId = null;
-    callback(cellId);
+  zoom(delta, tx, ty) {
+    const scale = Math.max(0.8, Math.min(1.8, this.scale - delta)).toFixed(2);
+    const rate = scale / this.scale;
+    this.app.stage.scale.x = scale;
+    this.app.stage.scale.y = scale;
+    this.scale = scale;
+    this.scrollTo(
+      (tx - this.app.stage.x) * rate - tx,
+      (ty - this.app.stage.y) * rate - ty
+    );
   }
 
-  listen(socket) {
-    //FIXME
-    socket.on('syncGame', payload => {
-
-    });
-    this.socket = socket;
+  scroll(dx, dy) {
+    this.scrollTo(
+      dx - this.app.stage.x,
+      dy - this.app.stage.y
+    );
   }
+
+  scrollTo(x, y) {
+    const { app, fullWidth, fullHeight, scale } = this;
+    const maxX = fullWidth * scale - app.renderer.width;
+    const maxY = fullHeight * scale - app.renderer.height;
+    this.app.stage.x = (
+      (maxX < 0)
+      ? -maxX / 2
+      : -Math.max(Math.min(x, maxX), 0)
+    );
+    this.app.stage.y = -Math.max(Math.min(y, maxY), 0);
+  }
+
+  endScroll(vx, vy) {
+    this.scrollVX = vx;
+    this.scrollVY = vy;
+  }
+
+  decelerateScroll(delta) {
+    if (!this.scrollVX && !this.scrollVY) {
+      return;
+    }
+    this.scroll(this.scrollVX, this.scrollVY);
+    this.scrollVX *= 0.95 * delta;
+    this.scrollVY *= 0.95 * delta;
+    if (Math.abs(this.scrollVX) < 1 && Math.abs(this.scrollVY) < 1) {
+      this.stopScroll();
+    }
+  }
+
+  stopScroll() {
+    this.scrollVX = 0;
+    this.scrollVY = 0;
+  }
+
+  forcusCell(x, y) {
+    const { cellSize, app, scale } = this;
+    this.scrollTo(
+      (x * cellSize + cellSize/2) * scale - app.renderer.width/2,
+      (y * cellSize + cellSize/2) * scale - app.renderer.height/2
+    );
+
+  }
+
+  followUnit(container) {
+    const { app, scale } = this;
+    const cellSize = this.clientCellSize();
+    const ax = container.x * scale;
+    const ay = container.y * scale;
+    const sx = this.app.stage.x;
+    const sy = this.app.stage.y;
+    const overX = ax + cellSize + sx - app.renderer.width;
+    const underX = ax + sx;
+    const overY = ay + cellSize + sy - app.renderer.height;
+    const underY = ay + sy;
+
+    let dx = overX > 0 ? overX : underX < 0 ? underX : 0;
+    let dy = overY > 0 ? overY : underY < 0 ? underY : 0;
+    this.scroll(dx, dy);
+  }
+
+  clientCellSize() {
+    return this.cellSize * this.scale;
+  }
+
+  fieldCoordinates(clientX, clientY) {
+    const cellSize = this.clientCellSize();
+    return {
+      x: Math.floor((clientX - this.app.stage.x) / cellSize),
+      y: Math.floor((clientY - this.app.stage.y) / cellSize),
+    };
+  }
+
+  clientPositionOfCell(x, y) {
+    const cellSize = this.clientCellSize();
+    return {
+      x: x * cellSize + this.app.stage.x,
+      y: y * cellSize + this.app.stage.y
+    };
+  }
+
+  clientXOfCell(x) {
+    const cellSize = this.clientCellSize();
+    return x * cellSize + this.app.stage.x;
+  }
+
+  clientYOfCell(y) {
+    const cellSize = this.clientCellSize();
+    return y * cellSize + this.app.stage.y;
+  }
+
+  resize(width, height) {
+    this.app.renderer.resize(width, height);
+  }
+
+
 
 }
 
