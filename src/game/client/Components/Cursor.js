@@ -1,7 +1,9 @@
 import PIXI from '../PIXI.js';
+import Component from './Component.js';
 
-export default class Cursor {
-  constructor(cellSize, layer) {
+export default class Cursor extends Component {
+  constructor(cellSize) {
+    super();
     this.cellSize = cellSize;
     const left = 0
       , top = 0
@@ -20,14 +22,13 @@ export default class Cursor {
     graphics.drawRect(right, bottom-size, -size, -width+size);
     graphics.drawRect(left, bottom, width, -size);
     graphics.drawRect(left, bottom-size, size, -width+size);
-    graphics.visible = false;
-    layer.addChild(graphics);
-    this.graphics = graphics;
+    this.container.addChild(graphics);
+    this.container.visible = false;
   }
 
   update(x, y) {
-    this.graphics.visible = true;
-    this.graphics.x = x * this.cellSize;
-    this.graphics.y = y * this.cellSize;
+    this.container.visible = true;
+    this.container.x = x * this.cellSize;
+    this.container.y = y * this.cellSize;
   }
 }

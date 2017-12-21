@@ -1,4 +1,5 @@
 import PIXI from '../PIXI.js';
+import Component from './Component.js';
 
 class Info {
   constructor() {
@@ -11,9 +12,10 @@ class Info {
 }
 
 
-export default class Ranges {
+export default class Ranges extends Component {
 
   constructor(game) {
+    super();
     this.game = game;
     this.map = new Map();
     this.isHealer = false;
@@ -56,7 +58,7 @@ export default class Ranges {
         }
         const newD = ds[u] + field.cost(v, klass.move);
         const aunit = game.unit(v);
-        if (aunit && unit.offense != aunit.offense) {
+        if (aunit && unit.isOffense != aunit.isOffense) {
           return this.setDistance(v, newD, u);
         }
         if (ds[v] <= newD || (!isFull && newD > status.move)) {
@@ -169,7 +171,7 @@ export default class Ranges {
     return result.reverse();
   }
 
-  render(layer, cellSize) {
+  setGraph(cellSize) {
     const { game, isHealer } = this;
     const movables = this.getMovables();
     const actionables = this.getActionables();
@@ -181,7 +183,7 @@ export default class Ranges {
         highlight.beginFill(color, 0.5);
         highlight.lineStyle(1, color);
         highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-        layer.addChild(highlight);
+        this.container.addChild(highlight);
       });
     }
     if (movables) {
@@ -192,7 +194,7 @@ export default class Ranges {
         highlight.beginFill(color, 0.5);
         highlight.lineStyle(1, color);
         highlight.drawRect(x*cellSize, y*cellSize, cellSize, cellSize);
-        layer.addChild(highlight);
+        this.container.addChild(highlight);
       });
     }
   }

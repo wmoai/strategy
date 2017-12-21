@@ -5,7 +5,7 @@ export default class Unit {
     this.field = field;
     this.cellSize = cellSize;
 
-    this.isOffense = unit.offense;
+    this.isOffense = unit.isOffense;
     this.maxHp = unit.status.hp;
     this.klassId = unit.klass.id;
 
@@ -14,7 +14,7 @@ export default class Unit {
 
     const container = new PIXI.Container();
 
-    const colorI = unit.acted ? 0 : (!this.isOffense ? 1 : 2);
+    const colorI = unit.isActed ? 0 : (!this.isOffense ? 1 : 2);
     const texture = resources.units.get(unit.klass.id)[colorI];
     const chara = new PIXI.Sprite(texture);
     chara.width = cellSize - margin*2;
@@ -53,11 +53,11 @@ export default class Unit {
     this.container.x = x * cellSize;
     this.container.y = y * cellSize;
     this.greenLine.width = (cellSize-4) * unit.hp / unit.status.hp;
-    const colorI = unit.acted ? 0 : (!unit.offense ? 1 : 2);
+    const colorI = unit.isActed ? 0 : (!unit.isOffense ? 1 : 2);
     this.chara.texture = resources.units.get(unit.klass.id)[colorI];
   }
 
-  update2({ hp, cellId, acted }) {
+  update2({ hp, cellId, isActed }) {
     const { field, cellSize } = this;
     if (hp < 1) {
       this.container.visible = false;
@@ -68,7 +68,7 @@ export default class Unit {
     this.container.x = x * cellSize;
     this.container.y = y * cellSize;
     this.greenLine.width = (cellSize-4) * hp / this.maxHp;
-    const colorI = acted ? 0 : (!this.isOffense ? 1 : 2);
+    const colorI = isActed ? 0 : (!this.isOffense ? 1 : 2);
     this.chara.texture = resources.units.get(this.klassId)[colorI];
   }
 

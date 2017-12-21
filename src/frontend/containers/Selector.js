@@ -8,7 +8,7 @@ const mapStateToProps = state => {
   const { me, opponent } = state.match;
   return {
     myUnits: me.deck ? me.deck.map(uid => data.unit[uid]) : [],
-    isOffense: me.offense,
+    isOffense: me.isOffense,
     opponentUnits : opponent.deck ? opponent.deck.map(uid => data.unit[uid]) : [],
   };
 };

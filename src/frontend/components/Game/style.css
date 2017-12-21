@@ -1,29 +1,49 @@
-#game-container {
+#screen-container {
   position: absolute;
-  width: 100%;
-  height: 100%;
   top: 0;
-  left: 0;
-  font-family: sans-serif;
-  background: linear-gradient(to right, #000, #333, #000);
-}
-
-#game-header {
-  position: relative;
-  height: 50px;
-  /* max-width: 800px; */
-  margin: auto;
-  z-index: 1;
-}
-
-#game-main {
-  position: absolute;
-  /* max-width: 800px; */
-  top: 50px;
   left: 0;
   right: 0;
   bottom: 0;
-  margin: 0 auto;
+  background: linear-gradient(to right, #000, #333, #000);
 }
 
+#screen-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  z-index: 2;
+}
+
+#screen-base {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+#screen-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#screen-transparent-overlay {
+  pointer-events: none;
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+#screen-float-ref {
+  position: absolute;
+  opacity: 0.8;
+}
 

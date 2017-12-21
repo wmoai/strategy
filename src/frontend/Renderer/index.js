@@ -25,10 +25,6 @@ export default class Renderer {
     });
     const stage = new PIXI.Container();
     stage.interactive = true;
-    // stage.interactiveChildren = true;
-    // stage.on('click', e => {
-      // console.log(e.data.global.x, e.data.global.y);
-    // });
 
     this.layer = {
       terrain: new PIXI.Container(),

@@ -5,9 +5,9 @@ export default function Forecast({ forecast }) {
   if (!forecast) {
     return null;
   }
-  const mySide = (forecast.me.offense == forecast.tg.offense)
-    ? 'healer' : (forecast.me.offense ? 'offense' : 'defense');
-  const opSide = forecast.tg.offense ? 'offense' : 'defense';
+  const mySide = (forecast.me.isOffense == forecast.tg.isOffense)
+    ? 'healer' : (forecast.me.isOffense ? 'offense' : 'defense');
+  const opSide = forecast.tg.isOffense ? 'offense' : 'defense';
   return (
     <div id="forecast">
       <table id="forecast-table">

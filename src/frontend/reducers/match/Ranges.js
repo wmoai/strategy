@@ -52,7 +52,7 @@ export default class Ranges {
         }
         const newD = ds[u] + field.cost(v, klass.move);
         const aunit = game.unit(v);
-        if (aunit && unit.offense != aunit.offense) {
+        if (aunit && unit.isOffense != aunit.isOffense) {
           return ranges.setDistance(v, newD, u);
         }
         if (ds[v] <= newD || (!isFull && newD > status.move)) {

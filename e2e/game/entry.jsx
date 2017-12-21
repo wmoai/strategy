@@ -1,38 +1,35 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-const Unit = require('../../src/game/models/Unit.js');
+const createUnit = require('../../src/game/models/createUnit.js');
 const Room = require('../../src/game/models/Room.js');
-const Game = require('../../src/game/models/Game.js');
+const createGame = require('../../src/game/models/createGame.js');
 
 
 import Component from '../../src/frontend/components/Game/index.jsx';
 import State from '../../src/frontend/reducers/match/State';
 import Player from '../../src/game/models/Player.js';
 
-require('../../src/game/data');
 import Renderer from '../../src/game/client/index.js';
 
 
-const me = new Player({ id:1,  offense: true });
-const opp = new Player({ id:2,  offense: false });
+const me = new Player({ id:1,  isOffense: true });
+const opp = new Player({ id:2,  isOffense: false });
 
 class Container extends React.Component {
   constructor(props) {
     super(props);
+    const game = createGame({ fieldId: 2 });
+    game.initUnits([
+      createUnit({ isOffense:true, unitId:32, state: {cellId:263} }),
+      createUnit({ isOffense:true, unitId:11, state: {cellId:264} }),
+      createUnit({ isOffense:false, unitId:15, state: {cellId:35} }),
+      createUnit({ isOffense:false, unitId:11, state: {cellId:55} }),
+    ]);
     this.state = {
       state: new State({
         room: new Room({
-          game: new Game().setField(2).initUnits([
-            Unit.create({ offense:true, unitId:32, cellId:263 }),
-            // Unit.create({ offense:true, unitId:11, cellId:333 }),
-            // Unit.create({ offense:true, unitId:34, cellId:32 }),
-            Unit.create({ offense:false, unitId:15, cellId:35 }),
-            Unit.create({ offense:false, unitId:11, cellId:55 }),
-            // Unit.create({ offense:false, unitId:15, cellId:265 }),
-            // Unit.create({ offense:false, unitId:32, cellId:4 }),
-            // Unit.create({ offense:false, unitId:9, cellId:1 }),
-          ]),
+          game,
           isSolo: true,
         }).addPlayer(me).addPlayer(opp).setState('BATTLE'),
         me: me,
@@ -43,7 +40,7 @@ class Container extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.state.state.room.game.turn != me.offense) {
+    if (this.state.state.room.game.turn != me.isOffense) {
       if (this.aiLoop) {
         return;
       }
@@ -76,7 +73,7 @@ class Container extends React.Component {
         // }, () => {
           // setTimeout(() => {
             // this.setState({
-              // state: this.state.state.set('me', new Player({ offense: this.state.state.room.game.turn })).clearUI()
+              // state: this.state.state.set('me', new Player({ isOffense: this.state.state.room.game.turn })).clearUI()
             // });
           // }, 2000);
         });
@@ -114,7 +111,7 @@ class Container extends React.Component {
         onEndAnimation={() => {}}
         game={this.state.state.room.game}
         ui={this.state.state.ui}
-        isOffense={this.state.state.me.offense}
+        isOffense={this.state.state.me.isOffense}
         isSolo={true}
       />
     );

@@ -98,12 +98,12 @@ export default class UI extends Record({
       me: {
         name: unit.status.name,
         hp: unit.hp,
-        offense: unit.offense
+        isOffense: unit.isOffense
       },
       tg: {
         name: target.status.name,
         hp: target.hp,
-        offense: target.offense
+        isOffense: target.isOffense
       }
     };
     if (unit.klass.healer) {
@@ -131,7 +131,7 @@ export default class UI extends Record({
   setMoveRange(game) {
     const cellId = this.movedCell || this.forcusedCell;
     const unit = this.forcusedUnit;
-    if (this.stateIs('FREE') || !unit || unit.acted) {
+    if (this.stateIs('FREE') || !unit || unit.isActed) {
       return this.delete('ranges');
     }
     const ranges = Ranges.calculate(game, cellId, unit);

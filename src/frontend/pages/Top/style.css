@@ -1,8 +1,3 @@
-body {
-  margin: 0;
-  padding: 0;
-}
-
 #top-base {
   height: 100%;
   background: linear-gradient(to right, #000, #333, #000);

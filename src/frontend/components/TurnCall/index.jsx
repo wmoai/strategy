@@ -24,37 +24,37 @@ export default class TurnCall extends React.Component {
   }
 
   update(props) {
-    const { game, isOffense } = props;
-    if (!game.isEnd) {
-      if (game.turn == isOffense) {
-        if (this.state.step != MY_TURN) {
-          this.setState({
-            show: true,
-            step: MY_TURN
-          }, this.setEnd);
-        }
-      } else if (this.state.step != ENEMY_TURN) {
+    const { turn, isOffense } = props;
+    // if (!game.isEnd) {
+    if (turn == isOffense) {
+      if (this.state.step != MY_TURN) {
         this.setState({
           show: true,
-          step: ENEMY_TURN
+          step: MY_TURN
         }, this.setEnd);
-        this.props.onEndMyTurn();
       }
+    } else if (this.state.step != ENEMY_TURN) {
+      this.setState({
+        show: true,
+        step: ENEMY_TURN
+      }, this.setEnd);
+      this.props.onEndMyTurn();
     }
+    // }
   }
 
   setEnd() {
-    setTimeout(() => {
-      this.setState({
-        show: false,
-        timer: null,
-      });
-    }, 1000);
+    // setTimeout(() => {
+      // this.setState({
+        // show: false,
+        // timer: null,
+      // });
+    // }, 1000);
   }
 
   render() {
-    const { game, hidden } = this.props;
-    if (hidden || !this.state.show || game.isEnd) {
+    const { hidden, turn } = this.props;
+    if (hidden || !this.state.show) {
       return null;
     }
     let body;
@@ -73,7 +73,7 @@ export default class TurnCall extends React.Component {
     }
 
     return (
-      <div id="turncall-base" key={game.turnCount}>
+      <div id="turncall-base" key={turn}>
         {body}
       </div>
     );

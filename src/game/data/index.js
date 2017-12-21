@@ -1,22 +1,20 @@
-exports.unit = require('./json/unit.json');
-exports.klass = require('./json/klass.json');
+const unit = require('./json/unit.json');
+const klass = require('./json/klass.json');
 
-const Terrain = require('../models/Terrain.js');
+const createTerrain = require('../models/createTerrain.js');
 const terrainData = require('./json/terrain.json');
-const terrains = {};
+const terrain = {};
 Object.values(terrainData).forEach(data => {
-  const terrain = new Terrain(data);
-  terrains[terrain.id] = terrain;
+  const t = createTerrain(data);
+  terrain[t.id] = t;
 });
-exports.terrain = terrains;
 
-const Field = require('../models/Field.js');
+const createField = require('../models/createField.js');
 const fields = [
-  new Field(require('../data/json/field/seki.json')),
-  new Field(require('../data/json/field/muhi.json')),
-  // new Field(require('../data/json/field/perse.json')),
+  createField(require('../data/json/field/seki.json')),
+  createField(require('../data/json/field/muhi.json')),
 ];
-exports.getField = (fieldId=null) => {
+function getField(fieldId=null) {
   if (fieldId == null) {
     return fields[Math.floor(Math.random() * fields.length)];
   }
@@ -27,5 +25,11 @@ exports.getField = (fieldId=null) => {
     }
   });
   return result;
-};
+}
 
+module.exports = {
+  unit,
+  klass,
+  terrain,
+  getField,
+};

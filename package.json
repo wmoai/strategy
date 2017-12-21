@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "webpack",
-    "start": "node src/app.js",
+    "start": "babel-node src/app.js",
     "test": "jest"
   },
   "keywords": [],

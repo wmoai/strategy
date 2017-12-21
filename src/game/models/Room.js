@@ -1,7 +1,9 @@
 const Immutable = require('immutable');
-const Game = require('./Game.js');
+// const Game = require('./Game.js');
+const createGame = require('./createGame.js');
 const Player = require('./Player.js');
-const Unit = require('./Unit.js');
+// const Unit = require('./Unit.js');
+const createUnit = require('./createUnit.js');
 const COM = require('./COM.js');
 
 const STATE = Immutable.Map({
@@ -54,14 +56,15 @@ module.exports = class Room extends Immutable.Record({
     return room.withMutations(mnt => {
       mnt.addPlayer(player)
         .addPlayer(com)
-        .readyToBattle(userId)
+        .getBattleReady(userId)
         .mightStartGame()
         .selectUnits(com.id, Object.keys(com.deck));
     });
   }
 
   syncGame(data) {
-    return this.set('game', data ? Game.restore(data) : null);
+    // return this.set('game', data ? Game.restore(data) : null);
+    return this.set('game', createGame(data));
   }
 
   setState(str) {
@@ -100,10 +103,10 @@ module.exports = class Room extends Immutable.Record({
 
   isTurnPlayer(userId) {
     const player = this.player(userId);
-    return this.game && player && player.offense == this.game.turn;
+    return this.game && player && player.isOffense == this.game.turn;
   }
 
-  readyToBattle(userId) {
+  getBattleReady(userId) {
     const player = this.player(userId);
     return this.set(
       'players',
@@ -122,11 +125,12 @@ module.exports = class Room extends Immutable.Record({
     let tgl = Math.random() >= 0.5;
 
     return this.withMutations(mnt => {
-      mnt.set('game', (new Game()).setField())
+      // mnt.set('game', (new Game()).setField())
+      mnt.set('game', createGame())
         .set('players', mnt.players.map(player => {
           // decide offense side
           tgl = !tgl;
-          return player.set('offense', tgl);
+          return player.set('isOffense', tgl);
         }))
         .setState('SELECT');
     });
@@ -137,8 +141,9 @@ module.exports = class Room extends Immutable.Record({
       // return this;
     // }
     const player = this.player(userId);
-    const units = list.map(index => Unit.create({
-      offense: player.offense,
+    // const units = list.map(index => Unit.create({
+    const units = list.map(index => createUnit({
+      isOffense: player.isOffense,
       unitId: player.deck[index],
     }));
     //FIXME Check cost and Reject
@@ -158,7 +163,9 @@ module.exports = class Room extends Immutable.Record({
     this.players.forEach(player => {
       units = units.concat(
         player.selection.map((unit, seq) => {
-          return unit.set('cellId', field.initialPos(player.offense)[seq]);
+          // return unit.set('cellId', field.initialPos(player.isOffense)[seq]);
+          unit.setCellId(field.initialPos(player.isOffense)[seq]);
+          return unit;
         })
       );
     });

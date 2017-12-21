@@ -14,7 +14,7 @@ import {
   connectSocket,
   CREATE_ROOM,
   JOIN_ROOM,
-  READY_TO_BATTLE,
+  GET_BATTLE_READY,
   SELECT_UNITS,
   END_TURN,
 } from './actions/';
@@ -23,7 +23,7 @@ import Websocket from './websocket.js';
 const socketMiddleware = store => next => action => {
   const { payload } = action;
   const state = store.getState().match;
-  if (state.isSolo()) {
+  if (state.room && state.room.isSolo) {
     return next(action);
   }
   switch (action.type) {
@@ -37,8 +37,9 @@ const socketMiddleware = store => next => action => {
       socket.emit('joinRoom', payload.roomId);
       return store.dispatch(connectSocket(socket));
     }
-    case READY_TO_BATTLE:
-      return state.socket.emit('readyToBattle');
+    case GET_BATTLE_READY:
+      state.socket.emit('getBattleReady');
+      break;
     case SELECT_UNITS:
       return state.socket.emit('selectUnits', {list: payload.selectedList});
     case END_TURN:
@@ -55,11 +56,19 @@ const store = createStore(
   )
 );
 
-Client.preload().then(() => {
-  render(
-    <Provider store={store}>
-      <Router />
-    </Provider>,
-    document.getElementById('contents')
-  );
-});
+const contents = document.getElementById('contents');
+if (contents) {
+  Client.preload().then(() => {
+    render(
+      <div>
+        <style>
+          {'body { margin:0;padding:0; }'}
+        </style>
+        <Provider store={store}>
+          <Router />
+        </Provider>
+      </div>
+      , contents
+    );
+  });
+}

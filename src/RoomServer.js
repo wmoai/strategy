@@ -128,7 +128,7 @@ module.exports = class RoomServer {
           // seq: unit.seq,
           // hp: unit.hp,
           // cellId: unit.cellId,
-          // acted: unit.acted,
+          // isActed: unit.isActed,
         // };
       // }).toArray(),
     // });
@@ -152,9 +152,9 @@ module.exports = class RoomServer {
       socket.emit('enterRoom', { userId });
       this.syncRoom(room);
 
-      socket.on('readyToBattle', () => {
+      socket.on('getBattleReady', () => {
         let room = this.getRoom(roomId);
-        this.syncRoom(room.readyToBattle(userId).mightStartGame());
+        this.syncRoom(room.getBattleReady(userId).mightStartGame());
       });
       socket.on('selectUnits', ({ list }) => {
         let room = this.getRoom(roomId);

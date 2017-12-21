@@ -2,9 +2,13 @@ const PIXI = require('pixi.js');
 export default PIXI;
 
 export let resources = {};
+let isPreloaded = false;
 
 export function preload() {
   return new Promise(resolve => {
+    if (isPreloaded) {
+      return resolve();
+    }
     const loader = PIXI.loaders.shared;
     loader.add('units', '/image/units.png')
       .add('terrain', '/image/terrain.png')
@@ -12,6 +16,7 @@ export function preload() {
         splitUnits();
         splitTerrain();
         resolve();
+        isPreloaded = true;
       });
   });
 }
@@ -29,7 +34,7 @@ function splitUnits() {
         tileSize*h,
         tileSize*v,
         tileSize,
-        tileSize
+        tileSize,
       );
       const texture = new PIXI.Texture(baseTexture, frame);
       set.push(texture);

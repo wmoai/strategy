@@ -74,9 +74,9 @@ export function leaveRoom() {
   return { type: LEAVE_ROOM };
 }
 
-export const READY_TO_BATTLE = 'READY_TO_BATTLE';
-export function readyToBattle() {
-  return { type: READY_TO_BATTLE };
+export const GET_BATTLE_READY = 'GET_BATTLE_READY';
+export function getBattleReady() {
+  return { type: GET_BATTLE_READY };
 }
 
 export const ENTER_ROOM = 'ENTER_ROOM';

@@ -1,52 +1,72 @@
-// import * as socket from '../../websocket.js';
+import Room from '../../../game/models/Room.js';
+
 import { 
   CONNECT_SOCKET,
   ENTER_ROOM,
   SYNC_ROOM,
-  SYNC_GAME,
   START_SOLO_PLAY,
   LEAVE_ROOM,
+  GET_BATTLE_READY,
   SELECT_UNITS,
-  SELECT_CELL,
-  HOVER_CELL,
-  END_TURN,
-  RETURN_ROOM,
-  END_MY_TURN,
-  END_ANIMATION,
+  // RETURN_ROOM,
 } from '../../actions/';
 
-import State from './State.js';
+const initialState = {
+  socket: null,
+  userId: null,
+  deck: null,
+  room: null,
+  isReady: false,
+  me: null,
+  opponent: null,
+};
 
-export default function reducer(state = new State(), action) {
+function updateRoom(state, room) {
+  const { userId } = state;
+  return {
+    ...state,
+    room,
+    me: room.player(userId),
+    opponent: room.opponent(userId),
+  };
+}
+
+export default function reducer(state = initialState, action) {
   const { payload } = action;
-  if (state.isSolo()) {
+  if (state.room && state.room.isSolo) {
     return soloPlayReducer(state, action);
   }
   switch (action.type) {
     case CONNECT_SOCKET:
-      return state.connectSocket(payload.socket);
+      return { ...state, socket: payload.socket };
     case ENTER_ROOM:
-      return state.enterRoom(payload.userId);
-    case SYNC_ROOM:
-      return state.syncRoom(payload);
-    case LEAVE_ROOM:
-      return state.leaveRoom();
-    case SYNC_GAME:
-      return state.syncGame(payload.game, payload.action);
-    case SELECT_CELL:
-      return state.selectCell(payload.cellId, (from, to, target) => {
-        state.socket.emit('act', {
-          from: from,
-          to: to,
-          target: target
-        });
-      });
-    case HOVER_CELL:
-      return state.hoverCell(payload.cellId);
-    case RETURN_ROOM:
-      return state.returnRoom();
-    case START_SOLO_PLAY:
-      return state.startSoloPlay(payload);
+      return { ...state, userId: payload.userId };
+    case SYNC_ROOM: {
+      return updateRoom(state, Room.restore(payload));
+    }
+    case LEAVE_ROOM: {
+      const { socket, room } = state;
+      if (socket && room) {
+        socket.emit('leaveRoom', room.id);
+        socket.close();
+      }
+      return {
+        ...state,
+        room: null,
+        socket: null,
+      };
+    }
+    case GET_BATTLE_READY:
+      return { ...state, isReady: true };
+    // case RETURN_ROOM:
+      // return state.returnRoom();
+    case START_SOLO_PLAY: {
+      const { id, deck } = payload;
+      return updateRoom(
+        { ...state, userId: id },
+        Room.soloRoom(id, deck)
+      );
+    }
   }
   return state;
 }
@@ -54,23 +74,13 @@ export default function reducer(state = new State(), action) {
 function soloPlayReducer(state, action) {
   const { payload } = action;
   switch (action.type) {
-    case SELECT_UNITS:
-      return state.selectUnitSolo(payload.selectedList);
-    case SELECT_CELL:
-      return state.selectCell(payload.cellId);
-    case HOVER_CELL:
-      return state.hoverCell(payload.cellId);
-    case END_TURN:
-      return state.endTurnSolo();
-    case END_MY_TURN:
-      return state.mightActAI();
-    case END_ANIMATION:
-      if (payload.turn !== state.room.game.turn) {
-        return state;
-      }
-      return state.mightActAI();
-    case RETURN_ROOM:
-      return state.leaveRoom();
+    case SELECT_UNITS: {
+      const { userId, room } = state;
+      const newRoom = room.selectUnits(userId, payload.selectedList).mightEngage();
+      return updateRoom(state, newRoom);
+    }
+    // case RETURN_ROOM:
+      // return state.leaveRoom();
   }
   return state;
 }

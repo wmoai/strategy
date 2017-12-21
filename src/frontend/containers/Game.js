@@ -11,11 +11,10 @@ import {
 } from '../actions';
 
 const mapStateToProps = state => {
-  const { room, me, ui, socket } = state.match;
+  const { room, me, socket } = state.match;
   return {
-    isOffense: me.offense,
+    isOffense: me.isOffense,
     game: room.game,
-    ui,
     socket,
     isSolo: room.isSolo,
   };

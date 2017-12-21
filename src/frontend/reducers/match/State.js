@@ -10,18 +10,12 @@ export default class State extends Record({
   deck: null,
 
   room: null,
+  isReady: false,
 
   me: null,
   opponent: null,
   ui: new UI(),
 }) {
-
-  // init({ userId, deck }) {
-    // return this.withMutations(mnt => {
-      // mnt.set('userId', userId)
-        // .set('deck', deck);
-    // });
-  // }
 
   connectSocket(socket) {
     return this.set('socket', socket);
@@ -74,6 +68,10 @@ export default class State extends Record({
       mnt.set('room', room)
         .set('ui', ui);
     });
+  }
+
+  getBattleReady() {
+    return this.set('isReady', true);
   }
 
   returnRoom() {
@@ -135,9 +133,9 @@ export default class State extends Record({
     const newUnit = game.unit(cellId);
     if (newUnit && newUnit != ui.forcusedUnit) {
       return this.forcus(cellId);
-    } else if (me.offense != game.turn) {
+    } else if (me.isOffense != game.turn) {
       return this.clearUI();
-    } else if (ui.forcusedUnit && ui.forcusedUnit.offense == game.turn) {
+    } else if (ui.forcusedUnit && ui.forcusedUnit.isOffense == game.turn) {
       if (game.checkMovable(ui.forcusedCell, cellId)) {
         return this.withMutations(mnt => {
           mnt.set('room', mnt.room.set('game', game.moveUnit(ui.forcusedCell, cellId)))
@@ -253,7 +251,7 @@ export default class State extends Record({
     const { room } = this;
     const com = room.opponent(this.userId);
     const { game } = room;
-    const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
+    const units = game.ownedUnits(com.isOffense).filter(unit => !unit.isActed);
 
     if (!this.isCOMTurn() || this.room.game.isEnd) {
       return null;
@@ -269,9 +267,9 @@ export default class State extends Record({
           return;
         }
         if (!unit.klass.healer) {
-          return target && target.offense !== unit.offense;
+          return target && target.isOffense !== unit.isOffense;
         } else {
-          return target && target.offense === unit.offense && target.accumulatedDamage() !== 0;
+          return target && target.isOffense === unit.isOffense && target.accumulatedDamage() !== 0;
         }
       });
       // 行動パラメータを算出
@@ -332,8 +330,8 @@ export default class State extends Record({
     const { room } = this;
     const com = room.opponent(this.userId);
     const { game } = room;
-    const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
-    const enemies = game.ownedUnits(!com.offense);
+    const units = game.ownedUnits(com.isOffense).filter(unit => !unit.isActed);
+    const enemies = game.ownedUnits(!com.isOffense);
 
     return this.withMutations(mnt => {
       units.forEach(unit => {
@@ -367,8 +365,8 @@ export default class State extends Record({
     const { room } = this;
     const com = room.opponent(this.userId);
     const { game } = room;
-    const units = game.ownedUnits(com.offense).filter(unit => !unit.acted);
-    const enemies = game.ownedUnits(!com.offense);
+    const units = game.ownedUnits(com.isOffense).filter(unit => !unit.isActed);
+    const enemies = game.ownedUnits(!com.isOffense);
 
     if (units.count() == 0) {
       return null;

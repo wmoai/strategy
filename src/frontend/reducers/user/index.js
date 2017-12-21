@@ -2,10 +2,14 @@ import {
   FETCH_DECK,
 } from '../../actions';
 
-import State from './State.js';
 const resource = require('../../../game/data');
 
-const user = (state = new State(), action) => {
+const initialState = {
+  userId: null,
+  deck: null,
+};
+
+const user = (state = initialState, action) => {
   const { payload } = action;
   switch (action.type) {
     case FETCH_DECK: {
@@ -14,8 +18,7 @@ const user = (state = new State(), action) => {
           return resource.unit[unitId];
         })
       ) : null;
-      return state.set('deck', deck);
-
+      return { ...state, deck };
     }
   }
 

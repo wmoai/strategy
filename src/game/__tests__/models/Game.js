@@ -73,9 +73,9 @@ describe('Game', () => {
     test('return unit', () => {
       const game = new Game({
         units: Immutable.List([
-          new Unit({unitId: 2, offense: true}),
-          new Unit({unitId: 4, offense: true}),
-          new Unit({unitId: 7, offense: false}),
+          new Unit({unitId: 2, isOffense: true}),
+          new Unit({unitId: 4, isOffense: true}),
+          new Unit({unitId: 7, isOffense: false}),
         ])
       });
 

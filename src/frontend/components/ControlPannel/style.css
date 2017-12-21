@@ -1,0 +1,194 @@
+
+#cp-container {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+#cp-contents {
+  display: flex;
+  max-width: 800px;
+  height: 100%;
+  margin: auto;
+  box-sizing: border-box;
+  justify-content: center;
+}
+
+
+#cp-unit {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-sizing: border-box;
+  border: 5px solid;
+  border-top-color: #222;
+  border-left-color: #333;
+  border-bottom-color: #555;
+  border-right-color: #444;
+  padding: 3px 10px;
+  margin-left: auto;
+  background: linear-gradient(to top, #333, #444);
+}
+#cp-unit.offense {
+  /* background: linear-gradient(to top, #5b2f2f, #964c4c); */
+}
+#cp-unit.defense {
+  /* background: linear-gradient(to top, #30325e, #4c5496); */
+}
+
+#cp-unit-avatar {
+  display: flex;
+  flex-direction: column;
+  margin-right: 15px;
+  max-width: 70px;
+  text-align: center;
+  font-size: 0.8em;
+}
+
+#cp-unit-name {
+  font-weight: bold;
+  line-height: 1.1em;
+  margin-bottom: 3px;
+}
+
+#cp-status-table {
+  font-size: 0.8em;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+#cp-status-table th {
+  text-align: left;
+  font-size: 0.8em;
+  font-weight: normal;
+  line-height: 1.1em;
+}
+#cp-status-table td {
+  width: 22px;
+  text-align: right;
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 saddlebrown;
+  font-weight: bold;
+  line-height: 1em;
+  line-height: 1.1em;
+}
+
+#cp-status-table th:nth-child(3) {
+  padding-left: 10px;
+}
+
+
+
+#cp-forecast {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 5px solid;
+  border-top-color: #222;
+  border-left-color: #333;
+  border-bottom-color: #555;
+  border-right-color: #444;
+  font-size: 0.7em;
+  color: white;
+}
+
+#cp-forecast ul {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 0 10px;
+}
+#cp-forecast ul.offense {
+  background: linear-gradient(to top, #5b2f2f, #964c4c);
+}
+#cp-forecast ul.defense {
+  background: linear-gradient(to top, #30325e, #4c5496);
+}
+#cp-forecast ul.healer {
+  background: linear-gradient(to top, #335e30, #488e43);
+}
+#cp-forecast ul li {
+  height: 16px;
+}
+
+#cp-forecast ul:first-child {
+  flex: 1;
+  text-align: right;
+}
+
+#cp-forecast ul:last-child {
+  flex: 1;
+}
+
+#cp-forecast ul:nth-child(2) {
+  width: 40px;
+  padding: 0;
+  text-align: center;
+}
+
+#cp-info {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  margin-left: auto;
+  background: red;
+}
+
+#cp-banner {
+  flex: 1;
+  border-bottom: solid 1px #222;
+  padding: 5px 0;
+}
+#cp-banner.offense {
+  background: linear-gradient(to top, #5b2f2f, #964c4c);
+}
+#cp-banner.defense {
+  background: linear-gradient(to top, #30325e, #4c5496);
+}
+
+#cp-army {
+  text-align: center;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 2px 0 #333;
+}
+
+#cp-turn {
+  text-align: center;
+  color: #ddd;
+  font-size: 0.6em;
+}
+
+#cp-terrain {
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  margin-top: auto;
+  box-sizing: border-box;
+  background: linear-gradient(to bottom, #333, #111);
+  color: #eee;
+}
+#cp-terrain .name {
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-right: 5px;
+}
+#cp-terrain .avoid {
+  font-size: 0.7em;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+  color: #999;
+  margin-right: 3px;
+}
+#cp-terrain .value {
+  font-size: 0.7em;
+}

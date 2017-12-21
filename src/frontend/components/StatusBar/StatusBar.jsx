@@ -4,13 +4,6 @@ import './StatusBar.css';
 
 export default class StatusBar extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      lineupSubmitted: false,
-    };
-  }
-
   render() {
     const { isOffense } = this.props;
 
@@ -22,10 +15,7 @@ export default class StatusBar extends React.Component {
   }
 
   battleList() {
-    const { onClickEndTurn, isOffense, game, ui } = this.props;
-    const { turn, field } = game;
-    const turnRemained = game.turnRemained();
-    const terrain = field.cellTerrain(ui.hoveredCell);
+    const { onClickEndTurn, isOffense, turn, turnRemained, terrain } = this.props;
     const isMyTurn = isOffense === turn;
 
     return (
@@ -33,7 +23,7 @@ export default class StatusBar extends React.Component {
         <li>
           <button
             id="turn-end-button"
-            disabled={!isMyTurn || game.isEnd}
+            disabled={!isMyTurn}
             onClick={() => {
               onClickEndTurn();
             }}>

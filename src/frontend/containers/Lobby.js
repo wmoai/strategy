@@ -6,15 +6,16 @@ import {
   createRoom,
   joinRoom,
   leaveRoom,
-  readyToBattle,
+  getBattleReady,
 } from '../actions/';
 
 
 const mapStateToProps = state => {
-  const { room, me, opponent } = state.match;
+  const { room, me, opponent, isReady } = state.match;
   return {
     roomId: room ? room.id : null,
     isMatched: (me && opponent),
+    isReady
   };
 };
 const mapDispatchToProps = dispatch => {
@@ -31,8 +32,8 @@ const mapDispatchToProps = dispatch => {
     onLeaveRoom: () => {
       dispatch(leaveRoom());
     },
-    onReady: () => {
-      dispatch(readyToBattle());
+    onGetReady: () => {
+      dispatch(getBattleReady());
     },
   };
 };
