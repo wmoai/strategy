@@ -1,6 +1,5 @@
 // @flow
 
-/*::
 type TerrainData = {
   id: number,
   name: string,
@@ -16,7 +15,6 @@ export type Terrain = {
   avoidance: number,
   cost: Map<string, number>
 };
-*/
 
 const MOVE_TYPES = [
   'foot',
@@ -30,7 +28,7 @@ module.exports = ({
   name,
   avoid,
   ...moveCosts,
-}/*: TerrainData*/)/*: Terrain*/ => {
+}: TerrainData): Terrain => {
 
   const cost = new Map();
   MOVE_TYPES.forEach(TYPE => {

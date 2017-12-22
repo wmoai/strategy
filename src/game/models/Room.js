@@ -20,9 +20,11 @@ module.exports = class Room extends Immutable.Record({
   game: null,
 }) {
 
-  toJS() {
-    const json = super.toJS();
-    json.players = this.players.map(player => player.toData()).toJS();
+  toData() {
+    const json = super.toJSON();
+    if (this.game) {
+      json.game = this.game.toData();
+    }
     return json;
   }
 
@@ -63,8 +65,14 @@ module.exports = class Room extends Immutable.Record({
   }
 
   syncGame(data) {
+    console.log(data);
+    if (!data) {
+      return this;
+    }
+    data.state.units = data.state.units ? data.state.units.map(unit => createUnit(unit)) : [];
+    const game = createGame(data);
     // return this.set('game', data ? Game.restore(data) : null);
-    return this.set('game', createGame(data));
+    return this.set('game', game);
   }
 
   setState(str) {
@@ -103,7 +111,7 @@ module.exports = class Room extends Immutable.Record({
 
   isTurnPlayer(userId) {
     const player = this.player(userId);
-    return this.game && player && player.isOffense == this.game.turn;
+    return this.game && player && player.isOffense == this.game.getState().turn;
   }
 
   getBattleReady(userId) {
@@ -170,10 +178,12 @@ module.exports = class Room extends Immutable.Record({
       );
     });
 
-    return this.withMutations(mnt => {
-      mnt.set('game', mnt.game.initUnits(units))
-        .setState('BATTLE');
-    });
+    // return this.withMutations(mnt => {
+      // mnt.set('game', mnt.game.initUnits(units))
+        // .setState('BATTLE');
+    // });
+    this.game.initUnits(units);
+    return this.setState('BATTLE');
   }
 
   canAct(userId) {
@@ -181,17 +191,17 @@ module.exports = class Room extends Immutable.Record({
   }
 
   actInGame(userId, from, to, target) {
-    if (!this.canAct(userId)) {
-      return this;
+    if (this.canAct(userId)) {
+      this.game.fixAction(from, to, target);
     }
-    return this.set('game', this.game.fixAction(from, to, target));
+    return this;
   }
 
   endTurn(userId) {
-    if (!this.canAct(userId)) {
-      return this;
+    if (this.canAct(userId)) {
+      this.game.changeTurn();
     }
-    return this.set('game', this.game.changeTurn());
+    return this;
   }
 
   mightResetPlayers() {

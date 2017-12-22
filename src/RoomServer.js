@@ -112,7 +112,8 @@ module.exports = class RoomServer {
 
   syncRoom(room) {
     this.saveRoom(room);
-    this.io.to(room.id).emit('syncRoom', room.toJSON());
+    // this.io.to(room.id).emit('syncRoom', room.toJSON());
+    this.io.to(room.id).emit('syncRoom', room.toData());
   }
 
   syncGame(room, action=null) {

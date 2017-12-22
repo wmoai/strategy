@@ -1,6 +1,5 @@
 // @flow
 
-/*::
 type FieldInfo = {
   oinit: Array<number>,
   dinit: Array<number>,
@@ -35,7 +34,6 @@ export type Field = {
   coordinates: number => FieldCoordinates,
   distance: (number, number) => number,
 };
-*/
 
 module.exports = ({
   id,
@@ -43,13 +41,13 @@ module.exports = ({
   height,
   terrain,
   info
-}/*: FieldData*/)/*: Field*/ => {
+}: FieldData): Field => {
 
-  function initialPos(isOffense/*: boolean*/) {
+  function initialPos(isOffense: boolean) {
     return isOffense ? info['oinit'] : info['dinit'];
   }
 
-  function existsCell(y/*: number*/, x/*: number*/) {
+  function existsCell(y: number, x: number) {
     return (
       y >= 0
       && y < height
@@ -58,7 +56,7 @@ module.exports = ({
     );
   }
 
-  function isEdgeCell(y/*: number*/, x/*: number*/) {
+  function isEdgeCell(y: number, x: number) {
     if (!existsCell(y, x)) {
       return false;
     }
@@ -70,15 +68,15 @@ module.exports = ({
     );
   }
 
-  function isActiveCell(y/*: number*/, x/*: number*/) {
+  function isActiveCell(y: number, x: number) {
     return existsCell(y, x) && !isEdgeCell(y, x);
   }
 
-  function cellId(y/*: number*/, x/*: number*/) {
+  function cellId(y: number, x: number) {
     return y * width + x;
   }
 
-  function isSameTerrainWithNeighbor(y/*: number*/, x/*: number*/)/*: any*/ {
+  function isSameTerrainWithNeighbor(y: number, x: number): any {
     const land = terrain[cellId(y, x)];
     return {
       top: !existsCell(y-1, x) || isSameTerrain(land, terrain[cellId(y-1, x)]),
@@ -92,7 +90,7 @@ module.exports = ({
     };
   }
 
-  function isSameTerrain(base/*: number*/, other/*: number*/)/*: boolean*/ {
+  function isSameTerrain(base: number, other: number): boolean {
     const water = [6, 7];
     const bridge = [9, 10];
     if (water.includes(base)) {
@@ -115,7 +113,7 @@ module.exports = ({
     // return resource.terrain[terrain[cellId]].avoidance;
   // }
 
-  function cellTerrainId(cellId/*: number*/)/*: number */ {
+  function cellTerrainId(cellId: number): number {
     return terrain[cellId];
   }
 
@@ -131,14 +129,14 @@ module.exports = ({
     return rows;
   }
 
-  function coordinates(cellId/*: number*/) {
+  function coordinates(cellId: number) {
     return {
       y: Math.floor(cellId / width),
       x: Math.floor(cellId % width)
     };
   }
 
-  function distance(cid1/*: number*/, cid2/*: number*/) {
+  function distance(cid1: number, cid2: number) {
     const c1 = coordinates(cid1);
     const c2 = coordinates(cid2);
     return Math.abs(c1.y - c2.y) + Math.abs(c1.x - c2.x);

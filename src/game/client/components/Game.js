@@ -9,6 +9,7 @@ import * as ai from '../lib/ai.js';
 
 // import GameModel from '../../models/Game.js';
 import createGame from '../../models/createGame.js';
+import createUnit from '../../models/createUnit.js';
 
 const masterData = require('../../data/');
 
@@ -146,6 +147,10 @@ export default class Game extends Component {
       }
     }
     // this.updateModel(gameData ? GameModel.restore(gameData) : null);
+
+    if (gameData.state.units) {
+      gameData.state.units = gameData.state.units.map(unit => createUnit(unit));
+    }
     this.model = createGame(gameData);
   }
 

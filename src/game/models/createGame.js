@@ -1,3 +1,4 @@
+const createUnit = require('./createUnit.js');
 
 const masterData = require('../data');
 
@@ -35,7 +36,10 @@ module.exports = (options) => {
   function toData() {
     return {
       fieldId,
-      state: {...currentState},
+      state: {
+        ...currentState,
+        units: currentState.units.map(unit => unit.toData()),
+      },
     };
   }
 
@@ -48,6 +52,12 @@ module.exports = (options) => {
         return unit;
       }))
     };
+  }
+
+  function getUnits() {
+    return currentState.untis.map(unit => {
+      return createUnit(unit);
+    });
   }
 
   function turnRemained() {
