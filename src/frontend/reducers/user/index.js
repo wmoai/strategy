@@ -2,7 +2,7 @@ import {
   FETCH_DECK,
 } from '../../actions';
 
-const resource = require('../../../game/data');
+import * as masterData from '../../../game/data';
 
 const initialState = {
   userId: null,
@@ -15,7 +15,7 @@ const user = (state = initialState, action) => {
     case FETCH_DECK: {
       const deck = payload.deck ? (
         payload.deck.map(unitId => {
-          return resource.unit[unitId];
+          return masterData.unit[unitId];
         })
       ) : null;
       return { ...state, deck };

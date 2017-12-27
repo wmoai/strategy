@@ -1,38 +1,68 @@
-export default class Animation {
+// @flow
 
-  constructor(start, end, duration) {
+type Point = {
+  x: number,
+  y: number,
+};
+
+export default class Animation {
+  container: any;
+  point: Point;
+  start: Point;
+  end: Point;
+  duration: number;
+  elapsed: number;
+  
+  constructor({ container, start, end, duration }: {
+    container: any;
+    start: Point;
+    end: Point;
+    duration: number;
+  }) {
+    this.container = container;
+    this.point = {
+      x: start.x,
+      y: start.y,
+    };
     this.start = start;
     this.end = end;
 
-    this.x = start.x !== null && end.x !== null ? start.x : null;
-    this.y = start.y !== null && end.y !== null ? start.y : null;
-    this.scale = start.scale;
-
     this.duration = duration;
     this.elapsed = 0;
-    this.isEnd = false;
   }
 
-  update(delta) {
+  isEnd(): boolean {
+    return this.elapsed >= this.duration;
+  }
+
+  update(delta: number) {
+    const { point, start, end, elapsed, duration, container } = this;
     this.elapsed += delta;
-    if (this.elapsed >= this.duration) {
-      if (this.x !== null) {
-        this.x = this.end.x;
+    if (this.isEnd()) {
+      if (point.x !== null) {
+        point.x = end.x;
       }
-      if (this.y !== null) {
-        this.y = this.end.y;
+      if (point.y !== null) {
+        point.y = end.y;
       }
-      this.isEnd = true;
-      return;
+    } else {
+      const r = elapsed / duration;
+      if (point.x !== null) {
+        point.x = start.x + (end.x - start.x) * r;
+      }
+      if (point.y !== null) {
+        point.y = start.y + (end.y - start.y) * r;
+      }
     }
 
-    const r = this.elapsed / this.duration;
-    if (this.x !== null) {
-      this.x = this.start.x + (this.end.x - this.start.x) * r;
-    }
-    if (this.y !== null) {
-      this.y = this.start.y + (this.end.y - this.start.y) * r;
-    }
+    container.x = point.x;
+    container.y = point.y;
+  }
+
+  omit() {
+    const { end, container } = this;
+    container.x = end.x;
+    container.y = end.y;
   }
 
 }

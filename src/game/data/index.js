@@ -1,24 +1,36 @@
-const unit = require('./json/unit.json');
-const klass = require('./json/klass.json');
+// @flow
 
-const createTerrain = require('../models/createTerrain.js');
-const terrainData = require('./json/terrain.json');
-const terrain = {};
-Object.values(terrainData).forEach(data => {
-  const t = createTerrain(data);
-  terrain[t.id] = t;
+import Terrain from '../models/Terrain.js';
+import Field from '../models/Field.js';
+
+import unit from './json/unit.json';
+import klass from './json/klass.json';
+import terrainData from './json/terrain.json';
+import sekiData from '../data/json/field/seki.json';
+import muhiData from '../data/json/field/muhi.json';
+
+const terrain: Map<number, Terrain> = new Map();
+Object.keys(terrainData).forEach(key => {
+  const t = new Terrain(terrainData[key]);
+  terrain.set(t.id, t);
 });
+function getTerrain(id: number): Terrain {
+  const result = terrain.get(id);
+  if (!result) {
+    throw `terrain [${id}] is not found.`;
+  }
+  return result;
+}
 
-const createField = require('../models/createField.js');
-const fields = [
-  createField(require('../data/json/field/seki.json')),
-  createField(require('../data/json/field/muhi.json')),
+const fields: Array<Field> = [
+  new Field(sekiData),
+  new Field(muhiData),
 ];
-function getField(fieldId=null) {
+function getField(fieldId: ?number): Field {
   if (fieldId == null) {
     return fields[Math.floor(Math.random() * fields.length)];
   }
-  let result;
+  let result = fields[0];
   fields.forEach(field => {
     if (fieldId == field.id) {
       result = field;
@@ -27,9 +39,9 @@ function getField(fieldId=null) {
   return result;
 }
 
-module.exports = {
+export {
   unit,
   klass,
-  terrain,
+  getTerrain,
   getField,
 };

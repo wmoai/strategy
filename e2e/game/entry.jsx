@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-const createUnit = require('../../src/game/models/createUnit.js');
 const Room = require('../../src/game/models/Room.js');
-const createGame = require('../../src/game/models/createGame.js');
+// const createGame = require('../../src/game/models/createGame.js');
+import Game from '../../src/game/models/Game.js';
 
 
 import Component from '../../src/frontend/components/Game/index.jsx';
@@ -19,12 +19,12 @@ const opp = new Player({ id:2,  isOffense: false });
 class Container extends React.Component {
   constructor(props) {
     super(props);
-    const game = createGame({ fieldId: 2 });
+    const game = new Game({ fieldId: 2 });
     game.initUnits([
-      createUnit({ isOffense:true, unitId:32, state: {cellId:263} }),
-      createUnit({ isOffense:true, unitId:11, state: {cellId:264} }),
-      createUnit({ isOffense:false, unitId:15, state: {cellId:35} }),
-      createUnit({ isOffense:false, unitId:11, state: {cellId:55} }),
+      { isOffense:true, unitId:32, state: {cellId:73} },
+      { isOffense:true, unitId:11, state: {cellId:264} },
+      { isOffense:false, unitId:15, state: {cellId:35} },
+      { isOffense:false, unitId:11, state: {cellId:55} },
     ]);
     this.state = {
       state: new State({

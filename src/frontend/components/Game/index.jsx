@@ -5,7 +5,7 @@ import './style.css';
 // import StatusBar from '../StatusBar/StatusBar.jsx';
 import ControlPannel from '../ControlPannel/index.jsx';
 // import RefUnit from '../RefUnit//RefUnit.jsx';
-import Forecast from '../Forecast/Forecast.jsx';
+// import Forecast from '../Forecast/Forecast.jsx';
 import Intro from '../Intro/index.jsx';
 import Result from '../Result/Result.jsx';
 

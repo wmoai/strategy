@@ -1,9 +1,6 @@
 const Immutable = require('immutable');
-// const Game = require('./Game.js');
-const createGame = require('./createGame.js');
+import Game from './Game.js';
 const Player = require('./Player.js');
-// const Unit = require('./Unit.js');
-const createUnit = require('./createUnit.js');
 const COM = require('./COM.js');
 
 const STATE = Immutable.Map({
@@ -65,14 +62,11 @@ module.exports = class Room extends Immutable.Record({
   }
 
   syncGame(data) {
-    console.log(data);
     if (!data) {
       return this;
     }
-    data.state.units = data.state.units ? data.state.units.map(unit => createUnit(unit)) : [];
-    const game = createGame(data);
     // return this.set('game', data ? Game.restore(data) : null);
-    return this.set('game', game);
+    return this.set('game', new Game(data));
   }
 
   setState(str) {
@@ -134,7 +128,7 @@ module.exports = class Room extends Immutable.Record({
 
     return this.withMutations(mnt => {
       // mnt.set('game', (new Game()).setField())
-      mnt.set('game', createGame())
+      mnt.set('game', new Game())
         .set('players', mnt.players.map(player => {
           // decide offense side
           tgl = !tgl;
@@ -145,15 +139,17 @@ module.exports = class Room extends Immutable.Record({
   }
 
   selectUnits(userId, list) {
-    // if (this.state !== STATE.get('SELECT')) {
-      // return this;
-    // }
     const player = this.player(userId);
-    // const units = list.map(index => Unit.create({
-    const units = list.map(index => createUnit({
-      isOffense: player.isOffense,
-      unitId: player.deck[index],
-    }));
+    // const units = list.map(index => createUnit({
+      // isOffense: player.isOffense,
+      // unitId: player.deck[index],
+    // }));
+    const units = list.map(index => {
+      return {
+        isOffense: player.isOffense,
+        unitId: player.deck[index],
+      };
+    });
     //FIXME Check cost and Reject
 
     return this.set('players', this.players.set(userId, player.set('selection', units)));
@@ -171,17 +167,18 @@ module.exports = class Room extends Immutable.Record({
     this.players.forEach(player => {
       units = units.concat(
         player.selection.map((unit, seq) => {
-          // return unit.set('cellId', field.initialPos(player.isOffense)[seq]);
-          unit.setCellId(field.initialPos(player.isOffense)[seq]);
-          return unit;
+          // unit.setCellId(field.initialPos(player.isOffense)[seq]);
+          // return unit;
+          return {
+            ...unit,
+            state: {
+              cellId: field.initialPos(player.isOffense)[seq]
+            },
+          };
         })
       );
     });
 
-    // return this.withMutations(mnt => {
-      // mnt.set('game', mnt.game.initUnits(units))
-        // .setState('BATTLE');
-    // });
     this.game.initUnits(units);
     return this.setState('BATTLE');
   }

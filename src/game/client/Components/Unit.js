@@ -1,57 +1,58 @@
+// @flow
+import Unit from '../../models/Unit.js';
+import Field from '../../models/Field.js';
+
 import PIXI, { resources } from '../PIXI.js';
 import Component from './Component.js';
 
-export default class Unit extends Component {
-  constructor(unit, field, cellSize) {
+export default class UnitComponent extends Component {
+  field: Field;
+  cellSize: number;
+  sprite: any;
+  greenLine: any;
+
+  constructor(model: Unit, field: Field, cellSize: number) {
     super();
     this.field = field;
     this.cellSize = cellSize;
 
-    this.isOffense = unit.isOffense;
-    this.maxHp = unit.status.hp;
-    this.klassId = unit.klass.id;
-
     const margin = cellSize / 10;
-    const { y, x } = field.coordinates(unit.cellId);
 
-
-    const colorI = unit.isActed ? 0 : (!this.isOffense ? 1 : 2);
-    const texture = resources.units.get(unit.klass.id)[colorI];
-    const chara = new PIXI.Sprite(texture);
-    chara.width = cellSize - margin*2;
-    chara.height = cellSize - margin*2;
-    chara.x = margin;
-    chara.y = margin;
-    this.container.addChild(chara);
+    const sprite = new PIXI.Sprite();
+    sprite.width = cellSize - margin*2;
+    sprite.height = cellSize - margin*2;
+    sprite.x = margin;
+    sprite.y = margin;
+    this.container.addChild(sprite);
+    this.sprite = sprite;
     const redLine = new PIXI.Graphics();
     redLine.beginFill(0xdc143c);
     redLine.drawRect(2, cellSize-4, cellSize-4, 2);
     this.container.addChild(redLine);
     const greenLine = new PIXI.Graphics();
     greenLine.beginFill(0x40e0d0);
-    greenLine.drawRect(2, cellSize-4, (cellSize-4) * unit.hp / unit.status.hp, 2);
+    greenLine.drawRect(2, cellSize-4, (cellSize-4) * model.state.hp / model.status.hp, 2);
     this.container.addChild(greenLine);
-
-    this.container.x = x * cellSize;
-    this.container.y = y * cellSize;
-
     this.greenLine = greenLine;
-    this.chara = chara;
+
+    this.update(model);
   }
 
-  update(unit) {
-    const { field, cellSize } = this;
-    if (!unit.isAlive()) {
+  update(model: Unit) {
+    const { field, cellSize, container, sprite, greenLine } = this;
+    if (!model.isAlive()) {
       this.container.visible = false;
       return;
     }
-    const { y, x } = field.coordinates(unit.cellId);
+    const { cellId, hp, isActed } = model.state;
+    const { y, x } = field.coordinates(cellId);
 
-    this.container.x = x * cellSize;
-    this.container.y = y * cellSize;
-    this.greenLine.width = (cellSize-4) * unit.hp / unit.status.hp;
-    const colorI = unit.isActed ? 0 : (!unit.isOffense ? 1 : 2);
-    this.chara.texture = resources.units.get(unit.klass.id)[colorI];
+    container.x = x * cellSize;
+    container.y = y * cellSize;
+    greenLine.width = (cellSize-4) * hp / model.status.hp;
+    const colorI = isActed ? 0 : (!model.isOffense ? 1 : 2);
+    sprite.texture = resources.units.get(model.klass.id)[colorI];
   }
 
 }
+

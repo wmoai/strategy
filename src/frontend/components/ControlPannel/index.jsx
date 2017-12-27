@@ -13,7 +13,7 @@ function Unit({ unit }) {
         <div id="cp-unit-name">{status.name}</div>
         <div>
           <span>HP</span>
-          <span id="hp">{unit.getState().hp}</span>
+          <span id="hp">{unit.state.hp}</span>
           <span id="hp-max">/ {status.hp}</span>
         </div>
       </div>

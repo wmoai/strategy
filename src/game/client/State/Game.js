@@ -42,7 +42,7 @@ export default class Game {
       return;
     }
     this.forcusedUnit = unitModel;
-    this.forcusedCell = unitModel.getState().cellId;
+    this.forcusedCell = unitModel.state.cellId;
     this.set('MOVE');
   }
 

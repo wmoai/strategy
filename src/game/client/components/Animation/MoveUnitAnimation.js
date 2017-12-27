@@ -1,9 +1,23 @@
+// @flow
+import Field from '../../../models/Field.js';
 
 import Animation from './Animation.js';
 
 export default class MoveUnitAnimation {
+  container: any;
+  route: Array<number>;
+  field: Field;
+  cellSize: number;
+  animations: Array<Animation>;
+  processing: ?Animation;
 
-  constructor(container, route, field, cellSize) {
+
+  constructor({ container, route, field, cellSize }: {
+    container: any,
+    route: Array<number>,
+    field: Field,
+    cellSize: number
+  }) {
     this.container = container;
     this.route = route;
     this.field = field;
@@ -19,51 +33,39 @@ export default class MoveUnitAnimation {
       const nextC = field.coordinates(cellId);
       cx = nextC.x * cellSize;
       cy = nextC.y * cellSize;
+      const start = {x: sx, y: sy};
+      const end = { x: cx, y: cy};
       return new Animation({
-        x: sx,
-        y: sy,
-      }, {
-        x: cx,
-        y: cy
-      }, 4);
+        container,
+        start,
+        end,
+        duration: 4
+      });
     });
     this.processing = null;
-    this.isEnd = false;
   }
 
-  update(delta) {
-    if (!this.processing) {
-      if (this.animations.length == 0) {
-        this.end();
-        return;
-      }
-      this.processing = this.animations.shift();
-    }
-    this.processing.update(delta);
-    this.container.x = this.processing.x;
-    this.container.y = this.processing.y;
-    if (this.processing.isEnd) {
+  isEnd(): boolean {
+    const { processing, animations } = this;
+    if (processing && processing.isEnd()) {
       this.processing = null;
     }
+    if (!processing) {
+      if (animations.length == 0) {
+        return true;
+      }
+      this.processing = animations.shift();
+    }
+    return false;
   }
 
-  omit() {
-    let animation = this.animations.length == 0 ? this.processing : this.animations.pop();
-    if (!animation) {
+  update(delta: number) {
+    if (this.isEnd()) {
       return;
     }
-    this.container.x = animation.ex;
-    this.container.y = animation.ey;
-    this.end();
-  }
-
-  end() {
-    if (this.bufferUnit) {
-      this.update(this.bufferUnit);
+    if (this.processing) {
+      this.processing.update(delta);
     }
-    this.isEnd = true;
-    this.processing = null;
-    this.animations = [];
   }
 
 }

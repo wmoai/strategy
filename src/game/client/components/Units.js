@@ -1,117 +1,114 @@
+// @flow
+import Unit from '../../models/Unit.js';
+import Field from '../../models/Field.js';
+
 import PIXI from '../PIXI.js';
+import Ranges from '../lib/Ranges.js';
+
 import Component from './Component.js';
+import UnitComponent from './Unit.js';
+import RangesComponent from './Ranges.js';
+import MoveUnitAnimation from './Animation/MoveUnitAnimation.js';
 
-import createUnit from './createUnit.js';
-import createMoveUnitAnimation from './Animation/createMoveUnitAnimation.js';
 
-export default class Units extends Component {
+export default class UnitsComponent extends Component {
+  field: Field;
+  cellSize: number;
+  unitsMap: Map<number, UnitComponent>;
+  layer: {
+    ranges: any,
+    units: any,
+  };
+  currentUnitModels: ?Array<Unit>;
+  currentRanges: ?Ranges;
 
-  constructor({ unitModels, field, cellSize }) {
+
+  constructor({ unitModels, field, cellSize }: {
+    unitModels: Array<Unit>,
+    field: Field,
+    cellSize: number,
+  }) {
     super();
     this.field = field;
     this.cellSize = cellSize;
-    this.components = new Map();
-    this.animations = [];
+    this.unitsMap = new Map();
 
-    this.layer = {
-      ranges: new PIXI.Container(),
-      units: new PIXI.Container(),
-    };
-    this.container.addChild(this.layer.ranges);
-    this.container.addChild(this.layer.units);
-
-
+    const rangesLayer = new PIXI.Container();
+    const unitsLayer = new PIXI.Container();
+    this.container.addChild(rangesLayer);
+    this.container.addChild(unitsLayer);
     unitModels.forEach(unitModel => {
-      const unit = createUnit(unitModel, field, cellSize);
-      this.layer.units.addChild(unit.container);
-      this.components.set(unitModel.seq, unit);
+      const unit = new UnitComponent(unitModel, field, cellSize);
+      unitsLayer.addChild(unit.container);
+      this.unitsMap.set(unitModel.seq, unit);
     });
-
-    this.buffers = {
-      unitModels: null,
-      ranges: null,
-    };
-    this.shouldUpdate = {
-      units: false,
-      ranges: false,
+    this.layer = {
+      ranges: rangesLayer,
+      units: unitsLayer,
     };
   }
 
-  setUnitModels(unitModels) {
-    this.buffers.unitModels = unitModels;
-    this.shouldUpdate.units = true;
-  }
-
-  setRanges(ranges) {
-    this.buffers.ranges = ranges;
-    this.shouldUpdate.ranges = true;
-  }
-
-  update(delta) {
-    let isUpdated = false;
-    if (this.hasAnimation()) {
-      const animation = this.animations[0];
-      animation.update(delta);
-      // this.followUnit(this.animation.container);
-      if (animation.isEnd()) {
-        this.animations.shift();
-      }
-      isUpdated = true;
+  update(delta: number, unitModels: Array<Unit>, ranges: Ranges, animation: MoveUnitAnimation) {
+    if (this.updateAnimation(delta, animation)) {
+      return true;
     } else {
-      const { shouldUpdate, buffers, cellSize } = this;
-      if (shouldUpdate.units) {
-        shouldUpdate.units = false;
-        const { unitModels } = buffers;
-        if (unitModels) {
-          unitModels.forEach(unitModel => {
-            const unit = this.components.get(unitModel.seq);
-            unit.update(unitModel);
-          });
-        }
+      let isUpdated = false;
+      if (this.currentUnitModels !== unitModels) {
+        this.currentUnitModels = unitModels;
+        this.updateUnits(unitModels);
         isUpdated = true;
       }
-      if (shouldUpdate.ranges) {
-        shouldUpdate.ranges =false;
-        const { layer } = this;
-        const { ranges } = buffers;
-        layer.ranges.removeChildren();
-        if (ranges) {
-          ranges.setGraph(cellSize);
-          layer.ranges.addChild(ranges.container);
-        }
+      if (this.currentRanges !== ranges) {
+        this.currentRanges = ranges;
+        this.updateRanges(ranges);
         isUpdated = true;
       }
+      return isUpdated;
     }
-    return isUpdated;
   }
 
-  hasAnimation() {
-    return this.animations.length > 0;
-  }
-
-  unit(seq) {
-    return this.components.get(seq);
-  }
-
-  animatingUnit() {
-    if (!this.hasAnimation()) {
-      return;
+  updateAnimation(delta: number, animation: MoveUnitAnimation) {
+    if (!animation || animation.isEnd()) {
+      return false;
     }
-    return this.animations[0].container;
+    animation.update(delta);
+    return true;
   }
 
-  setMoveAnimation(unitModel, route) {
-    const { field, cellSize } = this;
-    const unit = this.components.get(unitModel.seq);
-    const animation = createMoveUnitAnimation({
-      container: unit.container,
-      route,
-      field,
-      cellSize
+  updateUnits(unitModels: Array<Unit>) {
+    unitModels.forEach(unitModel => {
+      const unit = this.unitsMap.get(unitModel.seq);
+      if (unit) {
+        unit.update(unitModel);
+      }
     });
-    this.animations.push(animation);
   }
 
+  updateRanges(ranges: Ranges) {
+    const layer = this.layer.ranges;
+    layer.removeChildren();
+    if (ranges) {
+      const component = new RangesComponent(ranges, this.cellSize);
+      layer.addChild(component.container);
+    }
+  }
 
+  createMoveAnimation(unitModel: Unit, route: Array<number>): ?MoveUnitAnimation {
+    const { unitsMap, field, cellSize } = this;
+    const unit = unitsMap.get(unitModel.seq);
+    if (unit) {
+      return new MoveUnitAnimation({
+        container: unit.container,
+        route,
+        field,
+        cellSize
+      });
+    }
+  }
+
+  unit(seq: number): ?UnitComponent {
+    return this.unitsMap.get(seq);
+  }
 
 }
+

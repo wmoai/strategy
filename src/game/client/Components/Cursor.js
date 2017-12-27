@@ -1,8 +1,12 @@
+// @flow
+
 import PIXI from '../PIXI.js';
 import Component from './Component.js';
 
-export default class Cursor extends Component {
-  constructor(cellSize) {
+export default class CursorComponent extends Component {
+  cellSize: number;
+
+  constructor(cellSize: number) {
     super();
     this.cellSize = cellSize;
     const left = 0
@@ -11,6 +15,7 @@ export default class Cursor extends Component {
       , bottom = cellSize;
     const width = cellSize / 3;
     const size = cellSize / 12;
+
 
     const graphics = new PIXI.Graphics();
     graphics.beginFill(0xffffff);
@@ -26,9 +31,11 @@ export default class Cursor extends Component {
     this.container.visible = false;
   }
 
-  update(x, y) {
-    this.container.visible = true;
-    this.container.x = x * this.cellSize;
-    this.container.y = y * this.cellSize;
+  update(x: number, y: number) {
+    const { container, cellSize } = this;
+    container.visible = true;
+    container.x = x * cellSize;
+    container.y = y * cellSize;
   }
+
 }

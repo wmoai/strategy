@@ -2,14 +2,14 @@ import { connect } from 'react-redux';
 import Component from '../components/Selector/index.jsx';
 import { selectUnits } from '../actions';
 
-import data from '../../game/data';
+import * as masterData from '../../game/data';
 
 const mapStateToProps = state => {
   const { me, opponent } = state.match;
   return {
-    myUnits: me.deck ? me.deck.map(uid => data.unit[uid]) : [],
+    myUnits: me.deck ? me.deck.map(uid => masterData.unit[uid]) : [],
     isOffense: me.isOffense,
-    opponentUnits : opponent.deck ? opponent.deck.map(uid => data.unit[uid]) : [],
+    opponentUnits : opponent.deck ? opponent.deck.map(uid => masterData.unit[uid]) : [],
   };
 };
 
