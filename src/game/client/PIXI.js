@@ -1,10 +1,21 @@
+// @flow
 const PIXI = require('pixi.js');
 export default PIXI;
 
-export let resources = {};
+export let resources: {
+  units: Map<number, any>,
+  terrain: Map<number, Array<any>>,
+  fires: Array<any>,
+  lights: Array<any>,
+} = {
+  units: new Map(),
+  terrain: new Map(),
+  fires: [],
+  lights: [],
+};
 let isPreloaded = false;
 
-export function preload() {
+export function preload(): Promise<void> {
   return new Promise(resolve => {
     if (isPreloaded) {
       return resolve();
@@ -12,11 +23,15 @@ export function preload() {
     const loader = PIXI.loaders.shared;
     loader.add('units', '/image/units.png')
       .add('terrain', '/image/terrain.png')
+      .add('fire', '/image/fire.png')
+      .add('light', '/image/light.png')
       .load(() => {
         splitUnits();
         splitTerrain();
-        resolve();
+        splitFire();
+        splitLight();
         isPreloaded = true;
+        resolve();
       });
   });
 }
@@ -26,20 +41,20 @@ function splitUnits() {
   const tileSize = 48;
   const units = new Map();
 
-  const baseTexture = loader.resources['units'].texture;
-  for (let h=0; h<baseTexture.width/tileSize; h++) {
+  const baseTexture = loader.resources['units'].texture.baseTexture;
+  for (let w=0; w<baseTexture.width/tileSize; w++) {
     const set = [];
-    for (let v=0; v<3; v++) {
+    for (let h=0; h<3; h++) {
       const frame = new PIXI.Rectangle(
+        tileSize*w,
         tileSize*h,
-        tileSize*v,
         tileSize,
         tileSize,
       );
       const texture = new PIXI.Texture(baseTexture, frame);
       set.push(texture);
     }
-    units.set(h+1, set);
+    units.set(w+1, set);
   }
   resources.units = units;
 }
@@ -70,5 +85,43 @@ function splitTerrain() {
     terrain.set(i+1, set);
   }
   resources.terrain = terrain;
+}
+
+function splitFire() {
+  const loader = PIXI.loaders.shared;
+  const tileSize = 120;
+  const fires = [];
+
+  const baseTexture = loader.resources['fire'].texture.baseTexture;
+  for (let i=0; i<6; i++) {
+    const x = i * tileSize % baseTexture.width;
+    const y = Math.floor(i * tileSize / baseTexture.width) * tileSize;
+    fires.push(new PIXI.Texture(baseTexture, new PIXI.Rectangle(
+      x,
+      y,
+      tileSize,
+      tileSize,
+    )));
+  }
+  resources.fires = fires;
+}
+
+function splitLight() {
+  const loader = PIXI.loaders.shared;
+  const tileSize = 120;
+  const lights = [];
+
+  const baseTexture = loader.resources['light'].texture.baseTexture;
+  for (let i=0; i<10; i++) {
+    const x = i * tileSize % baseTexture.width;
+    const y = Math.floor(i * tileSize / baseTexture.width) * tileSize;
+    lights.push(new PIXI.Texture(baseTexture, new PIXI.Rectangle(
+      x,
+      y,
+      tileSize,
+      tileSize,
+    )));
+  }
+  resources.lights = lights;
 }
 

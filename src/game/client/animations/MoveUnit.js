@@ -1,16 +1,17 @@
 // @flow
-import Field from '../../../models/Field.js';
+import Field from '../../models/Field.js';
 
+import Move from './Move.js';
 import Animation from './Animation.js';
 
-export default class MoveUnitAnimation {
+const FPC = 5; // Frame / Cell
+
+export default class MoveUnit extends Animation {
   container: any;
   route: Array<number>;
   field: Field;
   cellSize: number;
-  animations: Array<Animation>;
-  processing: ?Animation;
-
+  movements: Array<Move>;
 
   constructor({ container, route, field, cellSize }: {
     container: any,
@@ -18,7 +19,7 @@ export default class MoveUnitAnimation {
     field: Field,
     cellSize: number
   }) {
-    this.container = container;
+    super({ container, duration: Infinity });
     this.route = route;
     this.field = field;
     this.cellSize = cellSize;
@@ -27,7 +28,7 @@ export default class MoveUnitAnimation {
     const firstC = field.coordinates(first);
     let cx = firstC.x * cellSize;
     let cy = firstC.y * cellSize;
-    this.animations = route.map(cellId => {
+    this.movements = route.map(cellId => {
       const sx = cx;
       const sy = cy;
       const nextC = field.coordinates(cellId);
@@ -35,37 +36,28 @@ export default class MoveUnitAnimation {
       cy = nextC.y * cellSize;
       const start = {x: sx, y: sy};
       const end = { x: cx, y: cy};
-      return new Animation({
+      return new Move({
         container,
+        duration: FPC,
         start,
         end,
-        duration: 4
       });
     });
-    this.processing = null;
   }
 
-  isEnd(): boolean {
-    const { processing, animations } = this;
-    if (processing && processing.isEnd()) {
-      this.processing = null;
-    }
-    if (!processing) {
-      if (animations.length == 0) {
-        return true;
-      }
-      this.processing = animations.shift();
-    }
-    return false;
-  }
-
-  update(delta: number) {
-    if (this.isEnd()) {
+  animate(delta: number) {
+    const { movements } = this;
+    if (movements.length < 1) {
+      this.finish();
       return;
     }
-    if (this.processing) {
-      this.processing.update(delta);
+    const movement = movements[0];
+    if (movement.isEnd) {
+      movement.omit();
+      this.movements.shift();
+      return this.animate(delta);
     }
+    movement.update(delta);
   }
 
 }

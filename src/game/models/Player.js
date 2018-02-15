@@ -1,31 +1,37 @@
-const Immutable = require('immutable');
+// @flow
 
-module.exports = class Player extends Immutable.Record({
-  id: null,
-  isHuman: true,
-  isOffense: null,
-  deck: [], // [ unitId ]
-  ready: false,
-  selection: [], // [ Unit ]
-}) {
+export default class Player {
+  id: string;
+  isHuman: boolean;
+  isOffense: boolean;
+  deck: Array<number>;
+  isReady: boolean;
+  selection: Array<{ isOffense: boolean, unitId: number }>;
 
-  toData() {
+  constructor(data?: any) {
+    if (data) {
+      if (data.id != undefined) this.id = data.id;
+      if (data.isHuman != undefined) this.isHuman = data.isHuman;
+      if (data.isOffense != undefined) this.isOffense = data.isOffense;
+      if (data.deck != undefined) this.deck = data.deck;
+      if (data.isReady != undefined) this.isReady = data.isReady;
+    }
+    this.selection = [];
+  }
+
+  toData(): any {
     return {
       id: this.id,
+      isHuman: this.isHuman,
       isOffense: this.isOffense,
       deck: this.deck,
-      ready: this.ready,
+      isReady: this.isReady,
     };
   }
 
   reset() {
-    return this.withMutations(mnt => {
-      mnt.delete('isOffense')
-        .set('ready', false)
-        .delete('selection');
-    });
+    this.isReady = false;
+    this.selection = [];
   }
 
-};
-
-
+}

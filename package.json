@@ -15,9 +15,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^3.19.0",
-    "eslint-plugin-flowtype": "^2.39.1",
-    "eslint-plugin-react": "^6.10.3",
+    "eslint": "^4.14.0",
+    "eslint-plugin-flowtype": "^2.40.1",
+    "eslint-plugin-react": "^7.5.1",
     "jest": "^21.2.1",
     "react-test-renderer": "^16.0.0",
     "webpack-dev-server": "^2.9.3"
@@ -25,7 +25,7 @@
   "dependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
-    "babel-eslint": "^8.0.1",
+    "babel-eslint": "^8.1.2",
     "babel-jest": "^21.2.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
@@ -43,14 +43,13 @@
     "express": "^4.16.2",
     "express-session": "^1.15.6",
     "extract-text-webpack-plugin": "^3.0.2",
-    "flow-bin": "^0.57.3",
-    "immutable": "^4.0.0-rc.9",
+    "flow-bin": "^0.62.0",
     "jsonwebtoken": "^7.4.3",
     "path": "^0.12.7",
     "pixi.js": "^4.6.0",
     "pug": "^2.0.0-rc.4",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
     "react-redux": "^5.0.6",
     "react-router-dom": "^4.2.2",
     "redux": "^3.7.2",
@@ -58,7 +57,7 @@
     "socket.io": "^1.7.4",
     "socket.io-client": "^2.0.4",
     "style-loader": "^0.13.2",
-    "uglifyjs-webpack-plugin": "^1.1.2",
+    "uglifyjs-webpack-plugin": "^1.1.5",
     "uid-safe": "^2.1.5",
     "webpack": "^3.8.1"
   }

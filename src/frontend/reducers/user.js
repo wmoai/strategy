@@ -1,8 +1,8 @@
 import {
   FETCH_DECK,
-} from '../../actions';
+} from '../actions';
 
-import * as masterData from '../../../game/data';
+import unitData from '../../game/data/unitData.js';
 
 const initialState = {
   userId: null,
@@ -15,7 +15,7 @@ const user = (state = initialState, action) => {
     case FETCH_DECK: {
       const deck = payload.deck ? (
         payload.deck.map(unitId => {
-          return masterData.unit[unitId];
+          return unitData.get(unitId);
         })
       ) : null;
       return { ...state, deck };

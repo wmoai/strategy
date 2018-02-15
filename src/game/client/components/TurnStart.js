@@ -1,6 +1,7 @@
-
+// @flow
 import PIXI from '../PIXI.js';
 import Component from './Component.js';
+import Updater from '../lib/Updater.js';
 
 const baseStyle = {
   fontSize: 60,
@@ -16,6 +17,16 @@ const outDur = 20;
 const totalDur = enterDur + stopDur + outDur;
 
 export default class TurnStart extends Component {
+  components: {
+    background: any,
+    text: any,
+  };
+  elapsed: number;
+  animationX: {
+    enter: number,
+    stop: number,
+    out: number,
+  };
 
   constructor() {
     super();
@@ -29,7 +40,6 @@ export default class TurnStart extends Component {
     const text = new PIXI.Text();
     text.anchor.x = 0.5;
     text.anchor.y = 0.5;
-    text.y = 200;
     text.visible = false;
     this.container.addChild(text);
 
@@ -39,21 +49,22 @@ export default class TurnStart extends Component {
     };
 
     this.elapsed = 0;
-    this.visible = false;
     this.animationX = {
-      enter: null,
-      stop: null,
-      out: null,
+      enter: 0,
+      stop: 0,
+      out: 0,
     };
   }
 
-  setTurn(isMyTurn, width, height) {
+  createUpdater(isMyTurn: boolean, width: number, height: number) {
     const { components } = this;
 
     this.animationX.enter = width;
     this.animationX.stop = width / 2;
     this.animationX.out = width / 3;
 
+    components.text.y = height / 5 * 2;
+    components.text.x = width * 2;
     if (isMyTurn) {
       components.text.text = 'YOUR TURN';
       components.text.style = {
@@ -71,29 +82,18 @@ export default class TurnStart extends Component {
     }
     components.background.width = width;
     components.background.height = height;
+    components.text.visible = true;
+    components.background.visible = true;
 
     this.elapsed = 0;
-    this.visible = true;
+
+    return new Updater(totalDur, delta => {
+      this.animate(delta);
+    });
   }
 
-  update(delta) {
-    if (this.visible) {
-      const { components } = this;
-      components.text.visible = true;
-      components.background.visible = true;
-      if (this.elapsed > totalDur) {
-        this.visible = false;
-        components.text.visible = false;
-        components.background.visible = false;
-      }
-      this.elapsed += delta;
-      this.animate();
-      return true;
-    }
-    return false;
-  }
-
-  animate() {
+  animate(delta: number) {
+    this.elapsed += delta;
     const { elapsed, components, animationX } = this;
     if (elapsed < enterDur) {
       const { enter, stop } = animationX;

@@ -1,43 +1,47 @@
+// @flow
 
-const STATE = new Map();
-STATE.set('FREE', Symbol());
-STATE.set('MOVE', Symbol());
-STATE.set('ACT', Symbol());
-STATE.set('EMITED', Symbol());
+import GameModel from '../models/Game.js';
+import UnitModel from '../models/Unit.js';
 
+const STATE: Map<string, Symbol> = new Map([
+  ['FREE', Symbol()],
+  ['MOVE', Symbol()],
+  ['ACT', Symbol()],
+  ['EMITED', Symbol()],
+]);
 
 export default class Game {
-  constructor(model) {
-    this._state = STATE.get('FREE');
-    this.hoveredCell = null;
-    this.hoveredUnit = null;
-    this.forcusedCell = null;
-    this.forcusedUnit = null;
-    this.movedCell = null;
-    this.actionForecast = null;
+  _state: ?Symbol;
+  hoveredCell: ?number;
+  hoveredUnit: ?UnitModel;
+  forcusedCell: ?number;
+  forcusedUnit: ?UnitModel;
+  movedCell: ?number;
+  model: GameModel;
 
+  constructor(model: GameModel) {
+    this._state = STATE.get('FREE');
     this.model = model;
   }
 
-  is(str) {
+  is(str: string): boolean {
     return this._state == STATE.get(str);
   }
 
-  set(str) {
+  set(str: string) {
     this._state = STATE.get(str);
   }
 
-  hoverCell(cellId) {
+  hoverCell(cellId: number) {
     this.hoveredCell = cellId;
   }
 
-  hoverUnit(unit) {
+  hoverUnit(unit: ?UnitModel) {
     this.hoveredUnit = unit;
-    this.actionForecast = null;
   }
 
 
-  forcus(unitModel) {
+  forcus(unitModel: UnitModel) {
     if (!unitModel) {
       return;
     }
@@ -46,7 +50,7 @@ export default class Game {
     this.set('MOVE');
   }
 
-  move(cellId) {
+  move(cellId: number) {
     this.movedCell = cellId;
     this.set('ACT');
   }
@@ -62,7 +66,6 @@ export default class Game {
     this.forcusedCell = null;
     this.forcusedUnit = null;
     this.movedCell = null;
-    this.actionForecast = null;
   }
 
 

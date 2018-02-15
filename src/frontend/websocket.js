@@ -1,7 +1,7 @@
 import {
   enterRoom,
   syncRoom,
-  syncGame,
+  // syncGame,
 } from './actions/';
 
 import socketIOClient from 'socket.io-client';

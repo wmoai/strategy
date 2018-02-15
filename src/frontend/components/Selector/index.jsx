@@ -1,18 +1,38 @@
 // @flow
-import React from 'react';
+import React, { Fragment } from 'react';
 import './style.css';
+
+import UnitImage from '../UnitImage/index.jsx';
+
+import type { UnitData } from '../../../game/data/unitData.js';
 
 type Props = {
   costLimit: number,
-  myUnits: Array<any>,
+  myUnits: Array<UnitData>,
   isOffense: boolean,
-  opponentUnits: Array<any>,
+  opponentUnits: Array<UnitData>,
   onSubmit: Array<number> => void,
 };
 type State = {
   selected: Array<any>,
   isEmitted: boolean,
 };
+
+function Unit({ unit, isSelected=false, isOffense } : {
+  unit: UnitData,
+  isSelected?: boolean,
+  isOffense: boolean,
+}) {
+  return (
+    <Fragment>
+      <div className="sel-unit-image">
+        <UnitImage klassId={unit.klass} isOffense={isOffense} isGray={!isSelected} />
+      </div>
+      <div className="sel-unit-name">{unit.name}</div>
+      <div className="sel-unit-cost">{unit.cost}</div>
+    </Fragment>
+  );
+}
 
 export default class Selector extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -40,11 +60,7 @@ export default class Selector extends React.Component<Props, State> {
 
   render() {
     const { myUnits, isOffense, opponentUnits, onSubmit } = this.props;
-    let { costLimit } = this.props;
-    if (isOffense === false) {
-      costLimit += 2;
-    }
-    const ssize = 48;
+    const { costLimit } = this.props;
     const { selected } = this.state;
 
     let cost = 0;
@@ -52,9 +68,8 @@ export default class Selector extends React.Component<Props, State> {
       cost += myUnits[i].cost;
     });
 
-    let costStyle = (cost > costLimit) ? {
+    let costStyle = (cost < 1 || cost > costLimit) ? {
       color: 'red',
-      fontWeight: 'bold'
     } : null;
     const submittable = cost > 0 && cost <= costLimit;
 
@@ -62,19 +77,15 @@ export default class Selector extends React.Component<Props, State> {
       <div id="sel-base">
         <h2>出撃ユニット選択</h2>
         <div id="sel-container">
-          <div className="sel-row">
-            <div className="sel-side">自軍</div>
-            <div className={'sel-box ' + (isOffense ? 'box-offense' : 'box-defense')}>
+          <div className={'sel-player ' + (isOffense ? 'box-offense' : 'box-defense')}>
+            <div className="sel-side">
+              <div className="sel-army">自軍</div>
               <div className="sel-roll">{isOffense ? '攻撃' : '防衛'}</div>
+            </div>
+            <div className="sel-box">
               <ul className="sel-units-list">
                 {myUnits.map((unit, i) => {
                   const isSelected = (selected.indexOf(i) >= 0);
-                  const bgposition = {
-                    width: ssize,
-                    height: ssize,
-                    backgroundPositionX: -(unit.klass-1)*ssize,
-                    backgroundPositionY: !isSelected ? 0 : isOffense ? -ssize*2 : -ssize,
-                  };
                   return (
                     <li
                       key={i}
@@ -85,18 +96,22 @@ export default class Selector extends React.Component<Props, State> {
                         }
                         this.selectSortie(i);
                       }}>
-                      <div className="sel-unit-image" style={bgposition} />
-                      <div className="sel-unit-name">{unit.name}</div>
-                      <div className="sel-unit-cost">{unit.cost}</div>
+                      <Unit
+                        unit={unit}
+                        isSelected={isSelected}
+                        isOffense={isOffense}
+                      />
                     </li>
                   );
                 })}
               </ul>
             </div>
 
-            <div className="sel-footer">
+            <div className="sel-foot">
               <div id="sel-totalcost">
-                コスト：<span style={costStyle}>{cost}</span>/{costLimit}
+                <div>コスト</div>
+                <div id="sel-currentcost" style={costStyle}>{cost}</div>
+                <div id="sel-limitcost">/{costLimit}</div>
               </div>
               <button
                 id="sel-submitter"
@@ -113,23 +128,20 @@ export default class Selector extends React.Component<Props, State> {
               </button>
             </div>
           </div>
-          <div className="sel-row">
-            <div className="sel-side">敵軍</div>
-            <div className={'sel-box ' + (!isOffense ? 'box-offense' : 'box-defense')}>
+          <div className={'sel-player ' + (!isOffense ? 'box-offense' : 'box-defense')}>
+            <div className="sel-side">
+              <div className="sel-army">敵軍</div>
               <div className="sel-roll">{!isOffense ? '攻撃' : '防衛'}</div>
+            </div>
+            <div className="sel-box">
               <ul className="sel-units-list">
                 {opponentUnits.map((unit, i) => {
-                  const bgposition = {
-                    width: ssize,
-                    height: ssize,
-                    backgroundPositionX: -(unit.klass-1)*ssize,
-                    backgroundPositionY: 0,
-                  };
                   return (
                     <li key={i}>
-                      <div className="sel-unit-image" style={bgposition} />
-                      <div className="sel-unit-name">{unit.name}</div>
-                      <div className="sel-unit-cost">{unit.cost}</div>
+                      <Unit
+                        unit={unit}
+                        isOffense={isOffense}
+                      />
                     </li>
                   );
                 })}

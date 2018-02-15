@@ -1,37 +1,67 @@
+// @flow
 import React from 'react';
 
 import './style.css';
 
-// import StatusBar from '../StatusBar/StatusBar.jsx';
 import ControlPannel from '../ControlPannel/index.jsx';
-// import RefUnit from '../RefUnit//RefUnit.jsx';
-// import Forecast from '../Forecast/Forecast.jsx';
 import Intro from '../Intro/index.jsx';
-import Result from '../Result/Result.jsx';
+import Result from '../Result/index.jsx';
 
 import Client from '../../../game/client/index.js';
 
-export default class Game extends React.Component {
-  constructor(props) {
+import GameModel from '../../../game/models/Game.js';
+import type { Forecast } from '../../../game/models/Game.js';
+import UnitModel from '../../../game/models/Unit.js';
+import TerrainModel from '../../../game/models/Terrain.js';
+
+type Props = {
+  isOffense: boolean,
+  game: GameModel,
+  socket: any,
+  isSolo: boolean,
+  onSelectCell: number => void,
+  onHoverCell: number => void,
+  onClickEndTurn: void => void,
+  onReturnRoom: void => void,
+};
+type State = {
+  initialized: boolean,
+  introduction: boolean,
+  mouseX: number,
+  mouseY: number,
+  isMyTurn: boolean,
+  turnRemained: number,
+  hoveredUnit: ?UnitModel,
+  hoveredTerrain: ?TerrainModel,
+  actionForecast: ?Forecast,
+  winner: ?boolean,
+}
+
+export default class Game extends React.Component<Props, State> {
+  pixiCanvas: HTMLCanvasElement;
+  screenBase: HTMLDivElement;
+  client: Client;
+  resizeListener: void => void;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       initialized: false,
       introduction: true,
       mouseX: 0,
       mouseY: 0,
-
-      turnRemained: null,
+      isMyTurn: false,
+      turnRemained: 0,
       hoveredUnit: null,
       hoveredTerrain: null,
       actionForecast: null,
+      winner: null,
     };
-    this.images = {};
   }
 
   componentDidMount() {
-    const { game, cellSize=40, isOffense, socket, isSolo } = this.props;
-
-    // const rect = this.container.getBoundingClientRect();
+    const { game, isOffense, socket, isSolo } = this.props;
+    const cellSize = 40;
 
     const client = new Client({
       canvas: this.pixiCanvas,
@@ -50,8 +80,14 @@ export default class Game extends React.Component {
         actionForecast: forecast,
       });
     });
-    client.addEventListener('changeturn', ({ turnRemained }) => {
-      this.setState({ turnRemained });
+    client.addEventListener('changeturn', ({ turn, turnRemained }) => {
+      this.setState({
+        isMyTurn: turn === isOffense,
+        turnRemained
+      });
+    });
+    client.addEventListener('endgame', winner => {
+      this.setState({ winner });
     });
     this.client = client;
     
@@ -61,7 +97,7 @@ export default class Game extends React.Component {
 
     setTimeout(() => {
       this.endIntroduction();
-    }, 5000);
+    }, 3000);
 
     this.resizeListener = () => {
       this.client.resize(this.screenBase.clientWidth, this.screenBase.clientHeight);
@@ -81,11 +117,7 @@ export default class Game extends React.Component {
     }
   }
 
-  // cellPoint(clientX, clientY) {
-    // return this.client.fieldCoordinates(clientX, clientY);
-  // }
-
-  changeScale(deltaY) {
+  changeScale(deltaY: number) {
     this.client.zoom(deltaY / 500);
   }
 
@@ -95,27 +127,6 @@ export default class Game extends React.Component {
       game,
       onReturnRoom,
     } = this.props;
-
-    const naviStyle = {};
-    // if (this.client) {
-      // const { mouseY, mouseX } = this.state;
-      // if (this.state.hoveredUnit || this.state.actionForecast) {
-        // const vr = this.state.mouseY / window.innerHeight;
-        // const hr = this.state.mouseX / window.innerWidth;
-        // const { x, y } = this.cellPoint(mouseX, mouseY);
-        // console.log(x,y);
-        // if (vr < .5) {
-          // naviStyle['top'] = this.client.clientYOfCell(y+1.5);
-        // } else {
-          // naviStyle['bottom'] = this.container.clientHeight - this.client.clientYOfCell(y-.5);
-        // }
-        // if (hr < .5) {
-          // naviStyle['left'] = this.client.clientXOfCell(x);
-        // } else {
-          // naviStyle['right'] = this.container.clientWidth - this.client.clientXOfCell(x+1);
-        // }
-      // }
-    // }
 
     return (
       <div id="screen-container">
@@ -127,11 +138,19 @@ export default class Game extends React.Component {
             isOffense={isOffense}
             turnRemained={this.state.turnRemained}
             forecast={this.state.actionForecast}
+            isMyTurn={this.state.isMyTurn}
+            onClickEndTurn={() => {
+              this.client.endTurn();
+            }}
           />
         </div>
         <div
           id="screen-base"
-          ref={block => this.screenBase = block}
+          ref={block => {
+            if (block) {
+              this.screenBase = block;
+            }
+          }}
           onMouseMove={e => {
             if (!this.state.initialized) {
               return;
@@ -147,7 +166,11 @@ export default class Game extends React.Component {
         >
           <canvas
             id="screen-canvas"
-            ref={canvas => { this.pixiCanvas = canvas; }}
+            ref={canvas => {
+              if (canvas) {
+                this.pixiCanvas = canvas;
+              }
+            }}
           />
         </div>
         {this.state.introduction &&
@@ -159,9 +182,9 @@ export default class Game extends React.Component {
               }}
             />
         }
-        {game.isEnd &&
+        {this.state.winner != null &&
             <Result
-              won={game.winner == isOffense}
+              won={this.state.winner == isOffense}
               onReturnRoom={onReturnRoom}
             />
         }

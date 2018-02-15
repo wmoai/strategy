@@ -16,12 +16,21 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-const RoomServer = require('./RoomServer.js');
+import RoomServer from './RoomServer.js';
 const roomServer = new RoomServer();
-const resource = require('./game/data');
+import unitData from './game/data/unitData.js';
 
 app.get('/user', (req, res) => {
   jwt.verify(req.cookies.jwt, JWT_SECRET, (err, data) => {
+    if (err || !data) {
+      const { id, deck } = createUser(res); 
+      res.send({
+        id,
+        deck,
+      });
+      // return res.status(204).send();
+      return;
+    }
     res.send({
       id: data.userId,
       deck: data.deck
@@ -30,30 +39,37 @@ app.get('/user', (req, res) => {
 });
 
 app.post('/deck', (req, res) => {
-  const common = Object.values(resource.unit).filter(unit => unit.cost == 2);
-  const elite = Object.values(resource.unit).filter(unit => unit.cost == 3);
-  const epic = Object.values(resource.unit).filter(unit => unit.cost == 5);
-  const deck = [].concat(
-    sealPack(common, 6),
-    sealPack(elite, 4),
-    sealPack(epic, 2)
-  );
-  res.cookie('jwt', jwt.sign({
-    userId: uid(24),
-    deck
-  }, JWT_SECRET));
-
+  const { deck } = createUser(res); 
   res.send({ deck });
 });
 
+function createUser(res) {
+  const units = Array.from(unitData.values());
+  const common = Object.values(units).filter(unit => unit.cost == 3);
+  const elite = Object.values(units).filter(unit => unit.cost == 4);
+  const epic = Object.values(units).filter(unit => unit.cost == 5);
+  const deck = [].concat(
+    sealPack(common, 4),
+    sealPack(elite, 6),
+    sealPack(epic, 2)
+  );
+  const userId = uid(24);
+  res.cookie('jwt', jwt.sign({
+    userId,
+    deck
+  }, JWT_SECRET));
+  return {
+    id: userId,
+    deck
+  };
+}
 
 function sealPack(units, count) {
   const indexes = [];
   while(indexes.length < count) {
-    const sel = Math.floor(Math.random() * units.length);
-    if (!indexes.includes(sel)) {
-      indexes.push(sel);
-    }
+    const rand = Math.random();
+    const sel = Math.floor(rand * units.length);
+    indexes.push(sel);
   }
   return indexes.map(index => {
     return units[index].id;
@@ -64,9 +80,8 @@ app.get('/*', (req, res) => {
   res.render('index2');
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => { // eslint-disable-line
   res.status(500).send(err.message);
-  // console.log(next, err.message);
 });
 
 

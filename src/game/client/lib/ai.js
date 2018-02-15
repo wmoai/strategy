@@ -1,7 +1,19 @@
+// @flow
+
 import Ranges from './Ranges.js';
 import * as masterData from '../../data';
 
-export function getActionByAI(gameModel, isOffense) {
+import GameModel from '../../models/Game.js';
+import UnitModel from '../../models/Unit.js';
+
+type Action = {
+  from: number,
+  to: number,
+  target?: number,
+  unitModel: UnitModel,
+};
+
+export function getActionByAI(gameModel: GameModel, isOffense: boolean) {
   if (gameModel.state.isEnd) {
     return null;
   }
@@ -23,28 +35,35 @@ export function getActionByAI(gameModel, isOffense) {
         return target && target.isOffense === unit.isOffense && target.accumulatedDamage() !== 0;
       }
     });
-    // 行動パラメータを算出
-    const actions = targetCellIds.map(tcell => {
-      const froms = ranges.getState(tcell).actionableFrom;
+    const fromTos = [];
+    for (let to of targetCellIds) {
+      const froms = ranges.getState(to).actionableFrom;
       let from;
       // 空のfromセルを抽出
-      // FIXME 地形を加味した評価値
       froms.forEach(_from => {
         const funit = gameModel.getUnit(_from);
         if (funit == null || funit === unit) {
           from = _from;
         }
       });
-      const target = gameModel.getUnit(tcell);
+      if (from) {
+        fromTos.push({ from, to });
+      }
+    }
+    const { field } = gameModel;
+    // 行動パラメータを算出
+    const actions = fromTos.map(({ from, to }) => {
+      let value = 0;
+      const target = gameModel.getUnit(to);
+      if (target) {
+        // 行動評価値 : 行動期待値の対象影響割合
+        // FIXME 地形を加味した評価値
+        value = target.expectedEvaluationBy(unit, field.distance(from, to), masterData.getTerrain(field.cellTerrainId(to))) / target.state.hp;
+      }
       return {
         from,
-        to: tcell,
-        value: (
-          // 行動評価値
-          from != undefined
-          ? target.expectedEvaluationBy(unit, masterData.getTerrain(gameModel.field.cellTerrainId(tcell)).avoidance)
-          : null
-        ),
+        to,
+        value,
         ranges,
       };
     }).filter(actionCell => {
@@ -72,11 +91,10 @@ export function getActionByAI(gameModel, isOffense) {
     to: priAction.from,
     target: priAction.to,
     unitModel: priUnit,
-    route: priAction.ranges.getRoute(priAction.from),
   };
 }
 
-export function getMovementByAI(gameModel, isOffense) {
+export function getMovementByAI(gameModel: GameModel, isOffense: boolean): ?Action {
   const units = gameModel.ownedUnits(!isOffense).filter(unit => !unit.state.isActed);
 
   if (units.length == 0) {
@@ -104,24 +122,19 @@ export function getMovementByAI(gameModel, isOffense) {
     }
   });
   if (!goal) {
-    return {
-      from: unitState.cellId,
-      to: unitState.cellId,
-    };
+    return null;
   }
   const route = ranges.getRoute(goal).reverse();
   for (let i=0; i<route.length; i++) {
     const target = route[i];
-    if (ranges.getState(target).isMovable && !gameModel.getUnit(target)) {
+    const thatUnit = gameModel.getUnit(target);
+    if (ranges.getState(target).isMovable && (!thatUnit || thatUnit == unit)) {
       return {
         from: unitState.cellId,
         to: target,
         unitModel: unit,
-        route: ranges.getRoute(target),
       };
     }
   }
 }
-
-
 

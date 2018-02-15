@@ -1,50 +1,60 @@
-const Immutable = require('immutable');
+// @flow
 import Game from './Game.js';
-const Player = require('./Player.js');
-const COM = require('./COM.js');
+import Player from './Player.js';
+import COM from './COM.js';
 
-const STATE = Immutable.Map({
-  ROOM: 10,
-  SELECT: 20,
-  BATTLE: 30,
-});
+const STATE: Map<'ROOM'|'SELECT'|'BATTLE', number> = new Map([
+  ['ROOM', 10],
+  ['SELECT', 20],
+  ['BATTLE', 30],
+]);
 
-module.exports = class Room extends Immutable.Record({
-  id: null,
-  isSolo: false,
-  state: STATE.get('ROOM'),
-  players: Immutable.Map(),
-  game: null,
-}) {
+export default class Room {
+  id: string;
+  isSolo: boolean;
+  state: number;
+  players: Map<string, Player>;
+  game: ?Game;
+
+  constructor(data?: {
+    id?: string,
+    isSolo?: boolean,
+    state?: number,
+    players?: Map<string, Player>,
+    game?: Game,
+  }) {
+    this.isSolo = false;
+    this.setState('ROOM');
+    this.players = new Map();
+
+    if (data) {
+      if (data.id) this.id = data.id;
+      if (data.isSolo) this.isSolo = data.isSolo;
+      if (data.state) this.state = data.state;
+      if (data.players) this.players = new Map(data.players);
+      if (data.game) this.game = data.game;
+    }
+  }
 
   toData() {
-    const json = super.toJSON();
+    const { id, isSolo, state, players } = this;
+    let game;
     if (this.game) {
-      json.game = this.game.toData();
+      game = this.game.toData();
     }
-    return json;
+    return { id, isSolo, state, players, game};
+
   }
 
-  static restore(data) {
+  static restore(data: any) {
     const room = new Room(data);
-    return room.withMutations(mnt => {
-      const players = {};
-      Object.values(data.players).forEach(playerData => {
-        const player = new Player(playerData);
-        players[player.id] = player;
-      });
-      
-      mnt.syncGame(data.game)
-        .set('players', data.players
-          ? Immutable.Map(players)
-          : Immutable.Map()
-        );
-    });
+    room.syncGame(data.game);
+    return room;
   }
 
-  static soloRoom(userId, deck) {
+  static soloRoom(userId: string, deck: Array<number>) {
     const room = new Room({
-      id: 1,
+      id: 'solo',
       isSolo: true,
     });
     const player = new Player({
@@ -52,98 +62,103 @@ module.exports = class Room extends Immutable.Record({
       deck: deck
     });
     const com = new COM();
-    return room.withMutations(mnt => {
-      mnt.addPlayer(player)
-        .addPlayer(com)
-        .getBattleReady(userId)
-        .mightStartGame()
-        .selectUnits(com.id, Object.keys(com.deck));
-    });
+    room.addPlayer(player);
+    room.addPlayer(com);
+    room.getBattleReady(userId);
+    room.mightStartGame();
+    room.selectUnits(com.id, Array.from(com.deck.keys()));
+    return room;
   }
 
-  syncGame(data) {
+  syncGame(data: any) {
     if (!data) {
       return this;
     }
-    // return this.set('game', data ? Game.restore(data) : null);
-    return this.set('game', new Game(data));
+    this.game = new Game(data);
+    return this;
   }
 
-  setState(str) {
-    return this.set('state', STATE.get(str));
+  setState(str: 'ROOM'|'SELECT'|'BATTLE') {
+    const newState = STATE.get(str);
+    if (newState != null) {
+      this.state = newState;
+    }
+    return this;
   }
 
-  stateIs(str) {
+  stateIs(str: 'ROOM'|'SELECT'|'BATTLE') {
     return this.state === STATE.get(str);
   }
 
-  addPlayer(player) {
-    return this.set('players', this.players.set(player.id, player));
+  addPlayer(player: Player) {
+    this.players.set(player.id, player);
+    return this;
   }
 
-  leave(userId) {
-    return this.set('players', this.players.delete(userId));
+  leave(userId: string) {
+    this.players.delete(userId);
+    return this;
   }
 
-  player(userId) {
+  player(userId: string): ?Player {
     const player = this.players.get(userId);
-    // if (!player) {
-      // throw `player[${userId}] is not exists.`;
-    // }
     return player;
   }
 
-  opponent(userId) {
+  opponent(userId: string) {
     let opponent;
-    this.players.keySeq().forEach(key => {
+    for (let key of this.players.keys()) {
       if (key !== userId) {
         opponent = this.player(key);
       }
-    });
+    }
     return opponent;
   }
 
-  isTurnPlayer(userId) {
+  isTurnPlayer(userId: string) {
     const player = this.player(userId);
-    return this.game && player && player.isOffense == this.game.getState().turn;
+    return this.game && player && player.isOffense == this.game.state.turn;
   }
 
-  getBattleReady(userId) {
+  getBattleReady(userId: string) {
     const player = this.player(userId);
-    return this.set(
-      'players',
-      this.players.set(userId, player.set('ready', true))
-    );
+    if (player) {
+      player.isReady = true;
+      this.players.set(userId, player);
+    }
+    return this;
   }
 
   mightStartGame() {
+    let isReady = true;
+    for (let player of this.players.values()) {
+      isReady = isReady && player.isReady;
+    }
     if (
       this.state !== STATE.get('ROOM')
-      || this.players.count() < 2
-      || !this.players.reduce((pre, cur) => pre.ready && cur.ready)
+      || this.players.size < 2
+      || !isReady
     ) {
       return this;
     }
     let tgl = Math.random() >= 0.5;
 
-    return this.withMutations(mnt => {
-      // mnt.set('game', (new Game()).setField())
-      mnt.set('game', new Game())
-        .set('players', mnt.players.map(player => {
-          // decide offense side
-          tgl = !tgl;
-          return player.set('isOffense', tgl);
-        }))
-        .setState('SELECT');
-    });
+    this.game = new Game();
+    this.players = new Map(Array.from(this.players.values()).map(player => {
+      // decide offense side
+      tgl = !tgl;
+      player.isOffense = tgl;
+      return [player.id, player];
+    }));
+    this.setState('SELECT');
+    return this;
   }
 
-  selectUnits(userId, list) {
+  selectUnits(userId: string, list: Array<number>) {
     const player = this.player(userId);
-    // const units = list.map(index => createUnit({
-      // isOffense: player.isOffense,
-      // unitId: player.deck[index],
-    // }));
+    if (!player) {
+      return this;
+    }
     const units = list.map(index => {
       return {
         isOffense: player.isOffense,
@@ -152,23 +167,25 @@ module.exports = class Room extends Immutable.Record({
     });
     //FIXME Check cost and Reject
 
-    return this.set('players', this.players.set(userId, player.set('selection', units)));
+    player.selection = units;
+    this.players.set(userId, player);
+    return this;
   }
 
   mightEngage() {
-    const canEngage = this.players.reduce((pre, cur) => {
-      return pre.selection && pre.selection.length > 0 && cur.selection && cur.selection.length > 0;
-    });
-    if (!canEngage) {
+    let canEngage = true;
+    for (let player of this.players.values()) {
+      canEngage = canEngage && (player.selection && player.selection.length > 0);
+    }
+    const { game } = this;
+    if (!canEngage || !game) {
       return this;
     }
-    const { field } = this.game;
-    let units = [];
-    this.players.forEach(player => {
+    const { field } = game;
+    let units: Array<{ isOffense: boolean, unitId: number }> = [];
+    for(let player of this.players.values()) {
       units = units.concat(
         player.selection.map((unit, seq) => {
-          // unit.setCellId(field.initialPos(player.isOffense)[seq]);
-          // return unit;
           return {
             ...unit,
             state: {
@@ -177,41 +194,46 @@ module.exports = class Room extends Immutable.Record({
           };
         })
       );
-    });
+    }
 
-    this.game.initUnits(units);
+    game.initUnits(units);
     return this.setState('BATTLE');
   }
 
-  canAct(userId) {
+  canAct(userId: string) {
     return this.state === STATE.get('BATTLE') && this.isTurnPlayer(userId);
   }
 
-  actInGame(userId, from, to, target) {
-    if (this.canAct(userId)) {
-      this.game.fixAction(from, to, target);
+  actInGame(userId: string, from: number, to: number, target: number) {
+    const { game } = this;
+    if (game && this.canAct(userId)) {
+      return game.fixAction(from, to, target);
     }
-    return this;
   }
 
-  endTurn(userId) {
-    if (this.canAct(userId)) {
-      this.game.changeTurn();
+  endTurn(userId: string) {
+    const { game } = this;
+    if (game && this.canAct(userId)) {
+      game.changeTurn();
     }
     return this;
   }
 
   mightResetPlayers() {
-    if (!this.game.isEnd) {
+    const { game } = this;
+    if (!game) {
       return this;
     }
-    return this.withMutations(mnt => {
-      mnt.set(
-        'players',
-        mnt.players.map(player => player.reset())
-      ).setState('ROOM');
-    });
+    if (!game.state.isEnd) {
+      return this;
+    }
+
+    this.players = new Map(Array.from(this.players.values()).map(player => {
+      player.reset();
+      return [player.id, player];
+    }));
+    this.setState('ROOM');
+    return this;
   }
 
-
-};
+}

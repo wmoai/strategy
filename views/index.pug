@@ -19,8 +19,6 @@ html
               th 守
               th 信
               th 技
-              th 運
-              th 命中
               th 移動
               th 射程
               th コスト
@@ -30,12 +28,10 @@ html
                 td
                   label(for=`unit_${unit.id}`)= unit.name
                 td= unit.hp
-                td= unit.pow
+                td= unit.str
                 td= unit.dff
                 td= unit.fth
                 td= unit.skl
-                td= unit.luc
-                td= unit.hit
                 td= unit.move
                 td #{unit.min_range}~#{unit.max_range}
                 td= unit.cost

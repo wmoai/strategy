@@ -1,47 +1,45 @@
+// @flow
 import React from 'react';
-
 import './style.css';
 
-export default class Intro extends React.Component {
+import Game from '../../../game/models/Game.js';
 
-  render() {
-    const { isOffense, game, onClick } = this.props;
-    return (
-      <div
-        id="intro-base"
-        onClick={e => onClick(e)}
-      >
-        <div className="intro-box win">
-          <div className="head">勝利条件</div>
-          <ul>
-            <li>
-              {isOffense ? (
-                '敵拠点に到達'
-              ) : (
-                `${game.turnRemained()}ターン防衛`
-              )}
-            </li>
-            <li>敵軍の全滅</li>
-          </ul>
-        </div>
-        <div className="intro-box lose">
-          <div className="head">敗北条件</div>
-          <ul>
-            <li>
-              {isOffense ? (
-                `${game.turnRemained()}ターン経過`
-              ) : (
-                '自軍拠点が占拠される'
-              )}
-            </li>
-            <li>自軍の全滅</li>
-          </ul>
+type Props = {
+  isOffense: boolean,
+  game: Game,
+  onClick: Event => void,
+};
 
-        </div>
+function Attack() {
+  return (
+    <div className="intro-box">
+      <div className="intro-box-head">攻撃軍</div>
+      <div>敵拠点を占領せよ</div>
+    </div>
+  );
+}
 
-      </div>
-    );
-  }
+function Defence() {
+  return (
+    <div className="intro-box">
+      <div className="intro-box-head">防衛軍</div>
+      <div>自軍拠点を防衛せよ</div>
+    </div>
+  );
+}
 
+export default function Intro({ isOffense, onClick }: Props) {
+  return (
+    <div
+      id="intro-base"
+      onClick={e => onClick(e)}
+    >
+      {isOffense ? (
+        <Attack />
+      ) : (
+        <Defence />
+      )}
+    </div>
+  );
 
 }

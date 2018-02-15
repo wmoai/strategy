@@ -52,7 +52,7 @@ export default class TerrainComponent extends Component {
   createTerrainSprite(
     x: number,
     y: number,
-    terrain: Terrain,
+    terrainId: number,
     same: {
       top: boolean,
       left: boolean,
@@ -83,7 +83,11 @@ export default class TerrainComponent extends Component {
     }
     let cornerI = (top ? 0 : 2) + (left ? 0: 1);
 
-    const sprite = new PIXI.Sprite(resources.terrain.get(terrain)[formI][cornerI]);
+    const terrainTexture = resources.terrain.get(terrainId);
+    if (!terrainTexture) {
+      throw `terrain ${terrainId} is not found.`;
+    }
+    const sprite = new PIXI.Sprite(terrainTexture[formI][cornerI]);
     sprite.x = x * cellSize + (left ? 0 : cellSize/2);
     sprite.y = y * cellSize + (top ? 0 : cellSize/2);
     sprite.width = cellSize/2;

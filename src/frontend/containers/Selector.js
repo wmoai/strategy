@@ -1,3 +1,5 @@
+// @flow
+
 import { connect } from 'react-redux';
 import Component from '../components/Selector/index.jsx';
 import { selectUnits } from '../actions';
@@ -6,10 +8,12 @@ import * as masterData from '../../game/data';
 
 const mapStateToProps = state => {
   const { me, opponent } = state.match;
+  const myUnits = me.deck ? me.deck.map(uid => masterData.unit.get(uid)) : [];
+  const opponentUnits = opponent.deck ? opponent.deck.map(uid => masterData.unit.get(uid)) : [];
   return {
-    myUnits: me.deck ? me.deck.map(uid => masterData.unit[uid]) : [],
+    myUnits,
     isOffense: me.isOffense,
-    opponentUnits : opponent.deck ? opponent.deck.map(uid => masterData.unit[uid]) : [],
+    opponentUnits,
   };
 };
 

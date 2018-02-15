@@ -8,7 +8,8 @@ import Ranges from '../lib/Ranges.js';
 import Component from './Component.js';
 import UnitComponent from './Unit.js';
 import RangesComponent from './Ranges.js';
-import MoveUnitAnimation from './Animation/MoveUnitAnimation.js';
+import MoveUnit from '../animations/MoveUnit.js';
+import ChangeHp from '../animations/ChangeHp.js';
 
 
 export default class UnitsComponent extends Component {
@@ -48,43 +49,31 @@ export default class UnitsComponent extends Component {
     };
   }
 
-  update(delta: number, unitModels: Array<Unit>, ranges: Ranges, animation: MoveUnitAnimation) {
-    if (this.updateAnimation(delta, animation)) {
-      return true;
-    } else {
-      let isUpdated = false;
-      if (this.currentUnitModels !== unitModels) {
-        this.currentUnitModels = unitModels;
-        this.updateUnits(unitModels);
-        isUpdated = true;
-      }
-      if (this.currentRanges !== ranges) {
-        this.currentRanges = ranges;
-        this.updateRanges(ranges);
-        isUpdated = true;
-      }
-      return isUpdated;
+  update(unitModels: Array<Unit>, ranges: ?Ranges) {
+    let isUpdated = false;
+    if (this.currentUnitModels !== unitModels) {
+      this.currentUnitModels = unitModels;
+      this.updateUnits(unitModels);
+      isUpdated = true;
     }
-  }
-
-  updateAnimation(delta: number, animation: MoveUnitAnimation) {
-    if (!animation || animation.isEnd()) {
-      return false;
+    if (this.currentRanges !== ranges) {
+      this.currentRanges = ranges;
+      this.updateRanges(ranges);
+      isUpdated = true;
     }
-    animation.update(delta);
-    return true;
+    return isUpdated;
   }
 
   updateUnits(unitModels: Array<Unit>) {
     unitModels.forEach(unitModel => {
       const unit = this.unitsMap.get(unitModel.seq);
       if (unit) {
-        unit.update(unitModel);
+        unit.update(unitModel.state);
       }
     });
   }
 
-  updateRanges(ranges: Ranges) {
+  updateRanges(ranges: ?Ranges) {
     const layer = this.layer.ranges;
     layer.removeChildren();
     if (ranges) {
@@ -93,15 +82,26 @@ export default class UnitsComponent extends Component {
     }
   }
 
-  createMoveAnimation(unitModel: Unit, route: Array<number>): ?MoveUnitAnimation {
+  createMoveAnimation(unitModel: Unit, route: Array<number>): ?MoveUnit {
     const { unitsMap, field, cellSize } = this;
     const unit = unitsMap.get(unitModel.seq);
     if (unit) {
-      return new MoveUnitAnimation({
+      return new MoveUnit({
         container: unit.container,
         route,
         field,
         cellSize
+      });
+    }
+  }
+
+  createChangeHpAnimation(change: { seq: number, hp: number }): ?ChangeHp {
+    const { unitsMap } = this;
+    const unit = unitsMap.get(change.seq);
+    if (unit) {
+      return new ChangeHp({
+        unit,
+        width: unit.lifeWidth(change.hp),
       });
     }
   }

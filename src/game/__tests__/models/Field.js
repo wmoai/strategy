@@ -1,9 +1,4 @@
-
-const Field = require('../../models/Field.js');
-
-beforeAll(() => {
-  require('../../data').init();
-});
+import Field from '../../models/Field.js';
 
 describe('Field', () => {
 

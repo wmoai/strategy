@@ -17,6 +17,7 @@ import {
   GET_BATTLE_READY,
   SELECT_UNITS,
   END_TURN,
+  RETURN_ROOM,
 } from './actions/';
 import Websocket from './websocket.js';
 
@@ -44,7 +45,9 @@ const socketMiddleware = store => next => action => {
       return state.socket.emit('selectUnits', {list: payload.selectedList});
     case END_TURN:
       return state.socket.emit('endTurn');
-
+    case RETURN_ROOM:
+      state.socket.emit('returnRoom');
+      break;
   }
   return next(action);
 };

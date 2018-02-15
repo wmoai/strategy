@@ -1,16 +1,15 @@
-const Player = require('./Player.js');
+// @flow
 
-module.exports = class COM extends Player {
+import Player from './Player.js';
 
-  constructor(args) {
-    super(args);
-    return this.withMutations(mnt => {
-      mnt.set('id', 'com')
-        .set('isHuman', false)
-        .set('deck', [1,2,3,4,5,6,11])
-        .set('ready', true);
-    });
+export default class COM extends Player {
+
+  constructor() {
+    super();
+    this.id = 'COM';
+    this.isHuman = false;
+    this.deck = [1,2,2,2,5,6];
+    this.isReady = true;
   }
 
-
-};
+}

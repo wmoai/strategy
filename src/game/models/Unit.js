@@ -1,41 +1,15 @@
 // @flow
+import * as masterData from '../data/';
+import type { UnitData } from '../data/unitData.js';
+import type { KlassData } from '../data/klassData.js';
+import Terrain from './Terrain.js';
 
-type UnitState = {
+export type UnitState = {
   cellId: number,
   hp: number,
   isActed: boolean,
 };
-export type UnitData = {
-  unitId: number,
-  isOffense: boolean,
-  seq: number,
-  state: UnitState,
-};
-type UnitStatus = {
-  name: string,
-  id: number,
-  hp: number,
-  pow: number,
-  dff: number,
-  fth: number,
-  skl: number,
-  luc: number,
-  hit: number,
-  move: number,
-  min_range: number,
-  max_range: number,
-  cost: number,
-  klass: number,
-};
-type UnitClass = {
-  name: string,
-  id: number,
-  magical: number,
-  healer: number,
-  move: string,
-};
 
-import * as masterData from '../data/';
 
 const initialState: UnitState = {
   cellId: -1,
@@ -45,16 +19,27 @@ const initialState: UnitState = {
 
 export default class Unit {
   isOffense: boolean;
-  status: UnitStatus;
-  klass: UnitClass;
+  status: UnitData;
+  klass: KlassData;
   seq: number;
   state: UnitState;
 
-  constructor({ unitId, isOffense, seq, state }: UnitData) {
+  constructor({ unitId, isOffense, seq, state }: {
+    unitId: number,
+    isOffense: boolean,
+    seq: number,
+    state: UnitState,
+  }) {
     this.isOffense = isOffense;
     this.seq = seq;
-    this.status = masterData.unit[unitId];
-    this.klass = masterData.klass[this.status.klass];
+    const unitData = masterData.unit.get(unitId);
+    if (unitData) {
+      this.status = unitData;
+      const klassData = masterData.klass.get(unitData.klass);
+      if (klassData) {
+        this.klass = klassData;
+      }
+    }
 
     this.state = { ...initialState, hp: this.status.hp };
     if (state) {
@@ -62,7 +47,7 @@ export default class Unit {
     }
   }
 
-  toData(): UnitData {
+  toData() {
     const { isOffense, seq, state } = this;
     return {
       unitId: this.status.id,
@@ -72,7 +57,7 @@ export default class Unit {
     };
   }
 
-  isAlive(): boolean {
+  isAlive() {
     return this.state.hp > 0;
   }
 
@@ -84,39 +69,43 @@ export default class Unit {
     this.state = {...this.state, isActed};
   }
 
-  actBy(actor: Unit, terrainAvoidance: number=0) {
+  actBy(actor: Unit, distance: number, terrain: Terrain) {
     const { state, status } = this;
     const { hp } = state;
+    let variation = 0;
     if (actor.klass.healer) {
-      const newHp = Math.min(hp + actor.status.pow, status.hp);
+      variation = actor.status.str;
+      const newHp = Math.min(hp + variation, status.hp);
       this.state = {...this.state, hp: newHp};
     } else {
-      if (Math.random()*100 < this.hitRateBy(actor, terrainAvoidance)) {
-        const newHp = Math.max(hp - this.calculatedEffectValueBy(actor), 0);
+      const ev = Math.random()*100;
+      const threshold = this.hitRateBy(actor, distance, terrain);
+      if (ev < threshold) {
+        variation = this.calculatedEffectValueBy(actor);
+        const newHp = Math.min(hp - variation, status.hp);
         this.state = {...this.state, hp: newHp};
       }
     }
+    return variation;
   }
 
-  hitRateBy(actor: Unit, terrainAvoidance: number=0): number {
+  hitRateBy(actor: Unit, distance: number, terrain: Terrain) {
     if (actor.klass.healer) {
       return 100;
     }
-    const hitr = actor.status.hit;
-    const avoidr = this.status.luc;
-    return Math.min(Math.max(Math.floor(hitr - avoidr - terrainAvoidance), 0), 100);
+    const hitr = 100 + (actor.status.skl / 2) - ((distance-1) * 20);
+    return Math.min(Math.max(Math.floor(hitr - terrain.avoidance), 0), 100);
   }
 
-  critRateBy(actor: Unit): number {
+  critRateBy(actor: Unit) {
     if (actor.klass.healer) {
       return 0;
     }
     const crtr = actor.status.skl;
-    const prtr = this.status.luc;
-    return Math.min(Math.max(Math.floor(crtr - prtr), 0), 100);
+    return Math.min(Math.max(Math.floor(crtr), 0), 100);
   }
 
-  calculatedEffectValueBy(actor: Unit): number {
+  calculatedEffectValueBy(actor: Unit) {
     const val = this.effectValueBy(actor);
     if (Math.random()*100 < this.critRateBy(actor)) {
       return val * 2;
@@ -124,27 +113,27 @@ export default class Unit {
     return val;
   }
 
-  effectValueBy(actor: Unit): number {
+  effectValueBy(actor: Unit) {
     const { status } = this;
     let result = 0;
     if (actor.klass.magical) {
-      result = Math.max(actor.status.pow - status.fth, 1);
+      result = Math.max(actor.status.str - status.fth, 1);
     } else {
-      result = Math.max(actor.status.pow - status.dff, 1);
+      result = Math.max(actor.status.str - status.dff, 1);
     }
     return result;
   }
 
-  expectedEvaluationBy(actor: Unit, terrainAvoidance: number=0): number {
+  expectedEvaluationBy(actor: Unit, distance: number, terrain: Terrain) {
     if (actor.klass.healer) {
-      return Math.min(actor.status.pow, this.accumulatedDamage());
+      return Math.min(actor.status.str, this.accumulatedDamage());
     }
     return this.effectValueBy(actor)
-      * this.hitRateBy(actor, terrainAvoidance) / 100
+      * this.hitRateBy(actor, distance, terrain) / 100
       * (this.critRateBy(actor) / 100 + 1);
   }
 
-  accumulatedDamage(): number {
+  accumulatedDamage() {
     return this.status.hp - this.state.hp;
   }
 

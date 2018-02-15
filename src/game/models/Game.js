@@ -1,7 +1,6 @@
 // @flow
 
 import Unit from './Unit.js';
-import type { UnitData } from  './Unit.js';
 import Field from  './Field.js';
 import * as masterData from '../data';
 
@@ -11,11 +10,24 @@ type GameState = {
   isEnd: boolean,
   winner: ?boolean,
 }
-type GameData = {
-  fieldId: number,
-  state: GameState,
-  units: Array<UnitData>,
+type ForecastUnit = {
+  name: string,
+  klass: number,
+  hp: number,
+  isOffense: boolean,
+  val: number,
+  hit: number,
+  crit: number,
 }
+export type Forecast = {
+  me: ForecastUnit,
+  tg: ForecastUnit,
+};
+export type HpChange = {
+  unitSeq: number,
+  hp: number,
+};
+
 
 const initialState: GameState = {
   turnCount: 1,
@@ -33,7 +45,7 @@ export default class Game {
   units: Array<Unit>;
 
 
-  constructor(data: GameData) {
+  constructor(data?: any) {
     this.cost = 16;
     this.defenseTurn = 10;
 
@@ -57,7 +69,7 @@ export default class Game {
     this.units = units;
   }
 
-  toData(): GameData {
+  toData() {
     const { field, units, state } = this;
     return {
       fieldId: field.id,
@@ -66,7 +78,7 @@ export default class Game {
     };
   }
 
-  initUnits(unitsData: Array<UnitData>) {
+  initUnits(unitsData: Array<any>) {
     let unitSeq = 0;
     this.units = unitsData.map(unitData => new Unit({
       ...unitData,
@@ -74,21 +86,25 @@ export default class Game {
     }));
   }
 
-  turnRemained(): number {
+  turnRemained() {
     return this.defenseTurn - Math.floor(this.state.turnCount / 2);
   }
 
-  getUnit(cellId: number): Unit {
-    return this.units.filter(unit => unit.state.cellId == cellId && unit.isAlive())[0];
+  getUnit(cellId: number) {
+    const buff = this.units.filter(unit => unit.state.cellId == cellId && unit.isAlive());
+    if (buff.length !== 1) {
+      return null;
+    }
+    return buff[0];
   }
 
-  ownedUnits(isOffense: boolean): Array<Unit> {
+  ownedUnits(isOffense: boolean) {
     return this.units.filter(unit => {
       return unit.isAlive() && unit.isOffense === isOffense;
     });
   }
 
-  checkMovable(from: number, to: number): boolean {
+  checkMovable(from: number, to: number) {
     if (from == to) {
       return true;
     }
@@ -144,7 +160,7 @@ export default class Game {
     });
   }
 
-  checkActionable(unit: Unit, from: number, to: number): boolean {
+  checkActionable(unit: Unit, from: number, to: number) {
     const target = this.getUnit(to);
     if (!unit || unit.state.isActed || !unit.isAlive() || !target || !target.isAlive()) {
       return false;
@@ -165,28 +181,93 @@ export default class Game {
     return actionable;
   }
 
-  actUnit(from: number, to: number) {
-    const actor = this.getUnit(from);
+  getForecast(unit: Unit, from: number, to: number) {
     const target = this.getUnit(to);
+    if (!target || !this.checkActionable(unit, from, to)) {
+      return;
+    }
+    const { field } = this;
+    const distance = field.distance(from, to);
+
+    const me: ForecastUnit = {
+      name: unit.status.name,
+      klass: unit.klass.id,
+      hp: unit.state.hp,
+      isOffense: unit.isOffense,
+      val: 0,
+      hit: 0,
+      crit: 0,
+    };
+    const tg: ForecastUnit = {
+      name: target.status.name,
+      klass: target.klass.id,
+      hp: target.state.hp,
+      isOffense: target.isOffense,
+      val: 0,
+      hit: 0,
+      crit: 0,
+    };
+    if (unit.klass.healer) {
+      me.val = unit.status.str;
+    } else {
+      me.val = target.effectValueBy(unit);
+      me.hit = target.hitRateBy(unit, distance, masterData.getTerrain(field.cellTerrainId(to)));
+      me.crit = target.critRateBy(unit);
+    }
+    if (!unit.klass.healer && !target.klass.healer) {
+      //counter attack
+      if (this.checkActionable(target, to, from)) {
+        tg.val = unit.effectValueBy(target);
+        tg.hit = unit.hitRateBy(target, distance, masterData.getTerrain(field.cellTerrainId(from)));
+        tg.crit = unit.critRateBy(target);
+      }
+    }
+    return { me, tg };
+  }
+
+  actUnit(from: number, to: ?number) {
+    const actor = this.getUnit(from);
+    if (!actor) {
+      return;
+    }
+    const { field } = this;
     const newUnits = Array.from(this.units);
 
     const actorIndex = newUnits.indexOf(actor);
-    actor.setActed(true);
+    if (actor.isOffense === this.state.turn) {
+      actor.setActed(true);
+    }
 
-    if (target) {
-      const targetIndex = newUnits.indexOf(target);
-      target.actBy(actor);
-      if (
-        !actor.klass.healer
-        && !target.klass.healer
-        && this.checkActionable(target, to, from)
-      ) {
-        actor.actBy(target);
+    let change;
+    if (to != null) {
+      const target = this.getUnit(to);
+      if (target) {
+        const targetIndex = newUnits.indexOf(target);
+        target.actBy(actor, field.distance(from, to), masterData.getTerrain(field.cellTerrainId(to)));
+        newUnits[targetIndex] = target;
+        change = {
+          seq: target.seq,
+          hp: target.state.hp,
+        };
       }
-      newUnits[targetIndex] = target;
     }
     newUnits[actorIndex] = actor;
     this.units = newUnits;
+
+    return change;
+  }
+
+  mightCounter(from: ?number, to: number) {
+    if (from == null) {
+      return;
+    }
+    const actor = this.getUnit(from);
+    const target = this.getUnit(to);
+    if (actor && !actor.klass.healer
+      && target && !target.klass.healer
+      && this.checkActionable(actor, from, to)) {
+      return this.actUnit(from, to);
+    }
   }
 
   mightChangeTurn() {
@@ -195,7 +276,7 @@ export default class Game {
     }
   }
 
-  shouldEndTurn(): boolean {
+  shouldEndTurn() {
     let ended = true;
     const { turn } = this.state;
     this.units.filter(unit => unit.isAlive()).forEach(unit => {
@@ -265,12 +346,21 @@ export default class Game {
     }
   }
 
-  fixAction(from: number, to: number, target: number) {
+  fixAction(from: number, to: number, target: ?number) {
+    let changes = [];
     this.moveUnit(from, to);
-    this.actUnit(to, target);
+    const c1 = this.actUnit(to, target);
+    if (c1) {
+      changes.push(c1);
+    }
+    const c2 = this.mightCounter(target, to);
+    if (c2) {
+      changes.push(c2);
+    }
     this.mightChangeTurn();
     this.mightEndGame();
-  }
 
+    return changes;
+  }
 
 }

@@ -4,10 +4,7 @@ import Component from '../components/Game/index.jsx';
 import {
   selectCell,
   hoverCell,
-  endTurn,
   returnRoom,
-  endMyTurn,
-  endAnimation,
 } from '../actions';
 
 const mapStateToProps = state => {
@@ -28,18 +25,9 @@ const mapDispatchToProps = dispatch => {
     onHoverCell: cellId => {
       dispatch(hoverCell(cellId));
     },
-    onClickEndTurn: () => {
-      dispatch(endTurn());
-    },
     onReturnRoom: () => {
       dispatch(returnRoom());
     },
-    onEndMyTurn: () => {
-      dispatch(endMyTurn());
-    },
-    onEndAnimation: turn => {
-      dispatch(endAnimation(turn));
-    }
   };
 };
 

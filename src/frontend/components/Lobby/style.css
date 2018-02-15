@@ -1,6 +1,5 @@
 #lobby-base {
   height: 100%;
-  background: linear-gradient(to right, #000, #333, #000);
 }
 
 #lobby-container {
@@ -26,28 +25,20 @@
 
 .lobby-btn {
   flex: 1;
-  font-size: 20px;
+  font-size: 1em;
   font-weight: bold;
-  line-height: 1.2em;
-  padding: 0.2em 0.6em;
-  background: linear-gradient(to top, #666, #777);
-  border: 0.3em solid;
-  border-top-color: #888;
-  border-left-color: #777;
-  border-bottom-color: #444;
-  border-right-color: #555;
-  border-radius: 2px;
+  padding: 0.5em;
+  border: 1px solid #555;
+  border-radius: 0;
+  background-color: white;
   outline: none;
-
-  color: #333;
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
-}
-.lobby-btn:active {
-  background: #666;
+  color: #555;
+  cursor: pointer;
 }
 .lobby-btn[disabled] {
   cursor: default;
-  color: #666;
+  color: #ccc;
+  border-color: #ccc;
 }
 
 .lobby-input {
@@ -55,13 +46,15 @@
   margin: 0;
   padding: 0 10px;
   box-sizing: border-box;
-  background: #ccc;
   border: none;
-  border-right: 2px solid #222;
+  background: #eee;
   outline: 0;
-  font-size: 1.1em;
+  font-size: 1em;
   text-align: center;
   color: #222;
+}
+.lobby-input::-webkit-input-placeholder {
+  color: #aaa;
 }
 
 #lobby-create {
@@ -74,8 +67,6 @@
 
 #lobby-join .lobby-input {
   width: 150px;
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
 }
 
 #lobby-room {
@@ -99,7 +90,7 @@
   flex: 1;
   text-align: center;
   font-size: 0.8em;
-  color: #999;
+  color: #666;
   margin-top: 30px;
 }
 

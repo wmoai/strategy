@@ -3,11 +3,13 @@
 import Terrain from '../models/Terrain.js';
 import Field from '../models/Field.js';
 
-import unit from './json/unit.json';
-import klass from './json/klass.json';
+import unit from './unitData.js';
+import klass from './klassData.js';
 import terrainData from './json/terrain.json';
 import sekiData from '../data/json/field/seki.json';
 import muhiData from '../data/json/field/muhi.json';
+
+import './unitData.js';
 
 const terrain: Map<number, Terrain> = new Map();
 Object.keys(terrainData).forEach(key => {

@@ -10,11 +10,11 @@ export function fetchDeck() {
         type: FETCH_DECK,
         payload: json
       });
+    }).catch(() => {
     });
   };
 }
 
-// export const CREATE_DECK = 'CREATE_DECK';
 export function createDeck() {
   return dispatch => {
     fetch('/deck', {
@@ -33,7 +33,6 @@ export function createDeck() {
 
 export const START_SOLO_PLAY = 'START_SOLO_PLAY';
 export function startSoloPlay() {
-  // return { type: START_SOLO_PLAY };
   return dispatch => {
     fetch('/user', {
       credentials: 'include'

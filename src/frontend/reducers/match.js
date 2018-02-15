@@ -1,4 +1,4 @@
-import Room from '../../../game/models/Room.js';
+import Room from '../../game/models/Room.js';
 
 import { 
   CONNECT_SOCKET,
@@ -8,8 +8,8 @@ import {
   LEAVE_ROOM,
   GET_BATTLE_READY,
   SELECT_UNITS,
-  // RETURN_ROOM,
-} from '../../actions/';
+  RETURN_ROOM,
+} from '../actions/';
 
 const initialState = {
   socket: null,
@@ -42,6 +42,7 @@ export default function reducer(state = initialState, action) {
     case ENTER_ROOM:
       return { ...state, userId: payload.userId };
     case SYNC_ROOM: {
+      console.log(payload);
       return updateRoom(state, Room.restore(payload));
     }
     case LEAVE_ROOM: {
@@ -58,8 +59,8 @@ export default function reducer(state = initialState, action) {
     }
     case GET_BATTLE_READY:
       return { ...state, isReady: true };
-    // case RETURN_ROOM:
-      // return state.returnRoom();
+    case RETURN_ROOM:
+      return { ...state, isReady: false };
     case START_SOLO_PLAY: {
       const { id, deck } = payload;
       return updateRoom(
@@ -79,8 +80,8 @@ function soloPlayReducer(state, action) {
       const newRoom = room.selectUnits(userId, payload.selectedList).mightEngage();
       return updateRoom(state, newRoom);
     }
-    // case RETURN_ROOM:
-      // return state.leaveRoom();
+    case RETURN_ROOM:
+      return { ...state, room: null };
   }
   return state;
 }

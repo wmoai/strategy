@@ -1,25 +1,36 @@
+// @flow
+
 export default class Touch {
-  constructor({ onClick, onDrag, onEndDrag }) {
+  isTouch: boolean;
+  isDragging: boolean;
+  clientX: number;
+  clientY: number;
+  deltaX: number;
+  deltaY: number;
+  onClick: (number, number) => void;
+  onDrag: (number, number) => void;
+  onEndDrag: (number, number) => void;
+
+  constructor({ onClick, onDrag, onEndDrag } : {
+    onClick: (number, number) => void;
+    onDrag: (number, number) => void;
+    onEndDrag: (number, number) => void;
+  }) {
     this.isTouch = false;
     this.isDragging = false;
-
-    this.clientX = null;
-    this.clientY = null;
-    this.deltaX = null;
-    this.deltaY = null;
 
     this.onClick = onClick;
     this.onDrag = onDrag;
     this.onEndDrag = onEndDrag;
   }
 
-  start(clientX, clientY) {
+  start(clientX: number, clientY: number) {
     this.isTouch = true;
     this.clientX = clientX;
     this.clientY = clientY;
   }
 
-  move(clientX, clientY) {
+  move(clientX: number, clientY: number) {
     if (this.isTouch && !this.isDragging) {
       const dx = Math.abs(this.clientX - clientX);
       const dy = Math.abs(this.clientY - clientY);

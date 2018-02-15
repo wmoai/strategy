@@ -1,24 +1,61 @@
+// @flow
+import PIXI from '../PIXI.js';
+
 import Component from './Component.js';
 import TerrainComponent from './Terrain.js';
 import CursorComponent from './Cursor.js';
 import UnitsComponent from './Units.js';
+import Updater from '../lib/Updater.js';
+import Animation from '../animations/Animation.js';
+import ChangeHp from '../animations/ChangeHp.js';
 import Ranges from '../lib/Ranges.js';
+import TurnStart from './TurnStart.js';
+import Scroll from '../animations/Scroll.js';
 
-import State from '../State/Game.js';
-import * as ai from '../lib/ai.js';
+import State from '../State.js';
 
 import GameModel from '../../models/Game.js';
+import UnitModel from '../../models/Unit.js';
 
-const masterData = require('../../data/');
+import * as masterData from '../../data/';
 
 export default class Game extends Component {
+  renderer: any;
+  state: State;
+  model: GameModel;
+  cellSize: number;
+  isOffense: boolean;
+  fullWidth: number;
+  fullHeight: number;
+  scale: number;
+  mouseX: number;
+  mouseY: number;
+  layer: {
+    main: any,
+    overlay: any,
+  };
+  components: {
+    turnStart: TurnStart,
+    cursor: CursorComponent,
+    units: UnitsComponent,
+  };
+  postUpdate: ?void => boolean;
+
+  updateQueue: Array<Updater>;
+  turnBuffer: ?boolean;
+  onChangeTurn: ?(boolean, number) => void;
+  onEnd: ?(boolean => void);
 
   constructor({
     renderer,
     game,
     cellSize,
     isOffense,
-    isSolo,
+  }: {
+    renderer: any,
+    game: GameModel,
+    cellSize: number,
+    isOffense: boolean,
   }) {
     super();
     this.renderer = renderer;
@@ -28,7 +65,6 @@ export default class Game extends Component {
     const { field } = game;
     this.cellSize = cellSize;
     this.isOffense = isOffense;
-    this.isSolo = isSolo;
 
     this.fullWidth = field.width * cellSize;
     this.fullHeight = field.height * cellSize;
@@ -37,6 +73,7 @@ export default class Game extends Component {
     this.mouseY = 0;
 
     this.components = {
+      turnStart: new TurnStart(),
       cursor: new CursorComponent(cellSize),
       units: new UnitsComponent({
         unitModels: game.units,
@@ -45,30 +82,158 @@ export default class Game extends Component {
       }),
     };
 
-    const terrainComponent = new TerrainComponent({ field, cellSize });
-    this.container.addChild(terrainComponent.container);
-    this.container.addChild(this.components.units.container);
-    this.container.addChild(this.components.cursor.container);
+    this.layer = {
+      main: new PIXI.Container(),
+      overlay: new PIXI.Container(),
+    };
+    this.container.addChild(this.layer.main);
+    this.container.addChild(this.layer.overlay);
 
-    this.currentRanges = null;
-    this.currentMoveAnimation = null;
+    const terrainComponent = new TerrainComponent({ field, cellSize });
+    this.layer.main.addChild(terrainComponent.container);
+    this.layer.main.addChild(this.components.units.container);
+    this.layer.main.addChild(this.components.cursor.container);
+    this.layer.overlay.addChild(this.components.turnStart.container);
+
+    this.updateQueue = [];
 
     const myUnitModel = game.units.filter(unit => unit.isOffense == isOffense)[0];
     if (myUnitModel) {
       const unit = this.components.units.unit(myUnitModel.seq);
-      this.scrollTo(
-        renderer.width/2 - (unit.container.x + cellSize/2) * this.scale,
-        renderer.height/2 - (unit.container.y + cellSize/2) * this.scale 
-      );
+      if (unit) {
+        this.scrollTo(
+          renderer.width/2 - (unit.container.x + cellSize/2) * this.scale,
+          renderer.height/2 - (unit.container.y + cellSize/2) * this.scale 
+        );
+      }
     }
   }
 
-  update(delta) {
-    if (this.components.units.update(delta, this.model.units, this.currentRanges, this.currentMoveAnimation)) {
-      this.followUnit();
+  update(delta: number) {
+    const updater = this.currentUpdater();
+    if (updater) {
+      if (updater instanceof Animation) {
+        this.followScreen(updater.container);
+        this.components.cursor.container.visible = !(updater instanceof ChangeHp);
+      }
+      updater.update(delta);
       return true;
     }
+    this.components.cursor.container.visible = true;
+
+    if (this.model.state.isEnd) {
+      const onEnd = this.onEnd
+        , winner = this.model.state.winner;
+      if (onEnd && winner != null) {
+        onEnd(winner);
+      }
+    }
+
+    if (this.turnBuffer != this.model.state.turn) {
+      this.changeTurn(this.model.state.turn);
+      return true;
+    }
+    if (this.postUpdate) {
+      return this.postUpdate();
+    }
     return false;
+  }
+
+  currentUpdater() {
+    if (this.updateQueue.length < 1) {
+      return null;
+    }
+    const updater = this.updateQueue[0];
+    if (updater.isEnd) {
+      this.updateQueue.shift();
+      return this.currentUpdater();
+    }
+    return updater;
+  }
+
+  reflectUnits() {
+    this.updateQueue.push(new Updater(0, () => {
+      this.components.units.updateUnits(this.model.units);
+    }));
+  }
+
+  reflectRanges(ranges: ?Ranges) {
+    this.updateQueue.push(new Updater(0, () => {
+      this.components.units.updateRanges(ranges);
+    }));
+  }
+
+  changeTurn(turn: boolean) {
+    this.turnBuffer = turn;
+    this.undo();
+    this.clearUI();
+    this.reflectUnits();
+    const onChangeTurn = this.onChangeTurn;
+    if (onChangeTurn) {
+      onChangeTurn(this.model.state.turn, this.model.turnRemained());
+    }
+    this.animateTurnStart();
+  }
+
+  animateMovement(unit: UnitModel, from: number, to: ?number) {
+    if (to == null) {
+      return;
+    }
+    const { model } = this;
+
+    const moveRanges = new Ranges(model, unit);
+    moveRanges.calculate(from);
+    const route = moveRanges.getRoute(to);
+    const animation = this.components.units.createMoveAnimation(unit, route);
+    if (animation) {
+      this.forcusContainer(animation.container);
+      this.updateQueue.push(animation);
+    }
+  }
+
+  animateChangeHp(changes: Array<{ seq: number, hp: number }>) {
+    changes.forEach(change => {
+      const animation = this.components.units.createChangeHpAnimation(change);
+      if (animation) {
+        this.updateQueue.push(animation);
+      }
+    });
+  }
+
+  animateTurnStart() {
+    const { renderer, model, components, isOffense } = this;
+    this.updateQueue.push(components.turnStart.createUpdater(
+      model.state.turn == isOffense,
+      renderer.width,
+      Math.min(renderer.height, this.layer.main.height),
+    ));
+  }
+
+  forcusContainer(container: any) {
+    const { renderer, scale } = this;
+    const cellSize = this.displayCellSize();
+    const ax = container.x * scale;
+    const ay = container.y * scale;
+    const sx = this.layer.main.x;
+    const sy = this.layer.main.y;
+    const overX = ax + cellSize + sx - renderer.width;
+    const underX = ax + sx;
+    const overY = ay + cellSize + sy - renderer.height;
+    const underY = ay + sy;
+
+    let dx = overX > 0 ? overX : underX < 0 ? underX : 0;
+    let dy = overY > 0 ? overY : underY < 0 ? underY : 0;
+    if (dx !== 0 || dy !== 0) {
+      this.updateQueue.push(new Scroll(this, dx, dy));
+    }
+  }
+
+  endMyTurn(emit: void => void) {
+    if (this.isOffense === this.model.state.turn) {
+      if (emit && typeof emit === 'function') {
+        emit();
+      }
+    }
   }
 
   hoveredCell() {
@@ -76,13 +241,19 @@ export default class Game extends Component {
   }
 
   hoveredUnit() {
-    return this.state.hoveredUnit;
+    const unit = this.state.hoveredUnit ? this.state.hoveredUnit : this.state.forcusedUnit;
+    if (unit && !unit.isAlive()) {
+      return null;
+    }
+    return unit;
   }
 
   hoveredTerrain() {
-    const terrainId = this.model.field.cellTerrainId(this.state.hoveredCell);
-    if (terrainId != null) {
-      return masterData.getTerrain(terrainId);
+    if (this.state.hoveredCell != null) {
+      const terrainId = this.model.field.cellTerrainId(this.state.hoveredCell);
+      if (terrainId != null) {
+        return masterData.getTerrain(terrainId);
+      }
     }
     return null;
   }
@@ -99,24 +270,13 @@ export default class Game extends Component {
     return this.model.state.turn == this.isOffense;
   }
 
-  isAnimating() {
-    if (!this.currentMoveAnimation || this.currentMoveAnimation.isEnd()) {
-      return false;
-    }
-    return true;
-  }
-
-  followUnit() {
-    if (!this.isAnimating()) {
-      return;
-    }
-    const container = this.currentMoveAnimation.container;
+  followScreen(container: any) {
     const { renderer, scale } = this;
     const cellSize = this.displayCellSize();
     const ax = container.x * scale;
     const ay = container.y * scale;
-    const sx = this.container.x;
-    const sy = this.container.y;
+    const sx = this.layer.main.x;
+    const sy = this.layer.main.y;
     const overX = ax + cellSize + sx - renderer.width;
     const underX = ax + sx;
     const overY = ay + cellSize + sy - renderer.height;
@@ -128,32 +288,30 @@ export default class Game extends Component {
   }
 
 
-  sync(gameData, actionData) {
+  sync(gameData: any, actionData: any) {
     this.clearUI();
 
     if (actionData) {
       const { model, isOffense } = this;
-      const { from, to } = actionData;
+      const { from, to, changes } = actionData;
       const unitModel = model.getUnit(from);
       if (unitModel && unitModel.isOffense !== isOffense) {
-        const ranges = new Ranges(model, unitModel);
-        ranges.calculate(from);
-        const route = ranges.getRoute(to);
-
-        this.currentMoveAnimation = this.components.units.createMoveAnimation(unitModel, route);
+        this.animateMovement(unitModel, from, to);
       }
+      this.animateChangeHp(changes);
+      this.reflectUnits();
     }
-    this.model = new GameModel(gameData);
+    const newModel = new GameModel(gameData);
+    this.model = newModel;
   }
 
-
-  hover(clientX, clientY) {
+  hover(clientX: number, clientY: number) {
     this.mouseX = clientX;
     this.mouseY = clientY;
     this.hoverCell(this.fieldCoordinates(clientX, clientY));
   }
 
-  hoverCell({ x, y }) {
+  hoverCell({ x, y }: { x:number, y:number }) {
     const { model } = this;
     if (!model.field.isActiveCell(y, x)) {
       return;
@@ -165,12 +323,15 @@ export default class Game extends Component {
     this.state.hoverUnit(unit);
   }
 
-  select(clientX, clientY, emitAction) {
+  select(clientX: number, clientY: number, emitAction: ?(number,number,?number) => void) {
+    if (this.currentUpdater()) {
+      return;
+    }
     this.selectCell(this.fieldCoordinates(clientX, clientY), emitAction);
   }
 
-  selectCell({ x, y }, emitAction) {
-    if (!this.model.field.isActiveCell(y, x) || this.isAnimating()) {
+  selectCell({ x, y }: { x:number, y:number }, emitAction: ?(number,number,?number) => void) {
+    if (!this.model.field.isActiveCell(y, x) || this.currentUpdater()) {
       return;
     }
     const { model } = this;
@@ -185,18 +346,18 @@ export default class Game extends Component {
     }
   }
 
-  forcus(cellId) {
+  forcus(cellId: number) {
     const { model } = this;
     const unitModel = model.getUnit(cellId);
     if (unitModel && !unitModel.state.isActed) {
       this.state.forcus(unitModel);
       const ranges = new Ranges(model, unitModel);
       ranges.calculate(cellId);
-      this.currentRanges = ranges;
+      this.reflectRanges(ranges);
     }
   }
 
-  mightMove(cellId) {
+  mightMove(cellId: number) {
     const { model, state, isOffense } = this;
     const { turn } = model.state;
     const { forcusedUnit, forcusedCell } = state;
@@ -207,107 +368,68 @@ export default class Game extends Component {
     } else if (isOffense != turn) {
       return this.clearUI();
     } else if (forcusedUnit && forcusedUnit.isOffense == turn) {
-      if (model.checkMovable(forcusedCell, cellId)) {
-        this.animateMovement(cellId);
-        return this.move(cellId);
+      if (forcusedCell != null && model.checkMovable(forcusedCell, cellId)) {
+        return this.move(forcusedUnit, forcusedCell, cellId);
       }
     }
     return this.clearUI();
   }
 
-  animateMovement(cellId) {
-    const { model, state } = this;
-    const { forcusedCell, forcusedUnit } = state;
+  move(unit: UnitModel, from: number, to: number) {
+    const { model } = this;
+    this.reflectRanges(null);
+    this.animateMovement(unit, from, to);
 
-    const moveRanges = new Ranges(model, forcusedUnit);
-    moveRanges.calculate(forcusedCell);
-    const route = moveRanges.getRoute(cellId);
-    this.currentMoveAnimation = this.components.units.createMoveAnimation(forcusedUnit, route);
+    model.moveUnit(from, to);
+    const actRanges = new Ranges(model, unit);
+    actRanges.setMovable(to);
+    this.reflectUnits();
+    this.reflectRanges(actRanges);
+
+    this.state.move(to);
   }
 
-  move(cellId) {
-    const { model, state } = this;
-    const { forcusedCell, forcusedUnit } = state;
-    model.moveUnit(forcusedCell, cellId);
-
-    const actRanges = new Ranges(model, forcusedUnit);
-    actRanges.setMovable(cellId);
-    this.currentRanges = actRanges;
-
-    this.state.move(cellId);
-  }
-
-  mightAct(cellId, emitAction) {
+  mightAct(cellId: number, emitAction: ?(number,number,?number) => void) {
     const { movedCell, forcusedCell } = this.state;
-    if (!this.isActionable(cellId)) {
+    if (!this.isActionable(cellId) || movedCell == null || forcusedCell == null) {
       this.undo();
       this.clearUI();
       return;
     }
     const actCell = (cellId != movedCell) ? cellId : undefined;
     this.state.act();
-    if (this.isSolo) {
-      this.model.fixAction(forcusedCell, movedCell, actCell);
-      this.clearUI();
-    }
+    this.act(forcusedCell, movedCell, actCell, emitAction);
+  }
 
+  act(from: number, to: number, target: ?number, emitAction: ?(number,number,?number) => void) {
     if (emitAction && typeof emitAction === 'function') {
-      emitAction(forcusedCell, movedCell, actCell);
+      emitAction(from, to, target);
     }
   }
 
-  isActionable(cellId) {
+  isActionable(cellId: number) {
     const { model } = this;
     const { movedCell, forcusedUnit } = this.state;
+    if (movedCell == null || forcusedUnit == null) {
+      return false;
+    }
     return cellId == movedCell
       || model.checkActionable(forcusedUnit, movedCell, cellId);
   }
 
   undo() {
     const { movedCell, forcusedCell } = this.state;
-    this.model.moveUnit(movedCell, forcusedCell);
+    if (movedCell != null && forcusedCell != null) {
+      this.model.moveUnit(movedCell, forcusedCell);
+      this.reflectUnits();
+    }
   }
 
 
   clearUI() {
-    this.currentRanges = null;
+    this.reflectRanges(null);
+    this.hoverCell(this.fieldCoordinates(this.mouseX, this.mouseY));
     this.state.clearUI();
-  }
-
-
-
-  isCOMTurn() {
-    if (this.model.state.turn === this.isOffense) {
-      return false;
-    }
-    return this.isSolo;
-  }
-
-  mightActAI() {
-    if (!this.isCOMTurn()) {
-      return false;
-    }
-    this.state.clearUI();
-    const { model, isOffense } = this;
-
-    const action = ai.getActionByAI(model, isOffense);
-    if (action) {
-      const { from, to, target, unitModel, route } = action;
-      this.model.fixAction(from, to, target);
-      this.currentMoveAnimation = this.components.units.createMoveAnimation(unitModel, route);
-      return true;
-    }
-    const movement = ai.getMovementByAI(model, isOffense);
-    if (!movement) {
-      this.model.changeTurn();
-      return true;
-    }
-    const { from, to, unitModel, route } = movement;
-    if (unitModel && route) {
-      this.currentMoveAnimation = this.components.units.createMoveAnimation(unitModel, route);
-    }
-    this.model.fixAction(from, to);
-    return true;
   }
 
 
@@ -315,79 +437,53 @@ export default class Game extends Component {
     return this.cellSize * this.scale;
   }
 
-  fieldCoordinates(clientX, clientY) {
+  fieldCoordinates(clientX: number, clientY: number) {
     const cellSize = this.displayCellSize();
     return {
-      x: Math.floor((clientX - this.container.x) / cellSize),
-      y: Math.floor((clientY - this.container.y) / cellSize),
+      x: Math.floor((clientX - this.layer.main.x) / cellSize),
+      y: Math.floor((clientY - this.layer.main.y) / cellSize),
     };
   }
 
-  zoom(delta) {
-    const scale = Math.max(0.8, Math.min(1.8, this.scale - delta)).toFixed(2);
+  zoom(delta: number) {
+    const scale = Number(Math.max(0.8, Math.min(1.8, this.scale - delta)).toFixed(2));
     const rate = scale / this.scale;
-    this.container.scale.x = scale;
-    this.container.scale.y = scale;
+    this.layer.main.scale.x = scale;
+    this.layer.main.scale.y = scale;
     this.scale = scale;
     this.scrollTo(
-      (this.container.x - this.mouseX) * rate + this.mouseX,
-      (this.container.y - this.mouseY) * rate + this.mouseY
+      (this.layer.main.x - this.mouseX) * rate + this.mouseX,
+      (this.layer.main.y - this.mouseY) * rate + this.mouseY
     );
   }
 
-  scroll(dx, dy) {
+  scroll(dx: number, dy: number) {
     this.scrollTo(
-      this.container.x - dx,
-      this.container.y - dy,
+      this.layer.main.x - dx,
+      this.layer.main.y - dy,
     );
   }
 
-  scrollTo(x, y) {
+  scrollTo(x: number, y: number) {
     const { renderer, fullWidth, fullHeight, scale } = this;
     let minX = renderer.width - fullWidth * scale;
     minX = minX > 0 ? minX / 2 : minX;
     const minY = renderer.height - fullHeight * scale;
-    this.container.x = Math.max(Math.min(x, 0), minX);
-    this.container.y = Math.min(Math.max(y, minY), 0);
+    const nx = Math.max(Math.min(x, 0), minX);
+    const ny = Math.min(Math.max(y, minY), 0);
+    this.layer.main.x = nx;
+    this.layer.main.y = ny;
   }
 
   forecast() {
     const { model, state } = this;
-    const unit = state.forcusedUnit;
-    const target = model.getUnit(state.hoveredCell);
-    if (!state.is('ACT') || !unit || !target || !model.checkActionable(unit, state.movedCell, state.hoveredCell)) {
-      return null;
+    const { forcusedUnit, hoveredCell, movedCell } = state;
+    if (!state.is('ACT') || forcusedUnit == null ||  hoveredCell == null || movedCell == null) {
+      return;
     }
-
-    const result = {
-      me: {
-        name: unit.status.name,
-        hp: unit.state.hp,
-        isOffense: unit.isOffense
-      },
-      tg: {
-        name: target.status.name,
-        hp: target.state.hp,
-        isOffense: target.isOffense
-      }
-    };
-    if (unit.klass.healer) {
-      result.me.val = unit.status.pow;
-    } else {
-      result.me.val = target.effectValueBy(unit);
-      result.me.hit = target.hitRateBy(unit, masterData.getTerrain(model.field.cellTerrainId(state.hoveredCell)).avoidance);
-      result.me.crit = target.critRateBy(unit);
-    }
-    if (!unit.klass.healer && !target.klass.healer) {
-      //counter attack
-      if (model.checkActionable(target, state.hoveredCell, state.movedCell)) {
-        result.tg.val = unit.effectValueBy(target);
-        result.tg.hit = unit.hitRateBy(target, masterData.getTerrain(model.field.cellTerrainId(state.movedCell)).avoidance);
-        result.tg.crit = unit.critRateBy(target);
-      }
-    }
-    return result;
+    return model.getForecast(forcusedUnit, movedCell, hoveredCell);
   }
-
-
 }
+
+
+

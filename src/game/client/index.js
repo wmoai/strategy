@@ -1,9 +1,12 @@
+// @flow
 import PIXI, { preload } from './PIXI.js';
 
 import Touch from './lib/Touch.js';
 
 import Game from './components/Game.js';
-import TurnStart from './components/TurnStart.js';
+import SoloGame from './components/SoloGame.js';
+
+import GameModel from '../models/Game.js';
 
 const Events = {
   hoverterrain: 'hovercell',
@@ -11,9 +14,27 @@ const Events = {
   hover: 'hover',
   forecast: 'forecast',
   changeturn: 'changeturn',
+  endgame: 'endgame',
 };
 
 export default class Client {
+  fullWidth: number;
+  fullHeight: number;
+  cellSize: number;
+  scale: number;
+  socket: any;
+  app: any;
+  components: {
+    game: Game,
+  };
+  touch: Touch;
+  scrollVX: number;
+  scrollVY: number;
+  eventListeners: Array<{
+    type: string,
+    callback: any => void,
+  }>;
+
 
   static preload() {
     return preload();
@@ -28,6 +49,15 @@ export default class Client {
     isOffense,
     isSolo=false,
     socket,
+  } : {
+    canvas: HTMLCanvasElement,
+    cellSize: number,
+    width: number,
+    height: number,
+    game: GameModel,
+    isOffense: boolean,
+    isSolo?: boolean,
+    socket: any,
   }) {
     const { field } = game;
     this.fullWidth = field.width * cellSize;
@@ -42,39 +72,73 @@ export default class Client {
       sharedLoader: true,
     });
 
-    this.components = {
-      turnStart: new TurnStart(),
-      game:  new Game({
+    const gameComponent = !isSolo ?
+      new Game({
         renderer: this.app.renderer,
         game,
         cellSize,
         isOffense,
         isSolo,
-      })
+      }) : new SoloGame({
+        renderer: this.app.renderer,
+        game,
+        cellSize,
+        isOffense,
+      });
+
+
+    this.components = {
+      game: gameComponent,
     };
 
     const container = new PIXI.Container();
-    this.layer = {
-      main: new PIXI.Container(),
-      overlay: new PIXI.Container(),
-    };
-    container.addChild(this.layer.main);
-    container.addChild(this.layer.overlay);
+    container.addChild(this.components.game.container);
     this.app.stage = container;
-
-
-    this.layer.overlay.addChild(this.components.turnStart.container);
-    this.layer.main.addChild(this.components.game.container);
 
     this.eventListeners = [];
   }
 
   run() {
+    const { app, components } = this;
+    const { game } = components;
+
+    this.listen();
+
+    let hoveredCell;
+    app.ticker.add(delta => {
+      this.decelerateScroll(delta);
+      if (hoveredCell != game.hoveredCell()) {
+        hoveredCell = game.hoveredCell();
+        this.kickEvent(Events.hover, {
+          unit: game.hoveredUnit(),
+          terrain: game.hoveredTerrain(),
+          forecast: game.forecast(),
+        });
+      }
+      game.update(delta);
+    });
+  }
+
+  listen() {
     const { app, components, socket } = this;
-    const { game, turnStart } = components;
+    const { game } = components;
+
+    game.onChangeTurn = (turn, turnRemained) => {
+      this.kickEvent(Events.changeturn, {
+        turn,
+        turnRemained,
+      });
+    };
+    game.onEnd = winner => {
+      this.kickEvent(Events.endgame, winner);
+      return this.app.ticker.stop();
+    };
 
     this.touch = new Touch({
       onClick: (x, y) => {
+        if (game.model.state.isEnd) {
+          return;
+        }
         game.select(x, y, (from, to, target) => {
           if (!socket) {
             return;
@@ -87,6 +151,9 @@ export default class Client {
         });
       },
       onDrag: (dx, dy) => {
+        if (game.model.state.isEnd) {
+          return;
+        }
         game.scroll(dx, dy);
       },
       onEndDrag: (vx, vy) => {
@@ -99,6 +166,9 @@ export default class Client {
       this.touch.start(e.data.global.x, e.data.global.y);
     });
     app.stage.on('mousemove', e => {
+      if (game.model.state.isEnd) {
+        return;
+      }
       this.touch.move(e.data.global.x, e.data.global.y);
       game.hover(e.data.global.x, e.data.global.y);
     });
@@ -113,55 +183,30 @@ export default class Client {
       socket.on('syncGame', payload => {
         game.sync(payload.game, payload.action);
       });
+      socket.emit('syncGame');
     }
-
-    let hoveredCell, turn;
-    app.ticker.add(delta => {
-      this.decelerateScroll(delta);
-      if (turnStart.update(delta)) {
-        return;
-      }
-      if (game.update(delta)) {
-        return;
-      }
-
-      if (hoveredCell != game.hoveredCell()) {
-        hoveredCell = game.hoveredCell();
-        this.kickEvent(Events.hover, {
-          unit: game.hoveredUnit(),
-          terrain: game.hoveredTerrain(),
-          forecast: game.forecast(),
-        });
-      }
-
-      const turnInfo = game.turnInfo();
-      if (turn != turnInfo.turn) {
-        turn = turnInfo.turn;
-        this.kickEvent(Events.changeturn, {
-          turnRemained: turnInfo.remained
-        });
-        turnStart.setTurn(
-          game.isMyTurn(),
-          app.renderer.width,
-          app.renderer.height,
-        );
-      }
-
-      game.mightActAI();
-    });
-
   }
 
-  zoom(delta) {
+  endTurn() {
+    this.components.game.endMyTurn(() => {
+      this.socket.emit('endTurn');
+    });
+  }
+
+  destroy() {
+    this.app.destroy();
+  }
+
+  zoom(delta: number) {
     this.components.game.zoom(delta);
   }
 
-  endScroll(vx, vy) {
+  endScroll(vx: number, vy: number) {
     this.scrollVX = vx;
     this.scrollVY = vy;
   }
 
-  decelerateScroll(delta) {
+  decelerateScroll(delta: number) {
     if (!this.scrollVX && !this.scrollVY) {
       return;
     }
@@ -178,63 +223,26 @@ export default class Client {
     this.scrollVY = 0;
   }
 
-  // forcusCell(x, y) {
-    // const { cellSize, app, scale } = this;
-    // this.scrollTo(
-      // (x * cellSize + cellSize/2) * scale - app.renderer.width/2,
-      // (y * cellSize + cellSize/2) * scale - app.renderer.height/2
-    // );
-  // }
-
   clientCellSize() {
     return this.cellSize * this.scale;
   }
 
-  fieldCoordinates(clientX, clientY) {
-    const cellSize = this.clientCellSize();
-    return {
-      x: Math.floor((clientX - this.layer.main.x) / cellSize),
-      y: Math.floor((clientY - this.layer.main.y) / cellSize),
-
-    };
-  }
-
-  clientPositionOfCell(x, y) {
-    const cellSize = this.clientCellSize();
-    return {
-      x: x * cellSize + this.layer.main.x,
-      y: y * cellSize + this.layer.main.y
-
-    };
-  }
-
-  clientXOfCell(x) {
-    const cellSize = this.clientCellSize();
-    return x * cellSize + this.layer.main.x;
-  }
-
-  clientYOfCell(y) {
-    const cellSize = this.clientCellSize();
-    return y * cellSize + this.layer.main.y;
-  }
-
-  resize(width, height) {
+  resize(width: number, height: number) {
     this.app.renderer.resize(width, height);
     this.components.game.scroll(0, 0);
   }
 
 
-  addEventListener(type, callback) {
+  addEventListener(type: string, callback: any => void) {
     this.eventListeners.push({ type, callback });
   }
 
-  kickEvent(type, ...args) {
+  kickEvent(type: string, ...args: Array<any>) {
     this.eventListeners.forEach(eventListener => {
       if (eventListener.type == type) {
         eventListener.callback(...args);
       }
     });
   }
-
 
 }
