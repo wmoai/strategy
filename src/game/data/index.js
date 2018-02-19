@@ -6,8 +6,10 @@ import Field from '../models/Field.js';
 import unit from './unitData.js';
 import klass from './klassData.js';
 import terrainData from './json/terrain.json';
-import sekiData from '../data/json/field/seki.json';
+
+import persianData from '../data/json/field/persian.json';
 import muhiData from '../data/json/field/muhi.json';
+import sekiData from '../data/json/field/seki.json';
 
 import './unitData.js';
 
@@ -25,8 +27,9 @@ function getTerrain(id: number): Terrain {
 }
 
 const fields: Array<Field> = [
-  new Field(sekiData),
+  new Field(persianData),
   new Field(muhiData),
+  new Field(sekiData),
 ];
 function getField(fieldId: ?number): Field {
   if (fieldId == null) {

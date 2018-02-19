@@ -93,7 +93,7 @@ export default class Unit {
     if (actor.klass.healer) {
       return 100;
     }
-    const hitr = 100 + (actor.status.skl / 2) - ((distance-1) * 20);
+    const hitr = 100 + (actor.status.skl * 5) - ((distance-1) * 20) - (this.status.skl * 5);
     return Math.min(Math.max(Math.floor(hitr - terrain.avoidance), 0), 100);
   }
 
@@ -101,7 +101,7 @@ export default class Unit {
     if (actor.klass.healer) {
       return 0;
     }
-    const crtr = actor.status.skl;
+    const crtr = actor.status.skl * 10;
     return Math.min(Math.max(Math.floor(crtr), 0), 100);
   }
 

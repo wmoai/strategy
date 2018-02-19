@@ -31,21 +31,21 @@ function UnitComponent({ unit }: { unit: ?Unit }) {
   const status = unit.status;
   return (
     <div id="cp-unit" className={unit.isOffense ? 'offense' : 'defense'}>
-      <div id="cp-unit-header">
-        <div id="cp-unit-name">{status.name}</div>
-        <div id="cp-unit-hp">
+      <div className="header">
+        <div className="name">{status.name}</div>
+        <div className="hp">
           <span>HP</span>
-          <div id="cp-unit-hp-val">
-            <span >{unit.state.hp}</span>
+          <div className="hp-val val">
+            <span className="current">{unit.state.hp}</span>
             <span className="max">/{status.hp}</span>
           </div>
         </div>
       </div>
-      <div id="cp-unit-main">
-        <div id="cp-unit-avatar">
+      <div className="main">
+        <div className="avatar">
           <UnitImage klassId={unit.klass.id} isOffense={unit.isOffense} />
         </div>
-        <table id="cp-status-table">
+        <table className="status-table">
           <tbody>
             <tr>
               <th>力</th>
@@ -89,8 +89,10 @@ function Info({ isOffense, terrain, turnRemained }) {
         )}
         { turnRemained > 1 ? (
           <div id="cp-turn">残り<b>{turnRemained}</b>ターン</div>
-        ) : (
+        ) : turnRemained == 1 ? (
           <div id="cp-turn"><b>最終ターン</b></div>
+        ) : (
+          <div></div>
         )}
       </div>
       <div id="cp-terrain">
@@ -131,7 +133,7 @@ function ForecastComponent({ forecast }) {
         <table>
           <tbody>
             <tr className={mySide}>
-              <td className="important">{me.hp}</td>
+              <td className="important hp">{me.hp}</td>
               <td className="important">{me.val || '-'}</td>
               <td>{percentStr(me.hit) ||  '-'}</td>
               <td>{percentStr(me.crit) || '-'}</td>
@@ -143,7 +145,7 @@ function ForecastComponent({ forecast }) {
               <th>会心</th>
             </tr>
             <tr className={opSide}>
-              <td className="important">{tg.hp}</td>
+              <td className="important hp">{tg.hp}</td>
               <td className="important">{tg.val || '-'}</td>
               <td>{percentStr(tg.hit) || '-'}</td>
               <td>{percentStr(tg.crit) || '-'}</td>

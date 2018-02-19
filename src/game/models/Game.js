@@ -31,7 +31,7 @@ export type HpChange = {
 
 const initialState: GameState = {
   turnCount: 1,
-  turn: true,
+  turn: false,
   isEnd: false,
   winner: null,
 };
@@ -53,7 +53,11 @@ export default class Game {
     if (data) {
       fieldId = data.fieldId;
     }
-    this.field = masterData.getField(fieldId);
+    const field = masterData.getField(fieldId);
+    if (field.info.turn) {
+      this.defenseTurn = field.info.turn;
+    }
+    this.field = field;
 
     let state = {...initialState};
     let units = [];

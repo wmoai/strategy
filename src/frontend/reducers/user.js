@@ -16,7 +16,7 @@ const user = (state = initialState, action) => {
       const deck = payload.deck ? (
         payload.deck.map(unitId => {
           return unitData.get(unitId);
-        })
+        }).filter(data => data != null)
       ) : null;
       return { ...state, deck };
     }

@@ -28,12 +28,12 @@ export default class CursorComponent extends Component {
     graphics.drawRect(left, bottom, width, -size);
     graphics.drawRect(left, bottom-size, size, -width+size);
     this.container.addChild(graphics);
-    this.container.visible = false;
+    this.container.x = -cellSize;
+    this.container.y = -cellSize;
   }
 
   update(x: number, y: number) {
     const { container, cellSize } = this;
-    container.visible = true;
     container.x = x * cellSize;
     container.y = y * cellSize;
   }

@@ -38,7 +38,7 @@ export function preload(): Promise<void> {
 
 function splitUnits() {
   const loader = PIXI.loaders.shared;
-  const tileSize = 48;
+  const tileSize = 50;
   const units = new Map();
 
   const baseTexture = loader.resources['units'].texture.baseTexture;

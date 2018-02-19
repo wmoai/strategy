@@ -4,6 +4,7 @@ type FieldInfo = {
   oinit: Array<number>,
   dinit: Array<number>,
   base: Array<number>,
+  turn: number,
 };
 type FieldData = {
   id: number,

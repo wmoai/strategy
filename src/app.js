@@ -28,7 +28,6 @@ app.get('/user', (req, res) => {
         id,
         deck,
       });
-      // return res.status(204).send();
       return;
     }
     res.send({
@@ -49,9 +48,9 @@ function createUser(res) {
   const elite = Object.values(units).filter(unit => unit.cost == 4);
   const epic = Object.values(units).filter(unit => unit.cost == 5);
   const deck = [].concat(
-    sealPack(common, 4),
+    sealPack(common, 3),
     sealPack(elite, 6),
-    sealPack(epic, 2)
+    sealPack(epic, 3)
   );
   const userId = uid(24);
   res.cookie('jwt', jwt.sign({

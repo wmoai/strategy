@@ -6,7 +6,7 @@ export default function UnitImage({ klassId, isOffense, isGray=false }: {
   isOffense: boolean,
   isGray?: boolean,
 }) {
-  const ssize = 48;
+  const ssize = 50;
   return  (
     <div className="cp-unit-image" style={{
       background: 'url(/image/units.png)',
