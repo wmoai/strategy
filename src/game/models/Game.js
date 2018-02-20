@@ -54,9 +54,7 @@ export default class Game {
       fieldId = data.fieldId;
     }
     const field = masterData.getField(fieldId);
-    if (field.info.turn && field.info.turn.length == 1) {
-      this.defenseTurn = field.info.turn[0];
-    }
+    this.defenseTurn = field.turn();
     this.field = field;
 
     let state = {...initialState};

@@ -42,7 +42,6 @@ export default function reducer(state = initialState, action) {
     case ENTER_ROOM:
       return { ...state, userId: payload.userId };
     case SYNC_ROOM: {
-      console.log(payload);
       return updateRoom(state, Room.restore(payload));
     }
     case LEAVE_ROOM: {

@@ -4,7 +4,7 @@ type FieldInfo = {
   oinit: Array<number>,
   dinit: Array<number>,
   base: Array<number>,
-  turn: number,
+  turn: Array<number>,
 };
 type FieldData = {
   id: number,
@@ -31,6 +31,10 @@ export default class Field {
 
   initialPos(isOffense: boolean) {
     return isOffense ? this.info['oinit'] : this.info['dinit'];
+  }
+
+  turn() {
+    return this.info.turn[0];
   }
 
   existsCell(y: number, x: number): boolean {

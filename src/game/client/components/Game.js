@@ -17,6 +17,7 @@ import State from '../State.js';
 import GameModel from '../../models/Game.js';
 import UnitModel from '../../models/Unit.js';
 
+
 import * as masterData from '../../data/';
 
 export default class Game extends Component {
@@ -151,9 +152,10 @@ export default class Game extends Component {
     return updater;
   }
 
-  reflectUnits() {
+  reflectUnits(units: ?Array<UnitModel>) {
+    let models = units || this.model.units;
     this.updateQueue.push(new Updater(0, () => {
-      this.components.units.updateUnits(this.model.units);
+      this.components.units.updateUnits(models);
     }));
   }
 
@@ -299,9 +301,9 @@ export default class Game extends Component {
         this.animateMovement(unitModel, from, to);
       }
       this.animateChangeHp(changes);
-      this.reflectUnits();
     }
     const newModel = new GameModel(gameData);
+    this.reflectUnits(newModel.units);
     this.model = newModel;
   }
 

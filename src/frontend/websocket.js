@@ -1,7 +1,6 @@
 import {
   enterRoom,
   syncRoom,
-  // syncGame,
 } from './actions/';
 
 import socketIOClient from 'socket.io-client';
@@ -9,7 +8,6 @@ import socketIOClient from 'socket.io-client';
 const actionsMap = {
   enterRoom,
   syncRoom,
-  // syncGame,
 };
 
 export default class Websocket {
@@ -18,7 +16,6 @@ export default class Websocket {
 
     Object.keys(actionsMap).forEach(key => {
       this.socket.on(key, payload => {
-        console.log(key);
         const action = actionsMap[key];
         dispatch(action(payload));
       });
