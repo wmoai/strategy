@@ -1,5 +1,6 @@
 import React from 'react';
 
+import Indicator from '../../components/Indicator/index.jsx';
 import Lobby from '../../containers/Lobby.js';
 import Selector from '../../containers/Selector.js';
 import Game from '../../containers/Game.js';
@@ -14,14 +15,6 @@ export default class Match extends React.Component {
   }
 
   componentDidMount() {
-    /*
-    this.popstateListener = () => {
-      if (this.state.isLocked) {
-        history.pushState(null, null, null);
-      }
-    };
-    window.addEventListener('popstate', this.popstateListener);
-    */
     this.unloadListener = e => {
       if (this.state.isLocked) {
         e.returnValue = 'test';
@@ -31,36 +24,37 @@ export default class Match extends React.Component {
   }
 
   componentWillUnmount() {
-    /*
-    if (this.state.isLocked) {
-      history.back();
-    }
-    window.removeEventListener('popstate', this.popstateListener);
-    */
     window.removeEventListener('beforeunload', this.unloadListener);
   }
 
   componentWillReceiveProps(nextProps) {
     const { room } = nextProps;
     if (room && !this.state.isLocked) {
-      // history.pushState(null, null, null);
       this.setState({ isLocked: true });
     } else if (!room && this.state.isLocked) {
-      // history.back();
       this.setState({ isLocked: false });
     }
   }
 
   render() {
-    const { room } = this.props;
+    const { room, waiting } = this.props;
+    let content = <Lobby />;
     if (room) {
       if (room.stateIs('SELECT')) {
-        return <Selector costLimit={20} />;
+        content = <Selector costLimit={20} />;
       } else if (room.stateIs('BATTLE') && room.game) {
-        return <Game />;
+        content = <Game />;
       }
     }
-    return <Lobby />;
+    // return content;
+    return (
+      <div>
+        {waiting &&
+            <Indicator />
+        }
+        {content}
+      </div>
+    );
   }
 
 }

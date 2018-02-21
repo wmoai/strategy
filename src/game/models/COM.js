@@ -8,8 +8,7 @@ export default class COM extends Player {
     super();
     this.id = 'COM';
     this.isHuman = false;
-    this.deck = [1,2,2,2,5,6];
+    this.deck = [1,2,2,27,18,18];
     this.isReady = true;
   }
-
 }

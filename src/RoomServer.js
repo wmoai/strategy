@@ -32,17 +32,19 @@ export default class RoomServer {
 
         const { userId, deck } = data;
 
-        socket.on('createRoom', () => {
+        socket.on('createRoom', (callback) => {
           const roomId = this.generateRoomId();
           const room = new Room({ id: roomId });
           this.rooms.set(room.id, room);
           this.userToRoom.set(userId, room.id);
           this.join(roomId, userId, deck, socket);
+          callback();
         });
 
-        socket.on('joinRoom', roomId => {
+        socket.on('joinRoom', (roomId, callback) => {
           this.userToRoom.set(userId, roomId);
           this.join(roomId, userId, deck, socket);
+          callback();
         });
 
         socket.on('leaveRoom', () => {
@@ -163,7 +165,6 @@ export default class RoomServer {
     } catch (e) {
       console.log(e);
       socket.disconnect();
-      return;
     }
   }
 

@@ -1,3 +1,12 @@
+export const START_WAITING = 'START_WAITING';
+export function startWaiting() {
+  return { type: START_WAITING };
+}
+export const END_WAITING = 'END_WAITING';
+export function endWaiting() {
+  return { type: END_WAITING };
+}
+
 export const FETCH_DECK = 'FETCH_DECK';
 export function fetchDeck() {
   return dispatch => {

@@ -6,7 +6,6 @@ import thunkMiddleware from 'redux-thunk';
 import reducer from './reducers';
 
 import Router from './Router.jsx';
-// import Renderer from './Renderer';
 import Client from '../game/client/index.js';
 
 
@@ -18,6 +17,8 @@ import {
   SELECT_UNITS,
   END_TURN,
   RETURN_ROOM,
+  startWaiting,
+  endWaiting,
 } from './actions/';
 import Websocket from './websocket.js';
 
@@ -30,12 +31,18 @@ const socketMiddleware = store => next => action => {
   switch (action.type) {
     case CREATE_ROOM: {
       const socket = new Websocket(store.dispatch);
-      socket.emit('createRoom');
+      store.dispatch(startWaiting());
+      socket.emit('createRoom', () => {
+        store.dispatch(endWaiting());
+      });
       return store.dispatch(connectSocket(socket));
     }
     case JOIN_ROOM: {
       const socket = new Websocket(store.dispatch);
-      socket.emit('joinRoom', payload.roomId);
+      store.dispatch(startWaiting());
+      socket.emit('joinRoom', payload.roomId, () => {
+        store.dispatch(endWaiting());
+      });
       return store.dispatch(connectSocket(socket));
     }
     case GET_BATTLE_READY:

@@ -1,39 +1,9 @@
 html
   head
-    link(rel="stylesheet", href="/css/strategy.css")
+    link(rel="shortcut icon", href="https://placehold.jp/16x16.png", type="image/png")
+    link(rel="stylesheet", href="/bundle.css")
+    meta(name="viewport", content="width=device-width,initial-scale=1")
   body
-    #portal-container
-      #portal-navigator
-        form(action="sealed", method="POST")
-          input.portal-button(type="submit", value="デッキ生成")
-        if units && units.length > 0
-          form(action="app", method="POST", target="_blank")
-            input.portal-button(type="submit", value="対戦開始")
-      if units && units.length > 0
-        table
-          thead
-            tr
-              th 名
-              th HP
-              th 力
-              th 守
-              th 信
-              th 技
-              th 移動
-              th 射程
-              th コスト
-          tbody
-            each unit in units
-              tr
-                td
-                  label(for=`unit_${unit.id}`)= unit.name
-                td= unit.hp
-                td= unit.str
-                td= unit.dff
-                td= unit.fth
-                td= unit.skl
-                td= unit.move
-                td #{unit.min_range}~#{unit.max_range}
-                td= unit.cost
-        #deck hoge
+    #contents
+    script(src="/bundle.js")
 

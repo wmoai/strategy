@@ -26,10 +26,12 @@ export default class Top extends React.Component {
                 </li>
             }
           </ul>
-          <div id="top-deck">
-            <h2>YOUR DECK</h2>
-            <Deck deck={deck} />
-          </div>
+          {deck && deck.length > 0 &&
+              <div id="top-deck">
+                <h2>YOUR DECK</h2>
+                <Deck deck={deck} />
+              </div>
+          }
         </div>
       </div>
     );

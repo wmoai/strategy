@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+
 import RoomServer from './RoomServer.js';
 const roomServer = new RoomServer();
 import unitData from './game/data/unitData.js';
@@ -76,7 +77,7 @@ function sealPack(units, count) {
 }
 
 app.get('/*', (req, res) => {
-  res.render('index2');
+  res.render('index');
 });
 
 app.use((err, req, res, next) => { // eslint-disable-line

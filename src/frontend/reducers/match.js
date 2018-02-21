@@ -15,6 +15,7 @@ const initialState = {
   socket: null,
   userId: null,
   deck: null,
+  waiting: false,
   room: null,
   isReady: false,
   me: null,
