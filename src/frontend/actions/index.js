@@ -10,9 +10,11 @@ export function endWaiting() {
 export const FETCH_DECK = 'FETCH_DECK';
 export function fetchDeck() {
   return dispatch => {
+    dispatch(startWaiting());
     fetch('/user', {
       credentials: 'include'
     }).then(res => {
+      dispatch(endWaiting());
       return res.json();
     }).then(json => {
       dispatch({
@@ -26,10 +28,12 @@ export function fetchDeck() {
 
 export function createDeck() {
   return dispatch => {
+    dispatch(startWaiting());
     fetch('/deck', {
       method: 'POST',
       credentials: 'include'
     }).then(res => {
+      dispatch(endWaiting());
       return res.json();
     }).then(json => {
       dispatch({
@@ -43,9 +47,11 @@ export function createDeck() {
 export const START_SOLO_PLAY = 'START_SOLO_PLAY';
 export function startSoloPlay() {
   return dispatch => {
+    dispatch(startWaiting());
     fetch('/user', {
       credentials: 'include'
     }).then(res => {
+      dispatch(endWaiting());
       return res.json();
     }).then(json => {
       dispatch({

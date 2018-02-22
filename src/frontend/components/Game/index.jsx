@@ -131,6 +131,7 @@ export default class Game extends React.Component<Props, State> {
     return (
       <div id="screen-container">
         <style>{'body {overflow: hidden}'}</style>
+        <style>@import url('https://fonts.googleapis.com/css?family=Anton')</style>
         <div id="screen-header">
           <ControlPannel
             unit={this.state.hoveredUnit}

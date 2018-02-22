@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import Indicator from '../../components/Indicator/index.jsx';
 import Deck from '../../components/Deck/index.jsx';
 
 import './style.css';
@@ -12,9 +13,10 @@ export default class Top extends React.Component {
   }
 
   render() {
-    const { deck, onClickCreateDeck } = this.props;
+    const { deck, onClickCreateDeck, waiting } = this.props;
     return (
       <div id="top-base">
+        <Indicator shown={waiting} />
         <div id="top-container">
           <ul id="top-navigator">
             <li>

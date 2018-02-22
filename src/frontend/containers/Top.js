@@ -8,7 +8,8 @@ import {
 
 const mapStateToProps = state => {
   return {
-    deck: state.user ? state.user.deck : null
+    deck: state.user ? state.user.deck : null,
+    waiting: state.indicator.shown || false,
   };
 };
 const mapDispatchToProps = dispatch => {

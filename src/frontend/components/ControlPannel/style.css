@@ -176,6 +176,7 @@
 #cp-forecast .unit .name {
   margin-top: 3px;
   font-size: 1.2em;
+  line-height: 1.2em;
 }
 #cp-forecast .offense {
   background: #753b3b;

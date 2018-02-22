@@ -31,7 +31,7 @@ export default class ChangeHP extends Animation {
       text.text = 'Miss';
       text.style = {
         fontSize: 16,
-        fontFamily: 'impact',
+        fontFamily: ['Anton', 'impact'],
         fill: '#2f4f4f',
         stroke: '#eee',
         strokeThickness: 3,

@@ -175,20 +175,22 @@ export default function ControlPannel({ isOffense, terrain, unit, forecast, turn
   return (
     <div id="cp-container">
       <div id="cp-contents">
-        <TurnEndComponent
-          isMyTurn={isMyTurn}
-          onClickEndTurn={onClickEndTurn}
-        />
         {forecast ? (
           <ForecastComponent forecast={forecast} />
         ) : (
-          <UnitComponent unit={unit} />
+          <Fragment>
+            <TurnEndComponent
+              isMyTurn={isMyTurn}
+              onClickEndTurn={onClickEndTurn}
+            />
+            <UnitComponent unit={unit} />
+            <Info
+              isOffense={isOffense}
+              terrain={terrain}
+              turnRemained={turnRemained}
+            />
+          </Fragment>
         )}
-        <Info
-          isOffense={isOffense}
-          terrain={terrain}
-          turnRemained={turnRemained}
-        />
       </div>
     </div>
   );

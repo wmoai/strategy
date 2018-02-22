@@ -49,9 +49,7 @@ export default class Match extends React.Component {
     // return content;
     return (
       <div>
-        {waiting &&
-            <Indicator />
-        }
+        <Indicator shown={waiting} />
         {content}
       </div>
     );

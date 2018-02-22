@@ -165,7 +165,19 @@ export default class Client {
     app.stage.on('mousedown', e => {
       this.touch.start(e.data.global.x, e.data.global.y);
     });
+    app.stage.on('touchstart', e => {
+      this.touch.start(e.data.global.x, e.data.global.y);
+      game.hover(e.data.global.x, e.data.global.y);
+    });
+
     app.stage.on('mousemove', e => {
+      if (game.model.state.isEnd) {
+        return;
+      }
+      this.touch.move(e.data.global.x, e.data.global.y);
+      game.hover(e.data.global.x, e.data.global.y);
+    });
+    app.stage.on('touchmove', e => {
       if (game.model.state.isEnd) {
         return;
       }
@@ -176,6 +188,9 @@ export default class Client {
       this.touch.end();
     });
     app.stage.on('mouseout', () => {
+      this.touch.end();
+    });
+    app.stage.on('touchend', () => {
       this.touch.end();
     });
 
