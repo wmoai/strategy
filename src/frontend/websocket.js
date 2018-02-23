@@ -1,6 +1,7 @@
 import {
   enterRoom,
   syncRoom,
+  playerDisconnected,
 } from './actions/';
 
 import socketIOClient from 'socket.io-client';
@@ -8,6 +9,7 @@ import socketIOClient from 'socket.io-client';
 const actionsMap = {
   enterRoom,
   syncRoom,
+  playerDisconnected,
 };
 
 export default class Websocket {

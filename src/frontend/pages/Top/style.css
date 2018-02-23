@@ -3,10 +3,11 @@
 }
 
 #top-container {
-  width: 500px;
+  max-width: 500px;
+  min-width: 320px;
   min-height: 400px;
   margin: auto;
-  padding: 40px 10px;
+  padding: 40px 5px;
   box-sizing: border-box;
 }
 

@@ -314,11 +314,7 @@ export default class Game {
 
     // Annihilation victory
     if (flags.length == 1) {
-      this.state = {
-        ...this.state,
-        isEnd: true,
-        winner: flags[0],
-      };
+      this.endGame(flags[0]);
       return;
     }
 
@@ -331,21 +327,21 @@ export default class Game {
       }
     });
     if (occupied) {
-      this.state = {
-        ...this.state,
-        isEnd: true,
-        winner: true,
-      };
+      this.endGame(true);
     }
 
     // Defence victory
     if (this.state.turnCount >= this.defenseTurn*2) {
-      this.state = {
-        ...this.state,
-        isEnd: true,
-        winner: false,
-      };
+      this.endGame(false);
     }
+  }
+
+  endGame(winner: boolean) {
+    this.state = {
+      ...this.state,
+      isEnd: true,
+      winner,
+    };
   }
 
   fixAction(from: number, to: number, target: ?number) {

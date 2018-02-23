@@ -8,8 +8,8 @@ import * as masterData from '../../game/data';
 
 const mapStateToProps = state => {
   const { me, opponent } = state.match;
-  const myUnits = me.deck ? me.deck.map(uid => masterData.unit.get(uid)) : [];
-  const opponentUnits = opponent.deck ? opponent.deck.map(uid => masterData.unit.get(uid)) : [];
+  const myUnits = (me && me.deck) ? me.deck.map(uid => masterData.unit.get(uid)) : [];
+  const opponentUnits = (opponent && opponent.deck) ? opponent.deck.map(uid => masterData.unit.get(uid)) : [];
   return {
     myUnits,
     isOffense: me.isOffense,

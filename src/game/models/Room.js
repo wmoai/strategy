@@ -43,7 +43,6 @@ export default class Room {
       game = this.game.toData();
     }
     return { id, isSolo, state, players, game};
-
   }
 
   static restore(data: any) {
@@ -183,7 +182,7 @@ export default class Room {
     }
     const { field } = game;
     let units: Array<{ isOffense: boolean, unitId: number }> = [];
-    for(let player of this.players.values()) {
+    for (let player of this.players.values()) {
       units = units.concat(
         player.selection.map((unit, seq) => {
           return {
@@ -197,7 +196,8 @@ export default class Room {
     }
 
     game.initUnits(units);
-    return this.setState('BATTLE');
+    this.setState('BATTLE');
+    return this;
   }
 
   canAct(userId: string) {
@@ -224,7 +224,7 @@ export default class Room {
     if (!game) {
       return this;
     }
-    if (!game.state.isEnd) {
+    if (!game.state.isEnd && this.players.length >= 2) {
       return this;
     }
 

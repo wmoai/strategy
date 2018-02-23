@@ -41,6 +41,7 @@ const socketMiddleware = store => next => action => {
       const socket = new Websocket(store.dispatch);
       store.dispatch(startWaiting());
       socket.emit('joinRoom', payload.roomId, () => {
+        console.log(1212);
         store.dispatch(endWaiting());
       });
       return store.dispatch(connectSocket(socket));

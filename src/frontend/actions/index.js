@@ -118,6 +118,10 @@ export function syncGame(payload) {
   };
 }
 
+export const PLAYER_DISCONNECTED = 'PLAYER_DISCONNECTED';
+export function playerDisconnected() {
+  return { type: PLAYER_DISCONNECTED };
+}
 
 export const SELECT_UNITS = 'SELECT_UNITS';
 export function selectUnits(selectedList) {

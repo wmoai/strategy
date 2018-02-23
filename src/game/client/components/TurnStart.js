@@ -5,7 +5,7 @@ import Updater from '../lib/Updater.js';
 
 const baseStyle = {
   fontSize: 60,
-  fontFamily: ['Anton', 'impact'],
+  fontFamily: ['impact', 'Anton', 'Arial'],
   dropShadow: true,
   dropShadowBlur: 10,
   dropShadowDistance: 0,

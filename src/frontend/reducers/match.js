@@ -7,6 +7,7 @@ import {
   START_SOLO_PLAY,
   LEAVE_ROOM,
   GET_BATTLE_READY,
+  PLAYER_DISCONNECTED,
   SELECT_UNITS,
   RETURN_ROOM,
 } from '../actions/';
@@ -20,6 +21,7 @@ const initialState = {
   isReady: false,
   me: null,
   opponent: null,
+  isDisconnected: false,
 };
 
 function updateRoom(state, room) {
@@ -59,8 +61,22 @@ export default function reducer(state = initialState, action) {
     }
     case GET_BATTLE_READY:
       return { ...state, isReady: true };
+    case PLAYER_DISCONNECTED: {
+      const { room, isReady } = state;
+      if (!room.stateIs('ROOM')) {
+        return { ...state, isDisconnected: true };
+      } else if (isReady) {
+        //TODO cancel ready
+        return { ...state, isDisconnected: true };
+      }
+      break;
+    }
     case RETURN_ROOM:
-      return { ...state, isReady: false };
+      return {
+        ...state,
+        isReady: false,
+        isDisconnected: false,
+      };
     case START_SOLO_PLAY: {
       const { id, deck } = payload;
       return updateRoom(

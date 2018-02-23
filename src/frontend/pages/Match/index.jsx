@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import Indicator from '../../components/Indicator/index.jsx';
+import Disconnected from '../../components/Disconnected/index.jsx';
 import Lobby from '../../containers/Lobby.js';
 import Selector from '../../containers/Selector.js';
 import Game from '../../containers/Game.js';
@@ -37,7 +38,7 @@ export default class Match extends React.Component {
   }
 
   render() {
-    const { room, waiting } = this.props;
+    const { room, waiting, isDisconnected, onReturnRoom } = this.props;
     let content = <Lobby />;
     if (room) {
       if (room.stateIs('SELECT')) {
@@ -46,12 +47,14 @@ export default class Match extends React.Component {
         content = <Game />;
       }
     }
-    // return content;
     return (
-      <div>
+      <Fragment>
+        {isDisconnected &&
+            <Disconnected onReturnRoom={onReturnRoom} />
+        }
         <Indicator shown={waiting} />
         {content}
-      </div>
+      </Fragment>
     );
   }
 

@@ -32,28 +32,35 @@ export default class RoomServer {
 
         const { userId, deck } = data;
 
-        socket.on('createRoom', (callback) => {
+        socket.on('createRoom', (ack) => {
           const roomId = this.generateRoomId();
           const room = new Room({ id: roomId });
           this.rooms.set(room.id, room);
           this.userToRoom.set(userId, room.id);
-          this.join(roomId, userId, deck, socket);
-          callback();
+          try {
+            this.join(roomId, userId, deck, socket);
+            ack();
+          } catch (e) {
+            ack();
+            console.log(e);
+            socket.disconnect();
+          }
         });
 
-        socket.on('joinRoom', (roomId, callback) => {
+        socket.on('joinRoom', (roomId, ack) => {
           this.userToRoom.set(userId, roomId);
-          this.join(roomId, userId, deck, socket);
-          callback();
-        });
-
-        socket.on('leaveRoom', () => {
-          socket.disconnect();
+          try {
+            this.join(roomId, userId, deck, socket);
+            ack();
+          } catch (e) {
+            ack();
+            console.log(e);
+            socket.disconnect();
+          }
         });
 
         socket.on('disconnect', () => {
-          this.leave(userId);
-          console.log('disconnected');
+          console.log(`${userId} disconnected`);
         });
       });
 
@@ -74,7 +81,8 @@ export default class RoomServer {
 
   getRoom(roomId: string) {
     if (!this.rooms.has(roomId)) {
-      throw new Error(`Room[${roomId}] is not exists.`);
+      return null;
+      // throw new Error(`Room[${roomId}] is not exists.`);
     }
     return this.rooms.get(roomId);
   }
@@ -100,93 +108,88 @@ export default class RoomServer {
   }
 
   join(roomId: string, userId: string, deck: Array<number>, socket: any) {
-    try {
-      let room = this.getRoom(roomId);
-      if (!room) {
-        throw `room ${roomId} is not exists.`;
-      }
-      socket.join(roomId);
-      console.log(`join ${userId} to room ${roomId}`);
-
-      const player = new Player({
-        id: userId,
-        deck: deck
-      });
-      room.addPlayer(player);
-      socket.emit('enterRoom', { userId });
-      this.syncRoom(room);
-
-      socket.on('getBattleReady', () => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          this.syncRoom(room.getBattleReady(userId).mightStartGame());
-        }
-      });
-      socket.on('selectUnits', ({ list }) => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          this.syncRoom(room.selectUnits(userId, list).mightEngage());
-        }
-      });
-      socket.on('syncGame', () => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          const { game } = room;
-          if (game) {
-            socket.emit('syncGame', {
-              game: game.toData(),
-            });
-          }
-        }
-      });
-      socket.on('act', ({ from, to, target }) => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          const changes = room.actInGame(userId, from, to, target);
-          room.mightResetPlayers();
-          this.syncGame(
-            room,
-            { from, to, target, changes }
-          );
-        }
-      });
-      socket.on('endTurn', () => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          this.syncGame(room.endTurn(userId).mightResetPlayers());
-        }
-      });
-      socket.on('returnRoom', () => {
-        let room = this.getRoom(roomId);
-        if (room) {
-          socket.emit('syncRoom', room.toData());
-        }
-      });
-    } catch (e) {
-      console.log(e);
-      socket.disconnect();
-    }
-  }
-
-  leave(userId: string) {
-    if (!userId) {
-      return;
-    }
-    const roomId = this.userToRoom.get(userId);
-    if (!roomId) {
-      return;
-    }
     let room = this.getRoom(roomId);
     if (!room) {
-      return;
+      throw `room ${roomId} is not exists.`;
     }
-    room.leave(userId);
-    if (room.players.size == 0) {
-      this.rooms.delete(roomId);
-    } else {
-      this.syncRoom(room);
-    }
-    this.userToRoom.delete(userId);
+    socket.join(roomId);
+    console.log(`join ${userId} to room ${roomId}`);
+
+    const player = new Player({
+      id: userId,
+      deck: deck
+    });
+    room.addPlayer(player);
+    socket.emit('enterRoom', { userId });
+    this.syncRoom(room);
+
+    socket.on('getBattleReady', () => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        this.syncRoom(room.getBattleReady(userId).mightStartGame());
+      }
+    });
+    socket.on('selectUnits', ({ list }) => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        this.syncRoom(room.selectUnits(userId, list).mightEngage());
+      }
+    });
+    socket.on('syncGame', () => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        const { game } = room;
+        if (game) {
+          socket.emit('syncGame', {
+            game: game.toData(),
+          });
+        }
+      }
+    });
+    socket.on('act', ({ from, to, target }) => {
+      let room = this.getRoom(roomId);
+      if (room) {
+        const changes = room.actInGame(userId, from, to, target);
+        room.mightResetPlayers();
+        this.syncGame(
+          room,
+          { from, to, target, changes }
+        );
+      }
+    });
+    socket.on('endTurn', () => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        this.syncGame(room.endTurn(userId).mightResetPlayers());
+      }
+    });
+    socket.on('returnRoom', () => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        socket.emit('syncRoom', room.toData());
+      }
+    });
+    socket.on('leaveRoom', () => {
+      socket.disconnect();
+    });
+
+    socket.on('disconnect', () => {
+      const room = this.getRoom(roomId);
+      if (room) {
+        this.io.to(room.id).emit('playerDisconnected');
+
+        room.leave(userId);
+        if (room.stateIs('ROOM')) {
+          this.syncRoom(room);
+        } else {
+          room.mightResetPlayers();
+        }
+        if (room.players.size == 0) {
+          this.rooms.delete(roomId);
+        }
+        this.userToRoom.delete(userId);
+      }
+    });
   }
 
 }
