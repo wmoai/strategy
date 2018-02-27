@@ -99,7 +99,7 @@ export default class Room {
     return this;
   }
 
-  player(userId: string): ?Player {
+  player(userId: string) {
     const player = this.players.get(userId);
     return player;
   }
@@ -221,10 +221,7 @@ export default class Room {
 
   mightResetPlayers() {
     const { game } = this;
-    if (!game) {
-      return this;
-    }
-    if (!game.state.isEnd && this.players.length >= 2) {
+    if ((game && !game.state.isEnd) && this.players.size >= 2) {
       return this;
     }
 

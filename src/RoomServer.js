@@ -178,11 +178,15 @@ export default class RoomServer {
       if (room) {
         this.io.to(room.id).emit('playerDisconnected');
 
+        const opponent = room.opponent(userId);
         room.leave(userId);
-        if (room.stateIs('ROOM')) {
-          this.syncRoom(room);
-        } else {
-          room.mightResetPlayers();
+
+        if (opponent) {
+          if (room.stateIs('ROOM') && !opponent.isReady) {
+            this.syncRoom(room);
+          } else {
+            room.mightResetPlayers();
+          }
         }
         if (room.players.size == 0) {
           this.rooms.delete(roomId);
