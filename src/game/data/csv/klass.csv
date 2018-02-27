@@ -1,0 +1,8 @@
+name,id,magical,healer,move
+軽装歩兵,1,0,0,foot
+重装歩兵,2,0,0,foot
+軽装騎兵,3,0,0,horse
+重装騎兵,4,0,0,horse
+弓兵,5,0,0,foot
+魔術師,6,1,0,hover
+聖職者,7,1,1,hover

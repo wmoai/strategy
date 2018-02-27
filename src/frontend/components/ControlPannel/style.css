@@ -1,0 +1,300 @@
+
+#cp-container {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+#cp-contents {
+  display: flex;
+  align-items: center;
+  max-width: 800px;
+  height: 100%;
+  margin: auto;
+  box-sizing: border-box;
+  justify-content: center;
+}
+
+#cp-turnend-btn {
+  display: block;
+  height: 100%;
+  width: 70px;
+  outline: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  background: linear-gradient(to bottom right, mediumaquamarine, darkgreen);
+
+  border: solid 1px #555;
+  box-shadow:
+  inset 1px 2px 0 rgba(255,255,255,0.6),
+  inset -0.5px -0.5px rgba(255,255,255,0.3),
+  1px 1px 1px rgba(255, 255, 255, 0.1);
+
+  color: #eee;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  font-size: 1em;
+  line-height: 1.2em;
+  cursor: pointer;
+}
+#cp-turnend-btn[disabled] {
+  background: linear-gradient(to bottom right, #888, #555);
+  font-size: 0.9em;
+  color: #222;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
+
+#cp-unit {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: white;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 3px 10px;
+  margin-left: auto;
+  background: linear-gradient(to top, #666, #777);
+}
+
+#cp-unit .header {
+  display: flex;
+  align-items: center;
+}
+#cp-unit .name {
+  min-width: 80px;
+  text-align: center;
+  font-size: 0.9em;
+  line-height: 1em;
+  padding: 4px;
+  box-sizing: border-box;
+  border: solid 1px #777;
+  border-radius: 2px;
+}
+#cp-unit.offense .name {
+  background: linear-gradient(to top, #5b2f2f, #964c4c);
+}
+#cp-unit.defense .name {
+  background: linear-gradient(to top, #30325e, #4c5496);
+}
+
+#cp-unit .hp {
+  line-height: 1em;
+  margin-left: 10px;
+}
+#cp-unit .val {
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 #592e11;
+  font-weight: bold;
+}
+#cp-unit .hp-val {
+  display: inline-block;
+  min-width: 60px;
+  padding-left: 3px;
+  font-size: 1.2em;
+}
+#cp-unit .hp-val .current {
+  color: palegreen;
+  text-shadow: 1px 1px 0 #222;
+}
+#cp-unit .hp-val .max {
+  padding-left: 3px;
+  font-size: 0.7em;
+  font-weight: normal;
+}
+
+#cp-unit .main {
+  display: flex;
+  margin-top: 3px;
+}
+#cp-unit .avatar {
+  margin-right: 8px;
+}
+
+#cp-unit .status-table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: white;
+}
+#cp-unit .status-table th {
+  text-align: left;
+  font-size: 0.8em;
+  font-weight: normal;
+  line-height: 1.1em;
+}
+#cp-unit .status-table td {
+  min-width: 21px;
+  text-align: right;
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 #592e11;
+  font-weight: bold;
+  line-height: 1em;
+  line-height: 1.1em;
+}
+
+#cp-unit .status-table th:nth-child(3) {
+  padding-left: 15px;
+}
+
+
+#cp-forecast {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #222;
+  font-size: 11px;
+}
+
+#cp-forecast-wrap {
+  display: flex;
+  width: 100%;
+  margin: 0;
+}
+
+#cp-forecast .unit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5px 12px;
+  background-color: gray;
+  text-align: center;
+  color: white;
+}
+#cp-forecast .unit:first-child {
+  align-items: flex-end;
+}
+#cp-forecast .unit .name {
+  margin-top: 3px;
+  font-size: 1.2em;
+  line-height: 1.2em;
+}
+#cp-forecast .offense {
+  background: #753b3b;
+}
+#cp-forecast .defense {
+  background: #3b3e7c;
+}
+#cp-forecast .healer {
+  background: #3e6631;
+}
+
+#cp-forecast table {
+  border-collapse: collapse;
+  height: 100%;
+  font-size: 1em;
+  color: white;
+}
+#cp-forecast table tr:first-child td {
+  padding-top: 10px;
+}
+#cp-forecast table tr:last-child td {
+  padding-bottom: 10px;
+}
+#cp-forecast table td:first-child {
+  padding-left: 10px;
+}
+#cp-forecast table td:last-child {
+  padding-right: 10px;
+}
+#cp-forecast table th:first-child {
+  padding-left: 10px;
+}
+#cp-forecast table th:last-child {
+  padding-right: 10px;
+}
+
+#cp-forecast table td {
+  text-align: center;
+  padding: 2px 5px;
+  width: 24px;
+}
+#cp-forecast table td.important {
+  color: lemonchiffon;
+  text-shadow: 1px 1px 0 #333;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+#cp-forecast table td.hp {
+  color: palegreen;
+  font-size: 1.5em;
+}
+
+#cp-forecast table th {
+  height: 20px;
+  color: #bbb;
+  background-color: #222;
+}
+
+
+
+#cp-info {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 120px;
+  box-sizing: border-box;
+  margin-left: auto;
+  background: red;
+}
+
+#cp-banner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: solid 1px #222;
+}
+#cp-banner.offense {
+  background: linear-gradient(to top, #5b2f2f, #964c4c);
+}
+#cp-banner.defense {
+  background: linear-gradient(to top, #30325e, #4c5496);
+}
+
+#cp-army {
+  text-align: center;
+  font-size: 1.4em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 2px 0 #333;
+}
+
+#cp-turn {
+  text-align: center;
+  color: #ddd;
+  font-size: 0.8em;
+}
+
+#cp-terrain {
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  margin-top: auto;
+  box-sizing: border-box;
+  background: linear-gradient(to bottom, #333, #111);
+  color: #eee;
+}
+#cp-terrain .name {
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-right: 5px;
+}
+#cp-terrain .avoid {
+  font-size: 0.7em;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+  color: #999;
+  margin-right: 3px;
+}
+#cp-terrain .value {
+  font-size: 0.7em;
+}

@@ -1,53 +1,47 @@
-.cell {
-  display: inline-block;
-  position: relative;
-  width: 30px;
-  height: 30px;
-  border: silver 1px solid;
-  border-bottom: none;
-  border-right: none;
-  overflow: hidden;
-  cursor: pointer;
-  text-align: center;
-
-  -moz-user-select: none;
-  -webkit-user-select: none;
-}
-.cell.plains {
-  background-color: darkseagreen;
-}
-.cell.forest {
-  background-color: darkgreen;
-}
-.cell.mountain {
-  background-color: peru;
+body {
+  background: linear-gradient(to right, #000, #333, #000);
 }
 
+#portal-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.6;
-}
-.overlay.movable {
-  background-color: palegreen;
-}
-.overLay.actionable {
-  background-color: gold;
+  width: 600px;
+  margin: auto;
+  padding: 40px 10px;
+  box-sizing: border-box;
+  color: #bbb;
 }
 
-.unit {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 100;
+#portal-navigator {
+  display: flex;
+  align-items: center;
 }
 
-.unit.wait {
-  color: gray;
+#portal-navigator form {
+  margin: 0;
+}
+
+.portal-button {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.2em;
+  padding: 0.2em 0.6em;
+  background: linear-gradient(to top, #666, #777);
+  border: 0.3em solid;
+  border-top-color: #888;
+  border-left-color: #777;
+  border-bottom-color: #444;
+  border-right-color: #555;
+  border-radius: 2px;
+  outline: none;
+
+  color: #333;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+  margin: 0 5px;
+}
+
+#deck {
+  max-width: 600px;
 }
