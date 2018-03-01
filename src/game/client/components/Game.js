@@ -5,6 +5,7 @@ import Component from './Component.js';
 import TerrainComponent from './Terrain.js';
 import CursorComponent from './Cursor.js';
 import UnitsComponent from './Units.js';
+import TimerComponent from './Timer.js';
 import Updater from '../lib/Updater.js';
 import Animation from '../animations/Animation.js';
 import ChangeHp from '../animations/ChangeHp.js';
@@ -37,14 +38,17 @@ export default class Game extends Component {
   };
   components: {
     turnStart: TurnStart,
+    timer: TimerComponent,
     cursor: CursorComponent,
     units: UnitsComponent,
   };
-  postUpdate: ?void => boolean;
+  postUpdate: ?(void => boolean);
 
   updateQueue: Array<Updater>;
   turnBuffer: ?boolean;
-  onChangeTurn: ?(boolean, number) => void;
+  onChangeTurn: ?((boolean, number) => void);
+  onTimeOut: ?(void => void);
+  isTimeOut: boolean;
   onEnd: ?(boolean => void);
 
   constructor({
@@ -66,6 +70,7 @@ export default class Game extends Component {
     const { field } = game;
     this.cellSize = cellSize;
     this.isOffense = isOffense;
+    this.isTimeOut = false;
 
     this.fullWidth = field.width * cellSize;
     this.fullHeight = field.height * cellSize;
@@ -75,6 +80,7 @@ export default class Game extends Component {
 
     this.components = {
       turnStart: new TurnStart(),
+      timer: new TimerComponent(),
       cursor: new CursorComponent(cellSize),
       units: new UnitsComponent({
         unitModels: game.units,
@@ -95,6 +101,7 @@ export default class Game extends Component {
     this.layer.main.addChild(this.components.units.container);
     this.layer.main.addChild(this.components.cursor.container);
     this.layer.overlay.addChild(this.components.turnStart.container);
+    this.layer.overlay.addChild(this.components.timer.container);
 
     this.updateQueue = [];
 
@@ -112,15 +119,19 @@ export default class Game extends Component {
 
   update(delta: number) {
     const updater = this.currentUpdater();
+    const { cursor, timer } = this.components;
+    if (this.isMyTurn()) {
+      timer.update(this.renderer.width);
+    }
     if (updater) {
       if (updater instanceof Animation) {
         this.followScreen(updater.container);
-        this.components.cursor.container.visible = !(updater instanceof ChangeHp);
+        cursor.container.visible = !(updater instanceof ChangeHp);
       }
       updater.update(delta);
       return true;
     }
-    this.components.cursor.container.visible = true;
+    cursor.container.visible = true;
 
     if (this.model.state.isEnd) {
       const onEnd = this.onEnd
@@ -135,7 +146,13 @@ export default class Game extends Component {
       return true;
     }
     if (this.postUpdate) {
-      return this.postUpdate();
+      this.postUpdate();
+    }
+    if (!this.isTimeOut && timer.isEnd && this.isMyTurn()) {
+      this.isTimeOut = true;
+      if (this.onTimeOut) {
+        this.onTimeOut();
+      }
     }
     return false;
   }
@@ -203,12 +220,22 @@ export default class Game extends Component {
   }
 
   animateTurnStart() {
-    const { renderer, model, components, isOffense } = this;
-    this.updateQueue.push(components.turnStart.createUpdater(
-      model.state.turn == isOffense,
+    const { renderer, components } = this;
+    const isMyTurn = this.isMyTurn();
+    const updater = components.turnStart.createUpdater(
+      isMyTurn,
       renderer.width,
       Math.min(renderer.height, this.layer.main.height),
-    ));
+    );
+    if (isMyTurn) {
+      updater.after = () => {
+        this.isTimeOut = false;
+        components.timer.restart(90000);
+      };
+    } else {
+      components.timer.stop();
+    }
+    this.updateQueue.push(updater);
   }
 
   forcusContainer(container: any) {
@@ -231,7 +258,7 @@ export default class Game extends Component {
   }
 
   endMyTurn(emit: void => void) {
-    if (this.isOffense === this.model.state.turn) {
+    if (this.isMyTurn()) {
       if (emit && typeof emit === 'function') {
         emit();
       }
@@ -360,14 +387,14 @@ export default class Game extends Component {
   }
 
   mightMove(cellId: number) {
-    const { model, state, isOffense } = this;
+    const { model, state } = this;
     const { turn } = model.state;
     const { forcusedUnit, forcusedCell } = state;
 
     const prevUnit = model.getUnit(cellId);
     if (prevUnit && prevUnit != forcusedUnit) {
       return this.forcus(cellId);
-    } else if (isOffense != turn) {
+    } else if (!this.isMyTurn()) {
       return this.clearUI();
     } else if (forcusedUnit && forcusedUnit.isOffense == turn) {
       if (forcusedCell != null && model.checkMovable(forcusedCell, cellId)) {

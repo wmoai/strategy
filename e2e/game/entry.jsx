@@ -22,7 +22,11 @@ class Container extends React.Component {
       { isOffense:true, unitId:21, state: {cellId:32} },
       // { isOffense:true, unitId:11, state: {cellId:264} },
       { isOffense:true, unitId:25, state: {cellId:36} },
-      { isOffense:false, unitId:11, state: {cellId:55} },
+      { isOffense:true, unitId:25, state: {cellId:37} },
+      { isOffense:true, unitId:25, state: {cellId:38} },
+      { isOffense:true, unitId:25, state: {cellId:39} },
+      { isOffense:true, unitId:25, state: {cellId:40} },
+      { isOffense:false, unitId:11, state: {cellId:255} },
     ]);
     // game.state.isEnd = true;
     // game.state.winner = false;

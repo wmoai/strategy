@@ -20,6 +20,7 @@ export function preload(): Promise<void> {
     if (isPreloaded) {
       return resolve();
     }
+
     const loader = PIXI.loaders.shared;
     loader.add('units', '/image/units.png')
       .add('terrain', '/image/terrain.png')

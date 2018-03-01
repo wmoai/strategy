@@ -23,6 +23,7 @@ export default class Client {
   cellSize: number;
   scale: number;
   socket: any;
+  isEmitted: boolean;
   app: any;
   components: {
     game: Game,
@@ -65,6 +66,7 @@ export default class Client {
     this.cellSize = cellSize;
     this.scale = 1;
     this.socket = socket;
+    this.isEmitted = false;
     this.app = new PIXI.Application({
       width,
       height,
@@ -115,7 +117,9 @@ export default class Client {
           forecast: game.forecast(),
         });
       }
-      game.update(delta);
+      if (!this.isEmitted) {
+        game.update(delta);
+      }
     });
   }
 
@@ -128,6 +132,9 @@ export default class Client {
         turn,
         turnRemained,
       });
+    };
+    game.onTimeOut = () => {
+      this.endTurn();
     };
     game.onEnd = winner => {
       this.kickEvent(Events.endgame, winner);
@@ -143,6 +150,7 @@ export default class Client {
           if (!socket) {
             return;
           }
+          this.isEmitted = true;
           socket.emit('act', {
             from: from,
             to: to,
@@ -196,14 +204,17 @@ export default class Client {
 
     if (socket) {
       socket.on('syncGame', payload => {
+        this.isEmitted = false;
         game.sync(payload.game, payload.action);
       });
+      this.isEmitted = true;
       socket.emit('syncGame');
     }
   }
 
   endTurn() {
     this.components.game.endMyTurn(() => {
+      this.isEmitted = true;
       this.socket.emit('endTurn');
     });
   }
