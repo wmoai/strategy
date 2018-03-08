@@ -3,10 +3,13 @@ import React from 'react';
 import './style.css';
 import UnitImage from '../UnitImage/index.jsx';
 
-function Unit({ data }) {
+export default function Card({ data }) {
   return (
-    <div className="deck-unit">
-      <div className="name">{data.name}</div>
+    <div className="card-container">
+      <div className="name">
+        <div className="cost">{data.cost}</div>
+        <div className="body">{data.name}</div>
+      </div>
       <div className="main">
         <div className="image">
           <UnitImage klassId={data.klass} isOffense={false} isGray={true} />
@@ -29,7 +32,7 @@ function Unit({ data }) {
               <th>信</th>
               <td>{data.fth}</td>
               <th>射</th>
-              <td>{data.max_range}</td>
+              <td>{data.max_range == data.min_range ? data.min_range : `${data.min_range},${data.max_range}`}</td>
             </tr>
           </tbody>
         </table>
@@ -38,18 +41,3 @@ function Unit({ data }) {
   );
 }
 
-export default function Deck({ deck }) {
-  if (!deck) {
-    return null;
-  }
-
-  return (
-    <div id="deck-container">
-      {deck.map((unit, i) => {
-        return (
-          <Unit data={unit} key={i} />
-        );
-      })}
-    </div>
-  );
-}

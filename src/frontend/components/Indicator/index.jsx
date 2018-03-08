@@ -4,6 +4,8 @@ import './style.css';
 
 export default function Indicator({ shown }) {
   return (
-    <img id="global-indicator" className={shown ? '' : 'hidden'} src="/image/indicator.gif" />
+    <div id="indicator-container" className={shown ? '' : 'hidden'}>
+      <img id="global-indicator" src="/image/indicator.gif" />
+    </div>
   );
 }

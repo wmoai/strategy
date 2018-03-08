@@ -14,16 +14,14 @@
 #top-navigator {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   width: 100%;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 #top-navigator li {
-  margin-left: 10px;
-}
-#top-navigator li:first-child {
-  margin: 0;
+  margin: 5px;
 }
 
 .top-btn {
@@ -56,4 +54,18 @@
 #top-deck h2 {
   text-align: center;
   margin: 10px;
+  font-size: 2em;
+  font-family: impact;
+}
+
+#top-deck ul {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#top-deck ul li {
+  margin: 4px;
 }

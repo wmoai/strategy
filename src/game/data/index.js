@@ -11,7 +11,7 @@ import persianData from '../data/json/field/persian.json';
 import muhiData from '../data/json/field/muhi.json';
 import sekiData from '../data/json/field/seki.json';
 
-import './unitData.js';
+// import './unitData.js';
 
 const terrain: Map<number, Terrain> = new Map();
 Object.keys(terrainData).forEach(key => {

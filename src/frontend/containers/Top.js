@@ -1,10 +1,7 @@
 import { connect } from 'react-redux';
 import Component from '../pages/Top/index.jsx';
 
-import {
-  fetchDeck,
-  createDeck,
-} from '../actions/';
+import { fetchDeck } from '../actions/';
 
 const mapStateToProps = state => {
   return {
@@ -16,9 +13,6 @@ const mapDispatchToProps = dispatch => {
   return {
     onInit: () => {
       dispatch(fetchDeck());
-    },
-    onClickCreateDeck: () => {
-      dispatch(createDeck());
     },
   };
 };

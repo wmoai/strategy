@@ -1,0 +1,104 @@
+
+#deck-container {
+  height: 100%;
+  display: flex;
+  margin: auto;
+}
+
+#deck-container #current h1 {
+  text-align: center;
+  font-family: impact;
+  font-size: 2em;
+}
+
+#deck-container #my-deck {
+  flex: 1;
+  min-height: 400px;
+  padding: 40px 15px;
+  box-sizing: border-box;
+  overflow-y: scroll;
+}
+
+#deck-container #head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 10px;
+}
+
+#deck-container h1 {
+  margin: 0;
+  padding: 0 12px;
+  font-family: impact;
+}
+
+#deck-container #counter {
+  font-size: 0.8em;
+  padding: 0 8px;
+  font-family: Arial;
+}
+#deck-container #counter #current {
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 0 2px;
+}
+#deck-container #counter #current.invalid {
+  color: red;
+}
+
+#deck-container #submitter {
+  width: 60px;
+  height: 30px;
+  font-size: 0.8em;
+  font-weight: bold;
+  border: 1px solid #555;
+  border-radius: 0;
+  background-color: white;
+  outline: none;
+  color: #555;
+  cursor: pointer;
+}
+#deck-container #submitter[disabled] {
+  cursor: default;
+  color: #ccc;
+  border-color: #ccc;
+}
+
+#deck-container .card-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+}
+#deck-container .card-list li {
+  margin: 4px;
+}
+
+
+#deck-container .card-btn {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  font-size: 1em;
+  background: none;
+  cursor: pointer;
+}
+
+#deck-container #pool {
+  flex: 1;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+  padding: 25px 15px 40px;
+  box-sizing: border-box;
+  overflow-y: scroll;
+  background-color: #ddd;
+  border-left: solid 1px #999;
+}
+
+

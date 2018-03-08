@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export const START_WAITING = 'START_WAITING';
 export function startWaiting() {
   return { type: START_WAITING };
@@ -11,34 +13,24 @@ export const FETCH_DECK = 'FETCH_DECK';
 export function fetchDeck() {
   return dispatch => {
     dispatch(startWaiting());
-    fetch('/user', {
-      credentials: 'include'
-    }).then(res => {
+    axios.get('/user').then(res => {
       dispatch(endWaiting());
-      return res.json();
-    }).then(json => {
       dispatch({
         type: FETCH_DECK,
-        payload: json
+        payload: res.data,
       });
-    }).catch(() => {
     });
   };
 }
 
-export function createDeck() {
+export function setDeck(ids) {
   return dispatch => {
     dispatch(startWaiting());
-    fetch('/deck', {
-      method: 'POST',
-      credentials: 'include'
-    }).then(res => {
+    axios.post('/deck', { ids }).then(res => {
       dispatch(endWaiting());
-      return res.json();
-    }).then(json => {
       dispatch({
         type: FETCH_DECK,
-        payload: json
+        payload: res.data,
       });
     });
   };
@@ -48,15 +40,11 @@ export const START_SOLO_PLAY = 'START_SOLO_PLAY';
 export function startSoloPlay() {
   return dispatch => {
     dispatch(startWaiting());
-    fetch('/user', {
-      credentials: 'include'
-    }).then(res => {
+    axios.get('/user').then(res => {
       dispatch(endWaiting());
-      return res.json();
-    }).then(json => {
       dispatch({
         type: START_SOLO_PLAY,
-        payload: json
+        payload: res.data,
       });
     });
   };

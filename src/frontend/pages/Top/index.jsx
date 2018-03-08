@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import Indicator from '../../components/Indicator/index.jsx';
-import Deck from '../../components/Deck/index.jsx';
+import Card from '../../components/Card/index.jsx';
 
 import './style.css';
 
@@ -13,14 +13,14 @@ export default class Top extends React.Component {
   }
 
   render() {
-    const { deck, onClickCreateDeck, waiting } = this.props;
+    const { deck, waiting } = this.props;
     return (
       <div id="top-base">
         <Indicator shown={waiting} />
         <div id="top-container">
           <ul id="top-navigator">
             <li>
-              <button className="top-btn" onClick={() => onClickCreateDeck() }>ランダムデッキ</button>
+              <Link className="top-btn" to="deck">デッキ構築</Link>
             </li>
             {deck && 
                 <li>
@@ -31,7 +31,15 @@ export default class Top extends React.Component {
           {deck && deck.length > 0 &&
               <div id="top-deck">
                 <h2>YOUR DECK</h2>
-                <Deck deck={deck} />
+                <ul>
+                  {deck.map((unit, i) => {
+                    return (
+                      <li key={i}>
+                        <Card data={unit} />
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
           }
         </div>
