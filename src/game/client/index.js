@@ -220,7 +220,13 @@ export default class Client {
   }
 
   destroy() {
-    this.app.destroy();
+    const { socket, app } = this;
+    if (socket) {
+      socket.socket.removeAllListeners('syncGame');
+    }
+    if (app) {
+      app.destroy();
+    }
   }
 
   zoom(delta: number) {
