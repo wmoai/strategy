@@ -29,23 +29,21 @@ export default class Match extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { room } = nextProps;
-    if (room && !this.state.isLocked) {
+    const { screen } = nextProps;
+    if (screen != 'LOBBY' && !this.state.isLocked) {
       this.setState({ isLocked: true });
-    } else if (!room && this.state.isLocked) {
+    } else if (screen == 'LOBBY' && this.state.isLocked) {
       this.setState({ isLocked: false });
     }
   }
 
   render() {
-    const { room, waiting, isDisconnected, onReturnRoom } = this.props;
+    const { screen, waiting, isDisconnected, onReturnRoom } = this.props;
     let content = <Lobby />;
-    if (room) {
-      if (room.stateIs('SELECT')) {
-        content = <Selector costLimit={20} />;
-      } else if (room.stateIs('BATTLE') && room.game) {
-        content = <Game />;
-      }
+    if (screen === 'SELECT') {
+      content = <Selector costLimit={20} />;
+    } else if (screen === 'BATTLE' || screen === 'RESULT') {
+      content = <Game />;
     }
     return (
       <Fragment>

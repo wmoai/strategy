@@ -156,15 +156,11 @@ export function endMyTurn() {
   };
 }
 
-export const END_ANIMATION = 'END_ANIMATION';
-export function endAnimation(turn) {
-  return dispatch => {
-    setTimeout(() => {
-      dispatch({
-        type: END_ANIMATION,
-        payload: { turn }
-      });
-    }, 300);
+export const END_GAME = 'END_GAME';
+export function endGame(winner) {
+  return {
+    type: END_GAME,
+    payload: { winner },
   };
 }
 

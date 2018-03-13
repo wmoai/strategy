@@ -5,8 +5,7 @@ import { returnRoom } from '../actions';
 
 const mapStateToProps = state => {
   return {
-    _: state.match.room ? state.match.room.state : null,
-    room: state.match.room,
+    screen: state.match.screen,
     waiting: state.indicator.shown || false,
     isDisconnected: state.match.isDisconnected || false,
   };

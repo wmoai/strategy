@@ -19,9 +19,12 @@ type Props = {
   game: GameModel,
   socket: any,
   isSolo: boolean,
+  screen: string,
+  winner: ?boolean,
   onSelectCell: number => void,
   onHoverCell: number => void,
   onClickEndTurn: void => void,
+  onEndGame: boolean => void,
   onReturnRoom: void => void,
 };
 type State = {
@@ -60,7 +63,7 @@ export default class Game extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    const { game, isOffense, socket, isSolo } = this.props;
+    const { game, isOffense, socket, isSolo, onEndGame } = this.props;
     const cellSize = 40;
 
     const client = new Client({
@@ -87,7 +90,7 @@ export default class Game extends React.Component<Props, State> {
       });
     });
     client.addEventListener('endgame', winner => {
-      this.setState({ winner });
+      onEndGame(winner);
     });
     this.client = client;
     
@@ -126,12 +129,13 @@ export default class Game extends React.Component<Props, State> {
       isOffense,
       game,
       onReturnRoom,
+      screen,
+      winner,
     } = this.props;
 
     return (
       <div id="screen-container">
         <style>{'body {overflow: hidden}'}</style>
-        <style>@import url('https://fonts.googleapis.com/css?family=Anton')</style>
         <div id="screen-header">
           <ControlPannel
             unit={this.state.hoveredUnit}
@@ -183,9 +187,9 @@ export default class Game extends React.Component<Props, State> {
               }}
             />
         }
-        {this.state.winner != null &&
+        {screen === 'RESULT' &&
             <Result
-              won={this.state.winner == isOffense}
+              won={winner == isOffense}
               onReturnRoom={onReturnRoom}
             />
         }

@@ -71,9 +71,8 @@ if (contents) {
   Client.preload().then(() => {
     render(
       <div>
-        <style>
-          {'body { margin:0;padding:0; }'}
-        </style>
+        <style>{'body { margin:0;padding:0; }'}</style>
+        <style>{'@import url("https://fonts.googleapis.com/css?family=Anton")'}</style>
         <Provider store={store}>
           <Router />
         </Provider>

@@ -9,26 +9,49 @@ import {
   GET_BATTLE_READY,
   PLAYER_DISCONNECTED,
   SELECT_UNITS,
+  END_GAME,
   RETURN_ROOM,
 } from '../actions/';
+
+const SCREEN = new Map([
+  ['LOBBY', 'LOBBY'],
+  ['ROOM', 'ROOM'],
+  ['SELECT', 'SELECT'],
+  ['BATTLE', 'BATTLE'],
+  ['RESULT', 'RESULT'],
+]);
 
 const initialState = {
   socket: null,
   userId: null,
   deck: null,
-  waiting: false,
   room: null,
+  screen: SCREEN.get('LOBBY'),
   isReady: false,
   me: null,
   opponent: null,
+  waiting: false,
   isDisconnected: false,
 };
 
 function updateRoom(state, room) {
   const { userId } = state;
+  let screen = state.screen;
+  if (room.stateIs('ROOM') && state.screen !== 'RESULT') {
+    if (room) {
+      screen = SCREEN.get('ROOM');
+    } else {
+      screen = SCREEN.get('LOBBY');
+    }
+  } else if (room.stateIs('SELECT')) {
+    screen = SCREEN.get('SELECT');
+  } else if (room.stateIs('BATTLE')) {
+    screen = SCREEN.get('BATTLE');
+  }
   return {
     ...state,
     room,
+    screen,
     me: room.player(userId),
     opponent: room.opponent(userId),
   };
@@ -66,14 +89,20 @@ export default function reducer(state = initialState, action) {
       if (!room.stateIs('ROOM')) {
         return { ...state, isDisconnected: true };
       } else if (isReady) {
-        //TODO cancel ready
         return { ...state, isDisconnected: true };
       }
       break;
     }
+    case END_GAME:
+      return {
+        ...state,
+        screen: SCREEN.get('RESULT'),
+        winner: payload.winner
+      };
     case RETURN_ROOM:
       return {
         ...state,
+        screen: SCREEN.get('ROOM'),
         isReady: false,
         isDisconnected: false,
       };
@@ -96,8 +125,18 @@ function soloPlayReducer(state, action) {
       const newRoom = room.selectUnits(userId, payload.selectedList).mightEngage();
       return updateRoom(state, newRoom);
     }
+    case END_GAME:
+      return {
+        ...state,
+        screen: SCREEN.get('RESULT'),
+        winner: payload.winner
+      };
     case RETURN_ROOM:
-      return { ...state, room: null };
+      return {
+        ...state,
+        screen: SCREEN.get('LOBBY'),
+        room: null
+      };
   }
   return state;
 }
