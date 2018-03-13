@@ -164,7 +164,7 @@ function ForecastComponent({ forecast }) {
 }
 
 export default function ControlPannel({ isOffense, terrain, unit, forecast, turnRemained, isMyTurn, onClickEndTurn }: {
-  isOffense: boolean,
+  isOffense: ?boolean,
   terrain: ?Terrain,
   unit: ?Unit,
   forecast: ?Forecast,
@@ -179,10 +179,12 @@ export default function ControlPannel({ isOffense, terrain, unit, forecast, turn
           <ForecastComponent forecast={forecast} />
         ) : (
           <Fragment>
-            <TurnEndComponent
-              isMyTurn={isMyTurn}
-              onClickEndTurn={onClickEndTurn}
-            />
+            {isOffense !== undefined &&
+                <TurnEndComponent
+                  isMyTurn={isMyTurn}
+                  onClickEndTurn={onClickEndTurn}
+                />
+            }
             <UnitComponent unit={unit} />
             <Info
               isOffense={isOffense}

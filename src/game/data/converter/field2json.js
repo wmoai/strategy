@@ -23,7 +23,7 @@ module.exports = function(filepath, callback) {
       const info = {};
       for (let i = jsonData.height+1; i<csvData.length; i++) {
         const key = csvData[i][0];
-        if (key && !key.match(/^\#/)) {
+        if (key && !key.match(/^#/)) {
           info[key] = csvData[i].slice(1).filter(data => data != '');
         }
       }

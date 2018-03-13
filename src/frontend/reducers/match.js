@@ -27,9 +27,10 @@ const initialState = {
   deck: null,
   room: null,
   screen: SCREEN.get('LOBBY'),
+  isWatching: false,
   isReady: false,
-  me: null,
-  opponent: null,
+  isOffense: undefined,
+  isMatched: false,
   waiting: false,
   isDisconnected: false,
 };
@@ -48,12 +49,14 @@ function updateRoom(state, room) {
   } else if (room.stateIs('BATTLE')) {
     screen = SCREEN.get('BATTLE');
   }
+  const me = room.player(userId);
+  const isOffense = me ? me.isOffense : undefined;
   return {
     ...state,
     room,
     screen,
-    me: room.player(userId),
-    opponent: room.opponent(userId),
+    isMatched: room.players.size == 2,
+    isOffense,
   };
 }
 
@@ -66,7 +69,11 @@ export default function reducer(state = initialState, action) {
     case CONNECT_SOCKET:
       return { ...state, socket: payload.socket };
     case ENTER_ROOM:
-      return { ...state, userId: payload.userId };
+      return { 
+        ...state,
+        userId: payload.userId,
+        isWatching: payload.isWatching ? true : false,
+      };
     case SYNC_ROOM: {
       return updateRoom(state, Room.restore(payload));
     }

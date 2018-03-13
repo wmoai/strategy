@@ -112,6 +112,10 @@ export default class RoomServer {
     if (!room) {
       throw `room ${roomId} is not exists.`;
     }
+    if (room.players.size >= 2) {
+      this.watch(room, userId, socket);
+      return;
+    }
     socket.join(roomId);
     console.log(`join ${userId} to room ${roomId}`);
 
@@ -193,6 +197,15 @@ export default class RoomServer {
         }
         this.userToRoom.delete(userId);
       }
+    });
+  }
+
+  watch(room: Room, userId: string, socket: any) {
+    socket.join(room.id);
+    socket.emit('enterRoom', { userId, isWatching: true });
+    socket.emit('syncRoom', room.toData());
+    socket.on('leaveRoom', () => {
+      socket.disconnect();
     });
   }
 

@@ -7,13 +7,18 @@ import { selectUnits } from '../actions';
 import * as masterData from '../../game/data';
 
 const mapStateToProps = state => {
-  const { me, opponent } = state.match;
-  const myUnits = (me && me.deck) ? me.deck.map(uid => masterData.unit.get(uid)) : [];
-  const opponentUnits = (opponent && opponent.deck) ? opponent.deck.map(uid => masterData.unit.get(uid)) : [];
+  const { isOffense, room } = state.match;
+
+  const players = Array.from(room.players.values());
+  const decks = players.map(player => {
+    return {
+      isOffense: player.isOffense,
+      units: player.deck ? player.deck.map(uid => masterData.unit.get(uid)) : [],
+    };
+  });
   return {
-    myUnits,
-    isOffense: me.isOffense,
-    opponentUnits,
+    isOffense,
+    decks,
   };
 };
 

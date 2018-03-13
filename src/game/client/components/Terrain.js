@@ -1,6 +1,5 @@
 // @flow
 import Field from '../../models/Field.js';
-import Terrain from '../../models/Terrain.js';
 
 import PIXI, { resources } from '../PIXI.js';
 import Component from './Component.js';

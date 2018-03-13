@@ -45,7 +45,7 @@ function Top({ onClickSoloPlay, onCreateRoom, onJoinRoom }) {
   );
 }
 
-function Room({ roomId, isMatched, onLeaveRoom, onGetReady, isReady }) {
+function Room({ roomId, isWatching, isMatched, onLeaveRoom, onGetReady, isReady }) {
   return (
     <ul id="lobby-list">
       <li id="lobby-room">
@@ -59,17 +59,19 @@ function Room({ roomId, isMatched, onLeaveRoom, onGetReady, isReady }) {
       </li>
       <li>
         <div id="lobby-wait">
-          {isMatched ? '対戦相手が見つかりました' : '対戦相手を待っています...'}
+          {isWatching ? 'ゲーム開始を待っています' : isMatched ? '対戦相手が見つかりました' : '対戦相手を待っています...'}
         </div>
       </li>
-      <li>
-        <button
-          className="lobby-btn"
-          disabled={!isMatched || isReady}
-          onClick={() => onGetReady()}>
-          対戦開始
-        </button>
-      </li>
+      {!isWatching &&
+          <li>
+            <button
+              className="lobby-btn"
+              disabled={!isMatched || isReady}
+              onClick={() => onGetReady()}>
+              対戦開始
+            </button>
+          </li>
+      }
       <li id="lobby-room-leave">
         <button
           className="lobby-btn"

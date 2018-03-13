@@ -10,7 +10,7 @@ type Props = {
 export default function Disconnected({ onReturnRoom }: Props) {
   return (
     <div id="disconnected-container">
-      <div className="message">対戦相手の接続が切れました</div>
+      <div className="message">対戦者の接続が切れました</div>
       <button
         className="return"
         onClick={() => {

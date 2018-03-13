@@ -9,9 +9,9 @@ import {
 } from '../actions';
 
 const mapStateToProps = state => {
-  const { room, me, socket, screen, winner } = state.match;
+  const { room, isOffense, socket, screen, winner } = state.match;
   return {
-    isOffense: me.isOffense,
+    isOffense,
     game: room.game,
     socket,
     isSolo: room.isSolo,

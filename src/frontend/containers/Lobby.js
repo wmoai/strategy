@@ -11,10 +11,11 @@ import {
 
 
 const mapStateToProps = state => {
-  const { room, me, opponent, isReady } = state.match;
+  const { room, isWatching, isMatched, isReady } = state.match;
   return {
     roomId: room ? room.id : null,
-    isMatched: (me && opponent),
+    isWatching,
+    isMatched,
     isReady
   };
 };
