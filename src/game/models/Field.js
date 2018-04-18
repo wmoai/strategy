@@ -4,14 +4,14 @@ type FieldInfo = {
   oinit: Array<number>,
   dinit: Array<number>,
   base: Array<number>,
-  turn: Array<number>,
+  turn: Array<number>
 };
 type FieldData = {
   id: number,
   width: number,
   height: number,
   terrain: Array<number>,
-  info: FieldInfo,
+  info: FieldInfo
 };
 
 export default class Field {
@@ -39,12 +39,7 @@ export default class Field {
 
   existsCell(y: number, x: number): boolean {
     const { width, height } = this;
-    return (
-      y >= 0
-      && y < height
-      && x >= 0
-      && x < width
-    );
+    return y >= 0 && y < height && x >= 0 && x < width;
   }
 
   isEdgeCell(y: number, x: number): boolean {
@@ -52,12 +47,7 @@ export default class Field {
     if (!this.existsCell(y, x)) {
       return false;
     }
-    return (
-      x == 0
-      || y == 0
-      || x == width-1
-      || y == height-1
-    );
+    return x == 0 || y == 0 || x == width - 1 || y == height - 1;
   }
 
   isActiveCell(y: number, x: number): boolean {
@@ -68,7 +58,10 @@ export default class Field {
     return y * this.width + x;
   }
 
-  isSameTerrainWithNeighbor(y: number, x: number): {
+  isSameTerrainWithNeighbor(
+    y: number,
+    x: number
+  ): {
     top: boolean,
     left: boolean,
     bottom: boolean,
@@ -76,19 +69,35 @@ export default class Field {
     tl: boolean,
     tr: boolean,
     bl: boolean,
-    br: boolean,
+    br: boolean
   } {
     const { terrain } = this;
     const land = terrain[this.cellId(y, x)];
     return {
-      top: !this.existsCell(y-1, x) || this.isSameTerrain(land, terrain[this.cellId(y-1, x)]),
-      left: !this.existsCell(y, x-1) || this.isSameTerrain(land, terrain[this.cellId(y, x-1)]),
-      right: !this.existsCell(y, x+1) || this.isSameTerrain(land, terrain[this.cellId(y, x+1)]),
-      bottom: !this.existsCell(y+1, x) || this.isSameTerrain(land, terrain[this.cellId(y+1, x)]),
-      tl: !this.existsCell(y-1, x-1) || this.isSameTerrain(land, terrain[this.cellId(y-1, x-1)]),
-      tr: !this.existsCell(y-1, x+1) || this.isSameTerrain(land, terrain[this.cellId(y-1, x+1)]),
-      bl: !this.existsCell(y+1, x-1) || this.isSameTerrain(land, terrain[this.cellId(y+1, x-1)]),
-      br: !this.existsCell(y+1, x+1) || this.isSameTerrain(land, terrain[this.cellId(y+1, x+1)]),
+      top:
+        !this.existsCell(y - 1, x) ||
+        this.isSameTerrain(land, terrain[this.cellId(y - 1, x)]),
+      left:
+        !this.existsCell(y, x - 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y, x - 1)]),
+      right:
+        !this.existsCell(y, x + 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y, x + 1)]),
+      bottom:
+        !this.existsCell(y + 1, x) ||
+        this.isSameTerrain(land, terrain[this.cellId(y + 1, x)]),
+      tl:
+        !this.existsCell(y - 1, x - 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y - 1, x - 1)]),
+      tr:
+        !this.existsCell(y - 1, x + 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y - 1, x + 1)]),
+      bl:
+        !this.existsCell(y + 1, x - 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y + 1, x - 1)]),
+      br:
+        !this.existsCell(y + 1, x + 1) ||
+        this.isSameTerrain(land, terrain[this.cellId(y + 1, x + 1)])
     };
   }
 
@@ -114,15 +123,17 @@ export default class Field {
   rows(): Array<any> {
     const { width, terrain } = this;
     const rows = [];
-    for (var i=0; i<terrain.length; i+=width) {
-      rows.push(terrain.slice(i, i+width));
+    for (var i = 0; i < terrain.length; i += width) {
+      rows.push(terrain.slice(i, i + width));
     }
     return rows;
   }
 
-  coordinates(cellId: number): {
+  coordinates(
+    cellId: number
+  ): {
     x: number,
-    y: number,
+    y: number
   } {
     const { width } = this;
     return {
@@ -136,6 +147,4 @@ export default class Field {
     const c2 = this.coordinates(cid2);
     return Math.abs(c1.y - c2.y) + Math.abs(c1.x - c2.x);
   }
-
 }
-

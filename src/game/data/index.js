@@ -11,8 +11,6 @@ import persianData from '../data/json/field/persian.json';
 import muhiData from '../data/json/field/muhi.json';
 import sekiData from '../data/json/field/seki.json';
 
-// import './unitData.js';
-
 const terrain: Map<number, Terrain> = new Map();
 Object.keys(terrainData).forEach(key => {
   const t = new Terrain(terrainData[key]);
@@ -29,7 +27,7 @@ function getTerrain(id: number): Terrain {
 const fields: Array<Field> = [
   new Field(persianData),
   new Field(muhiData),
-  new Field(sekiData),
+  new Field(sekiData)
 ];
 function getField(fieldId: ?number): Field {
   if (fieldId == null) {
@@ -44,9 +42,4 @@ function getField(fieldId: ?number): Field {
   return result;
 }
 
-export {
-  unit,
-  klass,
-  getTerrain,
-  getField,
-};
+export { unit, klass, getTerrain, getField };

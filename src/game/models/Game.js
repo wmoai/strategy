@@ -1,15 +1,15 @@
 // @flow
 
 import Unit from './Unit.js';
-import Field from  './Field.js';
+import Field from './Field.js';
 import * as masterData from '../data';
 
 type GameState = {
   turnCount: number,
   turn: boolean,
   isEnd: boolean,
-  winner: ?boolean,
-}
+  winner: ?boolean
+};
 type ForecastUnit = {
   name: string,
   klass: number,
@@ -17,25 +17,23 @@ type ForecastUnit = {
   isOffense: boolean,
   val: number,
   hit: number,
-  crit: number,
-}
+  crit: number
+};
 export type Forecast = {
   me: ForecastUnit,
-  tg: ForecastUnit,
+  tg: ForecastUnit
 };
 export type HpChange = {
   unitSeq: number,
-  hp: number,
+  hp: number
 };
-
 
 const initialState: GameState = {
   turnCount: 1,
   turn: false,
   isEnd: false,
-  winner: null,
+  winner: null
 };
-
 
 export default class Game {
   cost: number;
@@ -43,7 +41,6 @@ export default class Game {
   field: Field;
   state: GameState;
   units: Array<Unit>;
-
 
   constructor(data?: any) {
     this.cost = 16;
@@ -57,11 +54,11 @@ export default class Game {
     this.defenseTurn = field.turn();
     this.field = field;
 
-    let state = {...initialState};
+    let state = { ...initialState };
     let units = [];
     if (data) {
       if (data.state) {
-        state = {...this.state, ...data.state};
+        state = { ...this.state, ...data.state };
       }
       if (data.units) {
         units = data.units.map(unit => new Unit(unit));
@@ -76,16 +73,19 @@ export default class Game {
     return {
       fieldId: field.id,
       units: units.map(unit => unit.toData()),
-      state,
+      state
     };
   }
 
   initUnits(unitsData: Array<any>) {
     let unitSeq = 0;
-    this.units = unitsData.map(unitData => new Unit({
-      ...unitData,
-      seq: unitSeq++
-    }));
+    this.units = unitsData.map(
+      unitData =>
+        new Unit({
+          ...unitData,
+          seq: unitSeq++
+        })
+    );
   }
 
   turnRemained() {
@@ -93,7 +93,9 @@ export default class Game {
   }
 
   getUnit(cellId: number) {
-    const buff = this.units.filter(unit => unit.state.cellId == cellId && unit.isAlive());
+    const buff = this.units.filter(
+      unit => unit.state.cellId == cellId && unit.isAlive()
+    );
     if (buff.length !== 1) {
       return null;
     }
@@ -120,26 +122,28 @@ export default class Game {
     const ds = field.terrain.map((terrain, i) => {
       return i == from ? 0 : Infinity;
     });
-    const qs = Array.from(ds.keys()); 
+    const qs = Array.from(ds.keys());
 
     let isMovable = false;
-    for(let l=0; l<5000; l++) {
+    for (let l = 0; l < 5000; l++) {
       if (qs.length == 0 || isMovable) {
         break;
       }
-      const minQ = qs.reduce((a, b) => ds[a] < ds[b] ? a : b);
+      const minQ = qs.reduce((a, b) => (ds[a] < ds[b] ? a : b));
       const u = Number(minQ);
       const spliceI = qs.indexOf(minQ);
       if (u == null || ds[u] > status.move || spliceI == null) {
         break;
       }
       qs.splice(spliceI, 1)[0];
-      [u-field.width, u-1, u+1, u+field.width].forEach(v => {
+      [u - field.width, u - 1, u + 1, u + field.width].forEach(v => {
         const { y, x } = field.coordinates(v);
         if (!field.isActiveCell(y, x)) {
           return;
         }
-        const newD = ds[u] + masterData.getTerrain(field.cellTerrainId(v)).cost.get(klass.move);
+        const newD =
+          ds[u] +
+          masterData.getTerrain(field.cellTerrainId(v)).cost.get(klass.move);
         if (ds[v] <= newD || newD > status.move) {
           return;
         }
@@ -164,7 +168,13 @@ export default class Game {
 
   checkActionable(unit: Unit, from: number, to: number) {
     const target = this.getUnit(to);
-    if (!unit || unit.state.isActed || !unit.isAlive() || !target || !target.isAlive()) {
+    if (
+      !unit ||
+      unit.state.isActed ||
+      !unit.isAlive() ||
+      !target ||
+      !target.isAlive()
+    ) {
       return false;
     }
     if (unit.klass.healer) {
@@ -179,7 +189,7 @@ export default class Game {
 
     let actionable = false;
     const dist = this.field.distance(from, to);
-    actionable = (unit.status.min_range <= dist && dist <= unit.status.max_range);
+    actionable = unit.status.min_range <= dist && dist <= unit.status.max_range;
     return actionable;
   }
 
@@ -198,7 +208,7 @@ export default class Game {
       isOffense: unit.isOffense,
       val: 0,
       hit: 0,
-      crit: 0,
+      crit: 0
     };
     const tg: ForecastUnit = {
       name: target.status.name,
@@ -207,20 +217,28 @@ export default class Game {
       isOffense: target.isOffense,
       val: 0,
       hit: 0,
-      crit: 0,
+      crit: 0
     };
     if (unit.klass.healer) {
       me.val = unit.status.str;
     } else {
       me.val = target.effectValueBy(unit);
-      me.hit = target.hitRateBy(unit, distance, masterData.getTerrain(field.cellTerrainId(to)));
+      me.hit = target.hitRateBy(
+        unit,
+        distance,
+        masterData.getTerrain(field.cellTerrainId(to))
+      );
       me.crit = target.critRateBy(unit);
     }
     if (!unit.klass.healer && !target.klass.healer) {
       //counter attack
       if (this.checkActionable(target, to, from)) {
         tg.val = unit.effectValueBy(target);
-        tg.hit = unit.hitRateBy(target, distance, masterData.getTerrain(field.cellTerrainId(from)));
+        tg.hit = unit.hitRateBy(
+          target,
+          distance,
+          masterData.getTerrain(field.cellTerrainId(from))
+        );
         tg.crit = unit.critRateBy(target);
       }
     }
@@ -245,11 +263,15 @@ export default class Game {
       const target = this.getUnit(to);
       if (target) {
         const targetIndex = newUnits.indexOf(target);
-        target.actBy(actor, field.distance(from, to), masterData.getTerrain(field.cellTerrainId(to)));
+        target.actBy(
+          actor,
+          field.distance(from, to),
+          masterData.getTerrain(field.cellTerrainId(to))
+        );
         newUnits[targetIndex] = target;
         change = {
           seq: target.seq,
-          hp: target.state.hp,
+          hp: target.state.hp
         };
       }
     }
@@ -265,9 +287,13 @@ export default class Game {
     }
     const actor = this.getUnit(from);
     const target = this.getUnit(to);
-    if (actor && !actor.klass.healer
-      && target && !target.klass.healer
-      && this.checkActionable(actor, from, to)) {
+    if (
+      actor &&
+      !actor.klass.healer &&
+      target &&
+      !target.klass.healer &&
+      this.checkActionable(actor, from, to)
+    ) {
       return this.actUnit(from, to);
     }
   }
@@ -295,7 +321,7 @@ export default class Game {
     this.state = {
       ...this.state,
       turn: !turn,
-      turnCount: turnCount+1,
+      turnCount: turnCount + 1
     };
     this.mightEndGame();
   }
@@ -308,7 +334,8 @@ export default class Game {
   }
 
   mightEndGame() {
-    const flags = this.units.filter(unit => unit.isAlive())
+    const flags = this.units
+      .filter(unit => unit.isAlive())
       .map(unit => unit.isOffense)
       .filter((x, i, self) => self.indexOf(x) === i);
 
@@ -331,7 +358,7 @@ export default class Game {
     }
 
     // Defence victory
-    if (this.state.turnCount >= this.defenseTurn*2) {
+    if (this.state.turnCount >= this.defenseTurn * 2) {
       this.endGame(false);
     }
   }
@@ -340,7 +367,7 @@ export default class Game {
     this.state = {
       ...this.state,
       isEnd: true,
-      winner,
+      winner
     };
   }
 
@@ -360,5 +387,4 @@ export default class Game {
 
     return changes;
   }
-
 }

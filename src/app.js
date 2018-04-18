@@ -18,11 +18,10 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use((req, res, next) => {
   jwt.verify(req.cookies.jwt, JWT_SECRET, (err, data) => {
-    req.jwt = (err || !data) ? user.create(req, res) : data;
+    req.jwt = err || !data ? user.create(req, res) : data;
     next();
   });
 });
-
 
 app.get('/user', user.get);
 app.post('/deck', user.setDeck);
@@ -31,10 +30,10 @@ app.get('/*', (req, res) => {
   res.render('index');
 });
 
-app.use((err, req, res, next) => { // eslint-disable-line
+// eslint-disable-next-line
+app.use((err, req, res, next) => {
   res.status(500).send(err.message);
 });
-
 
 const server = require('http').createServer(app);
 server.listen(process.env.PORT || 3005);
@@ -43,4 +42,3 @@ import RoomServer from './RoomServer.js';
 const roomServer = new RoomServer();
 const io = require('socket.io').listen(server);
 roomServer.listen(io);
-

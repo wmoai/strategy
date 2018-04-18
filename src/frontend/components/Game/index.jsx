@@ -10,57 +10,38 @@ import Result from '../Result/index.jsx';
 import Client from '../../../game/client/index.js';
 
 import GameModel from '../../../game/models/Game.js';
-import type { Forecast } from '../../../game/models/Game.js';
 import UnitModel from '../../../game/models/Unit.js';
 import TerrainModel from '../../../game/models/Terrain.js';
+import type { Forecast } from '../../../game/models/Game.js';
 
 type Props = {
   isOffense: boolean,
   game: GameModel,
   socket: any,
   isSolo: boolean,
-  screen: string,
-  winner: ?boolean,
-  onSelectCell: number => void,
-  onHoverCell: number => void,
-  onClickEndTurn: void => void,
-  onEndGame: boolean => void,
-  onReturnRoom: void => void,
-};
-type State = {
-  initialized: boolean,
-  introduction: boolean,
-  mouseX: number,
-  mouseY: number,
+  isIntroduction: boolean,
   isMyTurn: boolean,
   turnRemained: number,
   hoveredUnit: ?UnitModel,
   hoveredTerrain: ?TerrainModel,
   actionForecast: ?Forecast,
+  isResult: boolean,
   winner: ?boolean,
-}
 
-export default class Game extends React.Component<Props, State> {
+  onInitGame: void => void,
+  onRunGame: void => void,
+  onClickEndTurn: void => void,
+  onChangeTurn: (boolean, number) => void,
+  onEndGame: boolean => void,
+  onHoverGame: (?UnitModel, ?TerrainModel, ?Forecast) => void,
+  onReturnRoom: void => void
+};
+
+export default class Game extends React.Component<Props> {
   pixiCanvas: HTMLCanvasElement;
   screenBase: HTMLDivElement;
   client: Client;
   resizeListener: void => void;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      initialized: false,
-      introduction: true,
-      mouseX: 0,
-      mouseY: 0,
-      isMyTurn: false,
-      turnRemained: 0,
-      hoveredUnit: null,
-      hoveredTerrain: null,
-      actionForecast: null,
-      winner: null,
-    };
-  }
 
   componentDidMount() {
     const { game, isOffense, socket, isSolo, onEndGame } = this.props;
@@ -74,38 +55,32 @@ export default class Game extends React.Component<Props, State> {
       socket,
       isSolo,
       width: this.screenBase.clientWidth,
-      height: this.screenBase.clientHeight,
+      height: this.screenBase.clientHeight
     });
     client.addEventListener('hover', ({ unit, terrain, forecast }) => {
-      this.setState({
-        hoveredUnit: unit || this.state.hoveredUnit,
-        hoveredTerrain: terrain || this.state.hoveredTerrain,
-        actionForecast: forecast,
-      });
+      const { hoveredUnit, hoveredTerrain } = this.props;
+      this.props.onHoverGame(
+        unit || hoveredUnit,
+        terrain || hoveredTerrain,
+        forecast
+      );
     });
     client.addEventListener('changeturn', ({ turn, turnRemained }) => {
-      this.setState({
-        isMyTurn: turn === isOffense,
-        turnRemained
-      });
+      this.props.onChangeTurn(turn, turnRemained);
     });
     client.addEventListener('endgame', winner => {
       onEndGame(winner);
     });
     this.client = client;
-    
-    this.setState({
-      initialized: true,
-    });
-
-    setTimeout(() => {
-      this.endIntroduction();
-    }, 3000);
 
     this.resizeListener = () => {
-      this.client.resize(this.screenBase.clientWidth, this.screenBase.clientHeight);
+      this.client.resize(
+        this.screenBase.clientWidth,
+        this.screenBase.clientHeight
+      );
     };
     window.addEventListener('resize', this.resizeListener);
+    this.props.onInitGame();
   }
 
   componentWillUnmount() {
@@ -114,9 +89,9 @@ export default class Game extends React.Component<Props, State> {
   }
 
   endIntroduction() {
-    if (this.state.introduction) {
-      this.setState({introduction: false});
+    if (this.props.isIntroduction) {
       this.client.run();
+      this.props.onRunGame();
     }
   }
 
@@ -129,8 +104,13 @@ export default class Game extends React.Component<Props, State> {
       isOffense,
       game,
       onReturnRoom,
-      screen,
-      winner,
+      isResult,
+      isMyTurn,
+      turnRemained,
+      hoveredUnit,
+      hoveredTerrain,
+      actionForecast,
+      winner
     } = this.props;
 
     return (
@@ -138,12 +118,12 @@ export default class Game extends React.Component<Props, State> {
         <style>{'body {overflow: hidden}'}</style>
         <div id="screen-header">
           <ControlPannel
-            unit={this.state.hoveredUnit}
-            terrain={this.state.hoveredTerrain}
             isOffense={isOffense}
-            turnRemained={this.state.turnRemained}
-            forecast={this.state.actionForecast}
-            isMyTurn={this.state.isMyTurn}
+            isMyTurn={isMyTurn}
+            unit={hoveredUnit}
+            terrain={hoveredTerrain}
+            turnRemained={turnRemained}
+            forecast={actionForecast}
             onClickEndTurn={() => {
               this.client.endTurn();
             }}
@@ -155,15 +135,6 @@ export default class Game extends React.Component<Props, State> {
             if (block) {
               this.screenBase = block;
             }
-          }}
-          onMouseMove={e => {
-            if (!this.state.initialized) {
-              return;
-            }
-            this.setState({
-              mouseX: e.clientX,
-              mouseY: e.clientY,
-            });
           }}
           onWheel={e => {
             this.changeScale(e.deltaY);
@@ -178,24 +149,17 @@ export default class Game extends React.Component<Props, State> {
             }}
           />
         </div>
-        {this.state.introduction &&
-            <Intro
-              game={game}
-              isOffense={isOffense}
-              onClick={() => {
-                this.endIntroduction();
-              }}
-            />
-        }
-        {screen === 'RESULT' &&
-            <Result
-              won={winner == isOffense}
-              onReturnRoom={onReturnRoom}
-            />
-        }
+        {this.props.isIntroduction && (
+          <Intro
+            game={game}
+            isOffense={isOffense}
+            onEnd={() => this.endIntroduction()}
+          />
+        )}
+        {isResult && (
+          <Result won={winner == isOffense} onReturnRoom={onReturnRoom} />
+        )}
       </div>
     );
   }
-
 }
-

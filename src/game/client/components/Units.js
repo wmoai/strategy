@@ -11,23 +11,25 @@ import RangesComponent from './Ranges.js';
 import MoveUnit from '../animations/MoveUnit.js';
 import ChangeHp from '../animations/ChangeHp.js';
 
-
 export default class UnitsComponent extends Component {
   field: Field;
   cellSize: number;
   unitsMap: Map<number, UnitComponent>;
   layer: {
     ranges: any,
-    units: any,
+    units: any
   };
   currentUnitModels: ?Array<Unit>;
   currentRanges: ?Ranges;
 
-
-  constructor({ unitModels, field, cellSize }: {
+  constructor({
+    unitModels,
+    field,
+    cellSize
+  }: {
     unitModels: Array<Unit>,
     field: Field,
-    cellSize: number,
+    cellSize: number
   }) {
     super();
     this.field = field;
@@ -45,7 +47,7 @@ export default class UnitsComponent extends Component {
     });
     this.layer = {
       ranges: rangesLayer,
-      units: unitsLayer,
+      units: unitsLayer
     };
   }
 
@@ -101,7 +103,7 @@ export default class UnitsComponent extends Component {
     if (unit) {
       return new ChangeHp({
         unit,
-        width: unit.lifeWidth(change.hp),
+        width: unit.lifeWidth(change.hp)
       });
     }
   }
@@ -109,6 +111,4 @@ export default class UnitsComponent extends Component {
   unit(seq: number): ?UnitComponent {
     return this.unitsMap.get(seq);
   }
-
 }
-

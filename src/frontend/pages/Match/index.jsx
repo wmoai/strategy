@@ -7,7 +7,6 @@ import Selector from '../../containers/Selector.js';
 import Game from '../../containers/Game.js';
 
 export default class Match extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -18,7 +17,7 @@ export default class Match extends React.Component {
   componentDidMount() {
     this.unloadListener = e => {
       if (this.state.isLocked) {
-        e.returnValue = 'test';
+        e.returnValue = 'locked';
       }
     };
     window.addEventListener('beforeunload', this.unloadListener);
@@ -39,21 +38,19 @@ export default class Match extends React.Component {
 
   render() {
     const { screen, waiting, isDisconnected, onReturnRoom } = this.props;
-    let content = <Lobby />;
-    if (screen === 'SELECT') {
-      content = <Selector costLimit={20} />;
-    } else if (screen === 'BATTLE' || screen === 'RESULT') {
-      content = <Game />;
-    }
+    const isGame = screen === 'BATTLE' || screen === 'RESULT';
     return (
       <Fragment>
-        {isDisconnected &&
-            <Disconnected onReturnRoom={onReturnRoom} />
-        }
+        {isDisconnected && <Disconnected onReturnRoom={onReturnRoom} />}
         <Indicator shown={waiting} />
-        {content}
+        {screen === 'SELECT' ? (
+          <Selector />
+        ) : isGame ? (
+          <Game isPreview={screen === 'SELECT'} />
+        ) : (
+          <Lobby />
+        )}
       </Fragment>
     );
   }
-
 }

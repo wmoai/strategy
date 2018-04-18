@@ -3,10 +3,10 @@ import Game from './Game.js';
 import Player from './Player.js';
 import COM from './COM.js';
 
-const STATE: Map<'ROOM'|'SELECT'|'BATTLE', number> = new Map([
+const STATE: Map<'ROOM' | 'SELECT' | 'BATTLE', number> = new Map([
   ['ROOM', 10],
   ['SELECT', 20],
-  ['BATTLE', 30],
+  ['BATTLE', 30]
 ]);
 
 export default class Room {
@@ -21,7 +21,7 @@ export default class Room {
     isSolo?: boolean,
     state?: number,
     players?: Map<string, Player>,
-    game?: Game,
+    game?: Game
   }) {
     this.isSolo = false;
     this.setState('ROOM');
@@ -42,7 +42,7 @@ export default class Room {
     if (this.game) {
       game = this.game.toData();
     }
-    return { id, isSolo, state, players, game};
+    return { id, isSolo, state, players, game };
   }
 
   static restore(data: any) {
@@ -54,7 +54,7 @@ export default class Room {
   static soloRoom(userId: string, deck: Array<number>) {
     const room = new Room({
       id: 'solo',
-      isSolo: true,
+      isSolo: true
     });
     const player = new Player({
       id: userId,
@@ -77,7 +77,7 @@ export default class Room {
     return this;
   }
 
-  setState(str: 'ROOM'|'SELECT'|'BATTLE') {
+  setState(str: 'ROOM' | 'SELECT' | 'BATTLE') {
     const newState = STATE.get(str);
     if (newState != null) {
       this.state = newState;
@@ -85,7 +85,7 @@ export default class Room {
     return this;
   }
 
-  stateIs(str: 'ROOM'|'SELECT'|'BATTLE') {
+  stateIs(str: 'ROOM' | 'SELECT' | 'BATTLE') {
     return this.state === STATE.get(str);
   }
 
@@ -114,11 +114,6 @@ export default class Room {
     return opponent;
   }
 
-  isTurnPlayer(userId: string) {
-    const player = this.player(userId);
-    return this.game && player && player.isOffense == this.game.state.turn;
-  }
-
   getBattleReady(userId: string) {
     const player = this.player(userId);
     if (player) {
@@ -133,22 +128,20 @@ export default class Room {
     for (let player of this.players.values()) {
       isReady = isReady && player.isReady;
     }
-    if (
-      this.state !== STATE.get('ROOM')
-      || this.players.size < 2
-      || !isReady
-    ) {
+    if (this.state !== STATE.get('ROOM') || this.players.size < 2 || !isReady) {
       return this;
     }
     let tgl = Math.random() >= 0.5;
 
     this.game = new Game();
-    this.players = new Map(Array.from(this.players.values()).map(player => {
-      // decide offense side
-      tgl = !tgl;
-      player.isOffense = tgl;
-      return [player.id, player];
-    }));
+    this.players = new Map(
+      Array.from(this.players.values()).map(player => {
+        // decide offense side
+        tgl = !tgl;
+        player.isOffense = tgl;
+        return [player.id, player];
+      })
+    );
     this.setState('SELECT');
     return this;
   }
@@ -161,7 +154,7 @@ export default class Room {
     const units = list.map(index => {
       return {
         isOffense: player.isOffense,
-        unitId: player.deck[index],
+        unitId: player.deck[index]
       };
     });
     //FIXME Check cost and Reject
@@ -174,7 +167,8 @@ export default class Room {
   mightEngage() {
     let canEngage = true;
     for (let player of this.players.values()) {
-      canEngage = canEngage && (player.selection && player.selection.length > 0);
+      canEngage =
+        canEngage && (player.selection && player.selection.length > 0);
     }
     const { game } = this;
     if (!canEngage || !game) {
@@ -189,7 +183,7 @@ export default class Room {
             ...unit,
             state: {
               cellId: field.initialPos(player.isOffense)[seq]
-            },
+            }
           };
         })
       );
@@ -201,7 +195,13 @@ export default class Room {
   }
 
   canAct(userId: string) {
-    return this.state === STATE.get('BATTLE') && this.isTurnPlayer(userId);
+    const player = this.player(userId);
+    return (
+      this.state === STATE.get('BATTLE') &&
+      this.game &&
+      player &&
+      player.isOffense == this.game.state.turn
+    );
   }
 
   actInGame(userId: string, from: number, to: number, target: number) {
@@ -221,16 +221,17 @@ export default class Room {
 
   mightResetPlayers() {
     const { game } = this;
-    if ((game && !game.state.isEnd) && this.players.size >= 2) {
+    if (game && !game.state.isEnd && this.players.size >= 2) {
       return this;
     }
 
-    this.players = new Map(Array.from(this.players.values()).map(player => {
-      player.reset();
-      return [player.id, player];
-    }));
+    this.players = new Map(
+      Array.from(this.players.values()).map(player => {
+        player.reset();
+        return [player.id, player];
+      })
+    );
     this.setState('ROOM');
     return this;
   }
-
 }

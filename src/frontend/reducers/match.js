@@ -1,6 +1,6 @@
 import Room from '../../game/models/Room.js';
 
-import { 
+import {
   CONNECT_SOCKET,
   ENTER_ROOM,
   SYNC_ROOM,
@@ -10,7 +10,7 @@ import {
   PLAYER_DISCONNECTED,
   SELECT_UNITS,
   END_GAME,
-  RETURN_ROOM,
+  RETURN_ROOM
 } from '../actions/';
 
 const SCREEN = new Map([
@@ -18,7 +18,7 @@ const SCREEN = new Map([
   ['ROOM', 'ROOM'],
   ['SELECT', 'SELECT'],
   ['BATTLE', 'BATTLE'],
-  ['RESULT', 'RESULT'],
+  ['RESULT', 'RESULT']
 ]);
 
 const initialState = {
@@ -33,6 +33,7 @@ const initialState = {
   isMatched: false,
   waiting: false,
   isDisconnected: false,
+  selected: []
 };
 
 function updateRoom(state, room) {
@@ -56,7 +57,7 @@ function updateRoom(state, room) {
     room,
     screen,
     isMatched: room.players.size == 2,
-    isOffense,
+    isOffense
   };
 }
 
@@ -69,14 +70,13 @@ export default function reducer(state = initialState, action) {
     case CONNECT_SOCKET:
       return { ...state, socket: payload.socket };
     case ENTER_ROOM:
-      return { 
+      return {
         ...state,
         userId: payload.userId,
-        isWatching: payload.isWatching ? true : false,
+        isWatching: payload.isWatching ? true : false
       };
-    case SYNC_ROOM: {
+    case SYNC_ROOM:
       return updateRoom(state, Room.restore(payload));
-    }
     case LEAVE_ROOM: {
       const { socket, room } = state;
       if (socket && room) {
@@ -86,7 +86,7 @@ export default function reducer(state = initialState, action) {
       return {
         ...state,
         room: null,
-        socket: null,
+        socket: null
       };
     }
     case GET_BATTLE_READY:
@@ -103,22 +103,18 @@ export default function reducer(state = initialState, action) {
     case END_GAME:
       return {
         ...state,
-        screen: SCREEN.get('RESULT'),
-        winner: payload.winner
+        screen: SCREEN.get('RESULT')
       };
     case RETURN_ROOM:
       return {
         ...state,
         screen: SCREEN.get('ROOM'),
         isReady: false,
-        isDisconnected: false,
+        isDisconnected: false
       };
     case START_SOLO_PLAY: {
       const { id, deck } = payload;
-      return updateRoom(
-        { ...state, userId: id },
-        Room.soloRoom(id, deck)
-      );
+      return updateRoom({ ...state, userId: id }, Room.soloRoom(id, deck));
     }
   }
   return state;
@@ -129,14 +125,15 @@ function soloPlayReducer(state, action) {
   switch (action.type) {
     case SELECT_UNITS: {
       const { userId, room } = state;
-      const newRoom = room.selectUnits(userId, payload.selectedList).mightEngage();
+      const newRoom = room
+        .selectUnits(userId, payload.selectedList)
+        .mightEngage();
       return updateRoom(state, newRoom);
     }
     case END_GAME:
       return {
         ...state,
-        screen: SCREEN.get('RESULT'),
-        winner: payload.winner
+        screen: SCREEN.get('RESULT')
       };
     case RETURN_ROOM:
       return {
@@ -147,4 +144,3 @@ function soloPlayReducer(state, action) {
   }
   return state;
 }
-

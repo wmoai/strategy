@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "title": "test",
+    "isOffense": true,
+    "field": 1,
+    "enemies": [1, 2, 2, 27, 18, 18]
+  }
+]

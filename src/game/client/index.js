@@ -14,7 +14,7 @@ const Events = {
   hover: 'hover',
   forecast: 'forecast',
   changeturn: 'changeturn',
-  endgame: 'endgame',
+  endgame: 'endgame'
 };
 
 export default class Client {
@@ -23,19 +23,19 @@ export default class Client {
   cellSize: number;
   scale: number;
   socket: any;
+  isWaiting: boolean;
   isEmitted: boolean;
   app: any;
   components: {
-    game: Game,
+    game: Game
   };
   touch: Touch;
   scrollVX: number;
   scrollVY: number;
   eventListeners: Array<{
     type: string,
-    callback: any => void,
+    callback: any => void
   }>;
-
 
   static preload() {
     return preload();
@@ -48,9 +48,9 @@ export default class Client {
     height,
     game,
     isOffense,
-    isSolo=false,
-    socket,
-  } : {
+    isSolo = false,
+    socket
+  }: {
     canvas: HTMLCanvasElement,
     cellSize: number,
     width: number,
@@ -58,7 +58,7 @@ export default class Client {
     game: GameModel,
     isOffense: boolean,
     isSolo?: boolean,
-    socket: any,
+    socket: any
   }) {
     const { field } = game;
     this.fullWidth = field.width * cellSize;
@@ -66,31 +66,32 @@ export default class Client {
     this.cellSize = cellSize;
     this.scale = 1;
     this.socket = socket;
+    this.isWaiting = true;
     this.isEmitted = false;
     this.app = new PIXI.Application({
       width,
       height,
       view: canvas,
-      sharedLoader: true,
+      sharedLoader: true
     });
 
-    const gameComponent = !isSolo ?
-      new Game({
+    const gameComponent = !isSolo
+      ? new Game({
         renderer: this.app.renderer,
         game,
         cellSize,
         isOffense,
-        isSolo,
-      }) : new SoloGame({
+        isSolo
+      })
+      : new SoloGame({
         renderer: this.app.renderer,
         game,
         cellSize,
-        isOffense,
+        isOffense
       });
 
-
     this.components = {
-      game: gameComponent,
+      game: gameComponent
     };
 
     const container = new PIXI.Container();
@@ -98,13 +99,14 @@ export default class Client {
     this.app.stage = container;
 
     this.eventListeners = [];
+    this.setTicker();
+    this.listen();
+    this.zoom(0);
   }
 
-  run() {
+  setTicker() {
     const { app, components } = this;
     const { game } = components;
-
-    this.listen();
 
     let hoveredCell;
     app.ticker.add(delta => {
@@ -114,13 +116,17 @@ export default class Client {
         this.kickEvent(Events.hover, {
           unit: game.hoveredUnit(),
           terrain: game.hoveredTerrain(),
-          forecast: game.forecast(),
+          forecast: game.forecast()
         });
       }
-      if (!this.isEmitted) {
+      if (!this.isEmitted && !this.isWaiting) {
         game.update(delta);
       }
     });
+  }
+
+  run() {
+    this.isWaiting = false;
   }
 
   listen() {
@@ -130,7 +136,7 @@ export default class Client {
     game.onChangeTurn = (turn, turnRemained) => {
       this.kickEvent(Events.changeturn, {
         turn,
-        turnRemained,
+        turnRemained
       });
     };
     game.onTimeOut = () => {
@@ -166,7 +172,7 @@ export default class Client {
       },
       onEndDrag: (vx, vy) => {
         this.endScroll(vx, vy);
-      },
+      }
     });
 
     app.stage.interactive = true;
@@ -264,7 +270,6 @@ export default class Client {
     this.components.game.scroll(0, 0);
   }
 
-
   addEventListener(type: string, callback: any => void) {
     this.eventListeners.push({ type, callback });
   }
@@ -276,5 +281,4 @@ export default class Client {
       }
     });
   }
-
 }

@@ -1,5 +1,4 @@
 const webpack = require('webpack');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const path = require('path');
 
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
@@ -7,13 +6,11 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 module.exports = {
   entry: {
     bundle: './src/frontend/index.jsx',
-    // app: './src/game/client/',
   },
   output: {
     path: path.resolve('public'),
     filename: '[name].js'
   },
-  // devtool: 'cheap-module-eval-source-map',
   module: {
     rules: [
       {
@@ -34,7 +31,6 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
-    new UglifyJSPlugin(),
   ],
   devServer: {
     port: 8081,

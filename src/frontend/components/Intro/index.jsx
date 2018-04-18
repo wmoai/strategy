@@ -7,7 +7,7 @@ import Game from '../../../game/models/Game.js';
 type Props = {
   isOffense: boolean,
   game: Game,
-  onClick: Event => void,
+  onEnd: void => void
 };
 
 function Attack() {
@@ -28,18 +28,13 @@ function Defence() {
   );
 }
 
-export default function Intro({ isOffense, onClick }: Props) {
+export default function Intro({ isOffense, onEnd }: Props) {
+  setTimeout(() => {
+    onEnd();
+  }, 3000);
   return (
-    <div
-      id="intro-base"
-      onClick={e => onClick(e)}
-    >
-      {isOffense ? (
-        <Attack />
-      ) : (
-        <Defence />
-      )}
+    <div id="intro-base" onClick={() => onEnd()}>
+      {isOffense ? <Attack /> : <Defence />}
     </div>
   );
-
 }

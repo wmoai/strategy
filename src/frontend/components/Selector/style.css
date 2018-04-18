@@ -1,8 +1,12 @@
 #sel-base {
+  position: absolute;
+  z-index: 10;
   height: 100%;
+  width: 100%;
   padding: 20px 0;
   overflow: scroll;
   box-sizing: border-box;
+  background-color: white;
 }
 
 #sel-base h2 {
@@ -88,6 +92,9 @@
   user-select: none;
 }
 .sel-units-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
   width: 80px;
   margin: 3px;
@@ -96,9 +103,6 @@
   text-align: center;
   box-sizing: border-box;
   background: #eee;
-}
-.sel-unit-image {
-  display: inline-block;
 }
 .sel-unit-name {
   color: #111;
@@ -127,7 +131,6 @@ li.selected .sel-unit-cost {
   background: seagreen;
   border-color: white;
 }
-
 
 .sel-foot {
   display: flex;
@@ -176,4 +179,3 @@ li.selected .sel-unit-cost {
   border-color: #ccc;
   cursor: default;
 }
-

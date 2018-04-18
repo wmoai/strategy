@@ -8,11 +8,10 @@ import Card from '../../components/Card/index.jsx';
 const deckLimit = 12;
 
 export default class Top extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
-      deckBuffer: null,
+      deckBuffer: null
     };
   }
 
@@ -40,7 +39,7 @@ export default class Top extends React.Component {
       return;
     }
     this.setState({
-      deckBuffer: this.state.deckBuffer.concat(this.props.unitsData[index]),
+      deckBuffer: this.state.deckBuffer.concat(this.props.unitsData[index])
     });
   }
 
@@ -57,7 +56,9 @@ export default class Top extends React.Component {
           <div id="head">
             <h1>YOUR DECK</h1>
             <div id="counter">
-              <span id="current" className={!isValidCount ? 'invalid' : null}>{deckCount}</span>
+              <span id="current" className={!isValidCount ? 'invalid' : null}>
+                {deckCount}
+              </span>
               <span>/{deckLimit}</span>
             </div>
             <button
@@ -66,21 +67,28 @@ export default class Top extends React.Component {
               onClick={() => {
                 onClickSaveDeck(deckBuffer.map(unit => unit.id));
               }}
-            >SAVE</button>
+            >
+              SAVE
+            </button>
           </div>
           <ul className="card-list">
-            {deckBuffer && deckBuffer.map((unit, i) => {
-              return (
-                <li key={i}>
-                  <button className="card-btn" onClick={() => this.removeCard(i)}>
-                    <Card data={unit} />
-                  </button>
-                </li>
-              );
-            })}
+            {deckBuffer &&
+              deckBuffer.map((unit, i) => {
+                return (
+                  <li key={i}>
+                    <button
+                      className="card-btn"
+                      onClick={() => this.removeCard(i)}
+                    >
+                      <Card data={unit} />
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         </div>
         <div id="pool">
+          <h2>POOL</h2>
           <ul className="card-list">
             {unitsData.map((unitData, i) => {
               return (
@@ -96,5 +104,4 @@ export default class Top extends React.Component {
       </div>
     );
   }
-
 }

@@ -17,7 +17,7 @@ export function fetchDeck() {
       dispatch(endWaiting());
       dispatch({
         type: FETCH_DECK,
-        payload: res.data,
+        payload: res.data
       });
     });
   };
@@ -30,7 +30,7 @@ export function setDeck(ids) {
       dispatch(endWaiting());
       dispatch({
         type: FETCH_DECK,
-        payload: res.data,
+        payload: res.data
       });
     });
   };
@@ -44,7 +44,7 @@ export function startSoloPlay() {
       dispatch(endWaiting());
       dispatch({
         type: START_SOLO_PLAY,
-        payload: res.data,
+        payload: res.data
       });
     });
   };
@@ -89,7 +89,6 @@ export function enterRoom(payload) {
   };
 }
 
-
 export const SYNC_ROOM = 'SYNC_ROOM';
 export function syncRoom(payload) {
   return {
@@ -111,6 +110,14 @@ export function playerDisconnected() {
   return { type: PLAYER_DISCONNECTED };
 }
 
+export const SELECT_UNIT = 'SELECT_UNIT';
+export function selectUnit(index) {
+  return {
+    type: SELECT_UNIT,
+    payload: { index }
+  };
+}
+
 export const SELECT_UNITS = 'SELECT_UNITS';
 export function selectUnits(selectedList) {
   return {
@@ -119,40 +126,34 @@ export function selectUnits(selectedList) {
   };
 }
 
-export const SELECT_CELL = 'SELECT_CELL';
-export function selectCell(cellId) {
-  return {
-    type: SELECT_CELL,
-    payload: { cellId }
-  };
-}
-
-export const HOVER_CELL = 'HOVER_CELL';
-export function hoverCell(cellId) {
-  return {
-    type: HOVER_CELL,
-    payload: { cellId }
-  };
-}
-
-export const END_TURN = 'END_TURN';
-export function endTurn() {
-  return { type: END_TURN };
-}
-
 export const RETURN_ROOM = 'RETURN_ROOM';
 export function returnRoom() {
   return { type: RETURN_ROOM };
 }
 
-export const END_MY_TURN = 'END_MY_TURN';
-export function endMyTurn() {
-  return dispatch => {
-    setTimeout(() => {
-      dispatch({
-        type: END_MY_TURN
-      });
-    }, 1200);
+export const INIT_GAME = 'INIT_GAME';
+export function initGame() {
+  return { type: INIT_GAME };
+}
+
+export const RUN_GAME = 'RUN_GAME';
+export function runGame() {
+  return { type: RUN_GAME };
+}
+
+export const CHANGE_TURN = 'CHANGE_TURN';
+export function changeTurn(turn, turnRemained) {
+  return {
+    type: CHANGE_TURN,
+    payload: { turn, turnRemained }
+  };
+}
+
+export const HOVER_GAME = 'HOVER_GAME';
+export function hoverGame({ unit, terrain, forecast }) {
+  return {
+    type: HOVER_GAME,
+    payload: { unit, terrain, forecast }
   };
 }
 
@@ -160,7 +161,6 @@ export const END_GAME = 'END_GAME';
 export function endGame(winner) {
   return {
     type: END_GAME,
-    payload: { winner },
+    payload: { winner }
   };
 }
-

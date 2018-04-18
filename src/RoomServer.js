@@ -21,7 +21,6 @@ export default class RoomServer {
     const namespace = io.of('/game');
     this.io = namespace;
     namespace.on('connection', socket => {
-
       // sync session from jwt cookie and setup socket
       const cookies = cookie.parse(socket.request.headers.cookie);
       jwt.verify(cookies.jwt, JWT_SECRET, (err, data) => {
@@ -32,7 +31,7 @@ export default class RoomServer {
 
         const { userId, deck } = data;
 
-        socket.on('createRoom', (ack) => {
+        socket.on('createRoom', ack => {
           const roomId = this.generateRoomId();
           const room = new Room({ id: roomId });
           this.rooms.set(room.id, room);
@@ -63,17 +62,15 @@ export default class RoomServer {
           console.log(`${userId} disconnected`);
         });
       });
-
     });
-
   }
 
   generateRoomId() {
     let id = '';
     do {
       const c = '0123456789';
-      for(var i=0; i<5; i++){
-        id += c[Math.floor(Math.random()*c.length)];
+      for (var i = 0; i < 5; i++) {
+        id += c[Math.floor(Math.random() * c.length)];
       }
     } while (this.rooms.has(id));
     return id;
@@ -92,13 +89,13 @@ export default class RoomServer {
     this.io.to(room.id).emit('syncRoom', room.toData());
   }
 
-  syncGame(room: Room, action?: { from:number, to:number, target:?number }) {
+  syncGame(room: Room, action?: { from: number, to: number, target: ?number }) {
     this.saveRoom(room);
     const { game } = room;
     if (game) {
       this.io.to(room.id).emit('syncGame', {
         game: game.toData(),
-        action,
+        action
       });
     }
   }
@@ -145,7 +142,7 @@ export default class RoomServer {
         const { game } = room;
         if (game) {
           socket.emit('syncGame', {
-            game: game.toData(),
+            game: game.toData()
           });
         }
       }
@@ -155,10 +152,7 @@ export default class RoomServer {
       if (room) {
         const changes = room.actInGame(userId, from, to, target);
         room.mightResetPlayers();
-        this.syncGame(
-          room,
-          { from, to, target, changes }
-        );
+        this.syncGame(room, { from, to, target, changes });
       }
     });
     socket.on('endTurn', () => {
@@ -208,5 +202,4 @@ export default class RoomServer {
       socket.disconnect();
     });
   }
-
 }

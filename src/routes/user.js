@@ -5,14 +5,19 @@ const numOfDeck = 12;
 
 import unitData from '../game/data/unitData.js';
 
-
 export function create(req, res) {
   const deck = randomDeck();
   const userId = createUserId();
-  res.cookie('jwt', jwt.sign({
-    userId,
-    deck
-  }, JWT_SECRET));
+  res.cookie(
+    'jwt',
+    jwt.sign(
+      {
+        userId,
+        deck
+      },
+      JWT_SECRET
+    )
+  );
   return {
     userId,
     deck
@@ -20,7 +25,7 @@ export function create(req, res) {
 }
 
 function createUserId() {
-  return `${uid(12)}-${(new Date).getTime()}`;
+  return `${uid(12)}-${new Date().getTime()}`;
 }
 
 export function get(req, res) {
@@ -35,10 +40,16 @@ export function setDeck(req, res) {
   } else {
     deck = randomDeck();
   }
-  res.cookie('jwt', jwt.sign({
-    userId: req.jwt.userId,
-    deck
-  }, JWT_SECRET));
+  res.cookie(
+    'jwt',
+    jwt.sign(
+      {
+        userId: req.jwt.userId,
+        deck
+      },
+      JWT_SECRET
+    )
+  );
 
   res.send({ deck });
 }
@@ -58,7 +69,7 @@ function randomDeck() {
 
 function randomUnits(units, count) {
   const indexes = [];
-  while(indexes.length < count) {
+  while (indexes.length < count) {
     const rand = Math.random();
     const sel = Math.floor(rand * units.length);
     indexes.push(sel);

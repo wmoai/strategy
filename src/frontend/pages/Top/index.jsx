@@ -7,7 +7,6 @@ import Card from '../../components/Card/index.jsx';
 import './style.css';
 
 export default class Top extends React.Component {
-
   componentDidMount() {
     this.props.onInit();
   }
@@ -20,15 +19,20 @@ export default class Top extends React.Component {
         <div id="top-container">
           <ul id="top-navigator">
             <li>
-              <Link className="top-btn" to="deck">デッキ構築</Link>
+              <Link className="top-btn" to="deck">
+                デッキ構築
+              </Link>
             </li>
-            {deck && 
-                <li>
-                  <Link className="top-btn strong" to="match" target="sl_game">対戦ロビー</Link>
-                </li>
-            }
+            {deck && (
+              <li>
+                <Link className="top-btn strong" to="match" target="sl_game">
+                  対戦ロビー
+                </Link>
+              </li>
+            )}
           </ul>
-          {deck && deck.length > 0 &&
+          {deck &&
+            deck.length > 0 && (
               <div id="top-deck">
                 <h2>YOUR DECK</h2>
                 <ul>
@@ -41,10 +45,9 @@ export default class Top extends React.Component {
                   })}
                 </ul>
               </div>
-          }
+            )}
         </div>
       </div>
     );
   }
-
 }

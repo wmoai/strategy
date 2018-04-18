@@ -18,7 +18,6 @@ import State from '../State.js';
 import GameModel from '../../models/Game.js';
 import UnitModel from '../../models/Unit.js';
 
-
 import * as masterData from '../../data/';
 
 export default class Game extends Component {
@@ -34,33 +33,33 @@ export default class Game extends Component {
   mouseY: number;
   layer: {
     main: any,
-    overlay: any,
+    overlay: any
   };
   components: {
     turnStart: TurnStart,
     timer: TimerComponent,
     cursor: CursorComponent,
-    units: UnitsComponent,
+    units: UnitsComponent
   };
-  postUpdate: ?(void => boolean);
+  postUpdate: ?(void) => boolean;
 
   updateQueue: Array<Updater>;
   turnBuffer: ?boolean;
-  onChangeTurn: ?((boolean, number) => void);
-  onTimeOut: ?(void => void);
+  onChangeTurn: ?(boolean, number) => void;
+  onTimeOut: ?(void) => void;
   isTimeOut: boolean;
-  onEnd: ?(boolean => void);
+  onEnd: ?(boolean) => void;
 
   constructor({
     renderer,
     game,
     cellSize,
-    isOffense,
+    isOffense
   }: {
     renderer: any,
     game: GameModel,
     cellSize: number,
-    isOffense: boolean,
+    isOffense: boolean
   }) {
     super();
     this.renderer = renderer;
@@ -85,13 +84,13 @@ export default class Game extends Component {
       units: new UnitsComponent({
         unitModels: game.units,
         field,
-        cellSize,
-      }),
+        cellSize
+      })
     };
 
     this.layer = {
       main: new PIXI.Container(),
-      overlay: new PIXI.Container(),
+      overlay: new PIXI.Container()
     };
     this.container.addChild(this.layer.main);
     this.container.addChild(this.layer.overlay);
@@ -105,13 +104,15 @@ export default class Game extends Component {
 
     this.updateQueue = [];
 
-    const myUnitModel = game.units.filter(unit => unit.isOffense == isOffense)[0];
+    const myUnitModel = game.units
+      .filter(unit => unit.isOffense == isOffense)
+      .pop();
     if (myUnitModel) {
       const unit = this.components.units.unit(myUnitModel.seq);
       if (unit) {
         this.scrollTo(
-          renderer.width/2 - (unit.container.x + cellSize/2) * this.scale,
-          renderer.height/2 - (unit.container.y + cellSize/2) * this.scale 
+          renderer.width / 2 - (unit.container.x + cellSize / 2) * this.scale,
+          renderer.height / 2 - (unit.container.y + cellSize / 2) * this.scale
         );
       }
     }
@@ -134,8 +135,8 @@ export default class Game extends Component {
     cursor.container.visible = true;
 
     if (this.model.state.isEnd) {
-      const onEnd = this.onEnd
-        , winner = this.model.state.winner;
+      const onEnd = this.onEnd,
+        winner = this.model.state.winner;
       if (onEnd && winner != null) {
         onEnd(winner);
       }
@@ -171,15 +172,19 @@ export default class Game extends Component {
 
   reflectUnits(units: ?Array<UnitModel>) {
     let models = units || this.model.units;
-    this.updateQueue.push(new Updater(0, () => {
-      this.components.units.updateUnits(models);
-    }));
+    this.updateQueue.push(
+      new Updater(0, () => {
+        this.components.units.updateUnits(models);
+      })
+    );
   }
 
   reflectRanges(ranges: ?Ranges) {
-    this.updateQueue.push(new Updater(0, () => {
-      this.components.units.updateRanges(ranges);
-    }));
+    this.updateQueue.push(
+      new Updater(0, () => {
+        this.components.units.updateRanges(ranges);
+      })
+    );
   }
 
   changeTurn(turn: boolean) {
@@ -225,7 +230,7 @@ export default class Game extends Component {
     const updater = components.turnStart.createUpdater(
       isMyTurn,
       renderer.width,
-      Math.min(renderer.height, this.layer.main.height),
+      Math.min(renderer.height, this.layer.main.height)
     );
     if (isMyTurn) {
       updater.after = () => {
@@ -270,7 +275,9 @@ export default class Game extends Component {
   }
 
   hoveredUnit() {
-    const unit = this.state.hoveredUnit ? this.state.hoveredUnit : this.state.forcusedUnit;
+    const unit = this.state.hoveredUnit
+      ? this.state.hoveredUnit
+      : this.state.forcusedUnit;
     if (unit && !unit.isAlive()) {
       return null;
     }
@@ -291,7 +298,7 @@ export default class Game extends Component {
     const { model } = this;
     return {
       turn: model.state.turn,
-      remained: model.turnRemained(),
+      remained: model.turnRemained()
     };
   }
 
@@ -316,7 +323,6 @@ export default class Game extends Component {
     this.scroll(dx, dy);
   }
 
-
   sync(gameData: any, actionData: any) {
     this.clearUI();
 
@@ -340,7 +346,7 @@ export default class Game extends Component {
     this.hoverCell(this.fieldCoordinates(clientX, clientY));
   }
 
-  hoverCell({ x, y }: { x:number, y:number }) {
+  hoverCell({ x, y }: { x: number, y: number }) {
     const { model } = this;
     if (!model.field.isActiveCell(y, x)) {
       return;
@@ -352,14 +358,21 @@ export default class Game extends Component {
     this.state.hoverUnit(unit);
   }
 
-  select(clientX: number, clientY: number, emitAction: ?(number,number,?number) => void) {
+  select(
+    clientX: number,
+    clientY: number,
+    emitAction: ?(number, number, ?number) => void
+  ) {
     if (this.currentUpdater()) {
       return;
     }
     this.selectCell(this.fieldCoordinates(clientX, clientY), emitAction);
   }
 
-  selectCell({ x, y }: { x:number, y:number }, emitAction: ?(number,number,?number) => void) {
+  selectCell(
+    { x, y }: { x: number, y: number },
+    emitAction: ?(number, number, ?number) => void
+  ) {
     if (!this.model.field.isActiveCell(y, x) || this.currentUpdater()) {
       return;
     }
@@ -418,19 +431,28 @@ export default class Game extends Component {
     this.state.move(to);
   }
 
-  mightAct(cellId: number, emitAction: ?(number,number,?number) => void) {
+  mightAct(cellId: number, emitAction: ?(number, number, ?number) => void) {
     const { movedCell, forcusedCell } = this.state;
-    if (!this.isActionable(cellId) || movedCell == null || forcusedCell == null) {
+    if (
+      !this.isActionable(cellId) ||
+      movedCell == null ||
+      forcusedCell == null
+    ) {
       this.undo();
       this.clearUI();
       return;
     }
-    const actCell = (cellId != movedCell) ? cellId : undefined;
+    const actCell = cellId != movedCell ? cellId : undefined;
     this.state.act();
     this.act(forcusedCell, movedCell, actCell, emitAction);
   }
 
-  act(from: number, to: number, target: ?number, emitAction: ?(number,number,?number) => void) {
+  act(
+    from: number,
+    to: number,
+    target: ?number,
+    emitAction: ?(number, number, ?number) => void
+  ) {
     if (emitAction && typeof emitAction === 'function') {
       emitAction(from, to, target);
     }
@@ -442,8 +464,10 @@ export default class Game extends Component {
     if (movedCell == null || forcusedUnit == null) {
       return false;
     }
-    return cellId == movedCell
-      || model.checkActionable(forcusedUnit, movedCell, cellId);
+    return (
+      cellId == movedCell ||
+      model.checkActionable(forcusedUnit, movedCell, cellId)
+    );
   }
 
   undo() {
@@ -454,13 +478,11 @@ export default class Game extends Component {
     }
   }
 
-
   clearUI() {
     this.reflectRanges(null);
     this.hoverCell(this.fieldCoordinates(this.mouseX, this.mouseY));
     this.state.clearUI();
   }
-
 
   displayCellSize() {
     return this.cellSize * this.scale;
@@ -470,12 +492,14 @@ export default class Game extends Component {
     const cellSize = this.displayCellSize();
     return {
       x: Math.floor((clientX - this.layer.main.x) / cellSize),
-      y: Math.floor((clientY - this.layer.main.y) / cellSize),
+      y: Math.floor((clientY - this.layer.main.y) / cellSize)
     };
   }
 
   zoom(delta: number) {
-    const scale = Number(Math.max(0.8, Math.min(1.8, this.scale - delta)).toFixed(2));
+    const scale = Number(
+      Math.max(0.8, Math.min(1.8, this.scale - delta)).toFixed(2)
+    );
     const rate = scale / this.scale;
     this.layer.main.scale.x = scale;
     this.layer.main.scale.y = scale;
@@ -487,10 +511,7 @@ export default class Game extends Component {
   }
 
   scroll(dx: number, dy: number) {
-    this.scrollTo(
-      this.layer.main.x - dx,
-      this.layer.main.y - dy,
-    );
+    this.scrollTo(this.layer.main.x - dx, this.layer.main.y - dy);
   }
 
   scrollTo(x: number, y: number) {
@@ -507,12 +528,14 @@ export default class Game extends Component {
   forecast() {
     const { model, state } = this;
     const { forcusedUnit, hoveredCell, movedCell } = state;
-    if (!state.is('ACT') || forcusedUnit == null ||  hoveredCell == null || movedCell == null) {
+    if (
+      !state.is('ACT') ||
+      forcusedUnit == null ||
+      hoveredCell == null ||
+      movedCell == null
+    ) {
       return;
     }
     return model.getForecast(forcusedUnit, movedCell, hoveredCell);
   }
 }
-
-
-

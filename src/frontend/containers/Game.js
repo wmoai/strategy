@@ -2,44 +2,65 @@ import { connect } from 'react-redux';
 import Component from '../components/Game/index.jsx';
 
 import {
-  selectCell,
-  hoverCell,
+  initGame,
+  runGame,
+  changeTurn,
   endGame,
-  returnRoom,
+  hoverGame,
+  returnRoom
 } from '../actions';
 
 const mapStateToProps = state => {
-  const { room, isOffense, socket, screen, winner } = state.match;
+  const { room, isOffense, socket, screen } = state.match;
+  const {
+    isIntroduction,
+    turn,
+    turnRemained,
+    hoveredUnit,
+    hoveredTerrain,
+    actionForecast,
+    winner
+  } = state.game;
   return {
     isOffense,
     game: room.game,
     socket,
     isSolo: room.isSolo,
-    screen,
-    winner,
+    isPreview: screen === 'SELECT',
+    isResult: screen === 'RESULT',
+    isIntroduction,
+    isMyTurn: isOffense === turn,
+    turnRemained,
+    hoveredUnit,
+    hoveredTerrain,
+    actionForecast,
+    winner
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onSelectCell: cellId => {
-      dispatch(selectCell(cellId));
+    onInitGame: () => {
+      dispatch(initGame());
     },
-    onHoverCell: cellId => {
-      dispatch(hoverCell(cellId));
+    onRunGame: () => {
+      dispatch(runGame());
+    },
+    onChangeTurn: (turn, turnRemained) => {
+      dispatch(changeTurn(turn, turnRemained));
+    },
+    onHoverGame: (unit, terrain, forecast) => {
+      dispatch(hoverGame({ unit, terrain, forecast }));
     },
     onEndGame: winner => {
       dispatch(endGame(winner));
     },
     onReturnRoom: () => {
       dispatch(returnRoom());
-    },
+    }
   };
 };
 
-const Game = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Component);
+const Game = connect(mapStateToProps, mapDispatchToProps)(Component);
 
 export default Game;
