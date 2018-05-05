@@ -8,7 +8,8 @@ jobs:
       - run: npm install
       - run:
         name: test
-        command: npm run test
+        command: |
+          npm run test
   deploy-job:
     docker:
       - image: circleci/node:8
